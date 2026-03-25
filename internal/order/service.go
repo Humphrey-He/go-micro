@@ -10,6 +10,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 	"go-micro/pkg/cache"
 	"go-micro/pkg/db"
@@ -63,6 +64,17 @@ var allowedTransitions = map[string]map[string]bool{
 		statusSuccess: true,
 		statusFailed:  true,
 	},
+}
+
+var outboxPendingGauge = prometheus.NewGauge(prometheus.GaugeOpts{
+	Namespace: "order",
+	Subsystem: "outbox",
+	Name:      "pending_total",
+	Help:      "Pending outbox messages",
+})
+
+func init() {
+	prometheus.MustRegister(outboxPendingGauge)
 }
 
 func NewService(dbx *sqlx.DB, rdb *redis.Client, invClient InventoryClient, publisher Publisher) *Service {
@@ -126,7 +138,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 			return err
 		}
 		payload, _ := json.Marshal(event)
-		_, err := tx.Exec(`INSERT INTO order_outbox(event_type,payload,status,created_at) VALUES(?,?,?,NOW())`, "order.created", payload, outboxPending)
+		_, err := tx.Exec(`INSERT INTO order_outbox(event_type,payload,status,retry_count,last_error,created_at) VALUES(?,?,?,?,?,NOW())`, "order.created", payload, outboxPending, 0, "")
 		return err
 	})
 	if txErr != nil {
@@ -255,6 +267,12 @@ func (s *Service) publishOutboxBatch(limit int) error {
 	if s.publisher == nil {
 		return nil
 	}
+
+	var pendingCount int64
+	if err := s.db.Get(&pendingCount, `SELECT COUNT(1) FROM order_outbox WHERE status = ?`, outboxPending); err == nil {
+		outboxPendingGauge.Set(float64(pendingCount))
+	}
+
 	tx, err := s.db.Beginx()
 	if err != nil {
 		return err
@@ -269,8 +287,8 @@ func (s *Service) publishOutboxBatch(limit int) error {
 	}
 	for _, r := range rows {
 		if err := s.publisher.Publish(s.ctx, r.Payload); err != nil {
-			_ = tx.Rollback()
-			return err
+			_, _ = tx.Exec(`UPDATE order_outbox SET retry_count = retry_count + 1, last_error = ? WHERE id = ?`, err.Error(), r.ID)
+			continue
 		}
 		if _, err := tx.Exec(`UPDATE order_outbox SET status=?, sent_at=NOW() WHERE id=?`, outboxSent, r.ID); err != nil {
 			_ = tx.Rollback()

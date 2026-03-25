@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"go-micro/internal/payment"
 	"go-micro/pkg/errx"
 	"go-micro/pkg/httpx"
 	"go-micro/pkg/middleware"
@@ -37,6 +38,11 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.POST("/orders", h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
 	api.GET("/order-views/:order_no", h.getOrderView)
+	api.POST("/payments", h.createPayment)
+	api.GET("/payments/:id", h.getPayment)
+	api.POST("/payments/:id/success", h.markPaymentSuccess)
+	api.POST("/payments/:id/failed", h.markPaymentFailed)
+	api.POST("/payments/:id/timeout", h.markPaymentTimeout)
 	api.GET("/users/me", h.me)
 }
 
@@ -123,6 +129,102 @@ func (h *Handler) getOrderView(c *gin.Context) {
 	resp, err := h.svc.GetOrderView(orderNo)
 	if err != nil {
 		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order view unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 创建支付
+// @Tags Payment
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body payment.CreatePaymentRequest true "创建支付请求"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/payments [post]
+func (h *Handler) createPayment(c *gin.Context) {
+	var req payment.CreatePaymentRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.OrderID == "" || req.RequestID == "" || req.Amount <= 0 {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.CreatePayment(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 查询支付
+// @Tags Payment
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "支付ID"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/payments/{id} [get]
+func (h *Handler) getPayment(c *gin.Context) {
+	id := c.Param("id")
+	resp, err := h.svc.GetPayment(id)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 支付成功
+// @Tags Payment
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "支付ID"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/payments/{id}/success [post]
+func (h *Handler) markPaymentSuccess(c *gin.Context) {
+	id := c.Param("id")
+	resp, err := h.svc.MarkPaymentSuccess(id)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 支付失败
+// @Tags Payment
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "支付ID"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/payments/{id}/failed [post]
+func (h *Handler) markPaymentFailed(c *gin.Context) {
+	id := c.Param("id")
+	resp, err := h.svc.MarkPaymentFailed(id)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 支付超时
+// @Tags Payment
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param id path string true "支付ID"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/payments/{id}/timeout [post]
+func (h *Handler) markPaymentTimeout(c *gin.Context) {
+	id := c.Param("id")
+	resp, err := h.svc.MarkPaymentTimeout(id)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
 		c.JSON(code, body)
 		return
 	}

@@ -2,10 +2,12 @@ package gateway
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"go-micro/internal/inventory"
 	"go-micro/internal/order"
+	"go-micro/internal/payment"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
@@ -21,6 +23,7 @@ type Service struct {
 	user      *user.GRPCClient
 	inventory *inventory.GRPCClient
 	task      *task.GRPCClient
+	payment   *payment.Service
 	cbOrder   *resilience.CircuitBreaker
 	cbUser    *resilience.CircuitBreaker
 	cbInv     *resilience.CircuitBreaker
@@ -34,11 +37,16 @@ func NewService(orderClient *order.GRPCClient, userClient *user.GRPCClient, invC
 		user:      userClient,
 		inventory: invClient,
 		task:      taskClient,
+		payment:   nil,
 		cbOrder:   cb,
 		cbUser:    cb,
 		cbInv:     cb,
 		cbTask:    cb,
 	}
+}
+
+func (s *Service) SetPayment(p *payment.Service) {
+	s.payment = p
 }
 
 func (s *Service) CreateOrder(req CreateOrderRequest, requestID string) (httpx.Response, error) {
@@ -128,6 +136,60 @@ func (s *Service) GetOrderView(bizNo string) (httpx.Response, error) {
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: view}, nil
 }
+
+func (s *Service) CreatePayment(req payment.CreatePaymentRequest) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	p, err := s.payment.Create(req)
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: p}, nil
+}
+
+func (s *Service) GetPayment(paymentID string) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	p, err := s.payment.Get(paymentID)
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: p}, nil
+}
+
+func (s *Service) MarkPaymentSuccess(paymentID string) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	if err := s.payment.MarkSuccess(paymentID); err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: map[string]bool{"success": true}}, nil
+}
+
+func (s *Service) MarkPaymentFailed(paymentID string) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	if err := s.payment.MarkFailed(paymentID); err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: map[string]bool{"success": true}}, nil
+}
+
+func (s *Service) MarkPaymentTimeout(paymentID string) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	if err := s.payment.MarkTimeout(paymentID); err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: map[string]bool{"success": true}}, nil
+}
+
+var errPaymentNotInit = errors.New("payment service not initialized")
 
 func computeViewStatus(orderStatus, taskStatus, taskType, resvStatus string) (string, string) {
 	if orderStatus == "CANCELED" {

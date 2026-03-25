@@ -13,8 +13,10 @@ import (
 	"go-micro/internal/gateway"
 	"go-micro/internal/inventory"
 	"go-micro/internal/order"
+	"go-micro/internal/payment"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
+	"go-micro/pkg/db"
 	"go-micro/pkg/config"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
@@ -70,7 +72,14 @@ func Run() error {
 	}
 	defer taskConn.Close()
 
+	dbx, err := db.NewMySQL()
+	if err != nil {
+		logger.Error("mysql connect failed", zap.Error(err))
+		return err
+	}
+	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})
 	svc := gateway.NewService(orderClient, userClient, invClient, taskClient)
+	svc.SetPayment(paySvc)
 	h := gateway.NewHandler(svc)
 	h.Register(r)
 
@@ -90,4 +99,20 @@ func Run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return srv.Shutdown(ctx)
+}
+
+type orderCancelAdapter struct {
+	c *order.GRPCClient
+}
+
+func (a *orderCancelAdapter) Cancel(ctx context.Context, orderID string) error {
+	return a.c.Cancel(ctx, orderID)
+}
+
+type inventoryReleaseAdapter struct {
+	c *inventory.GRPCClient
+}
+
+func (a *inventoryReleaseAdapter) ReleaseByOrder(ctx context.Context, orderID string) error {
+	return a.c.ReleaseByOrder(ctx, orderID)
 }

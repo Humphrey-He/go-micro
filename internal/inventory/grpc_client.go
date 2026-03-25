@@ -41,3 +41,7 @@ func (c *GRPCClient) Confirm(ctx context.Context, reservedID string) error {
 	_, err := c.client.Confirm(ctx, &inventorypb.ConfirmRequest{ReservedId: reservedID})
 	return err
 }
+
+func (c *GRPCClient) GetReservation(ctx context.Context, orderID string) (*inventorypb.Reservation, error) {
+	return c.client.GetReservation(ctx, &inventorypb.GetReservationRequest{OrderId: orderID})
+}

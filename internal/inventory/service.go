@@ -18,6 +18,7 @@ var (
 	ErrNotFound     = errors.New("reservation not found")
 	ErrInvalidState = errors.New("invalid reservation state")
 	ErrSkuNotFound  = errors.New("sku not found")
+	ErrResvNotFound = errors.New("reservation by order not found")
 )
 
 const (
@@ -154,6 +155,20 @@ func (s *Service) GetInventory(skuID string) (*Inventory, error) {
 	}
 	_ = s.cache.setInventory(s.ctx, skuID, inv)
 	return &inv, nil
+}
+
+func (s *Service) GetReservation(orderID string) (*Reservation, error) {
+	if orderID == "" {
+		return nil, ErrResvNotFound
+	}
+	resv := Reservation{}
+	if err := s.db.Get(&resv, `SELECT * FROM inventory_reserved WHERE order_id = ? ORDER BY created_at DESC LIMIT 1`, orderID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrResvNotFound
+		}
+		return nil, err
+	}
+	return &resv, nil
 }
 
 type cacheClient struct {

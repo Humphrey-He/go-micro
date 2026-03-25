@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +18,9 @@ import (
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
 	"go-micro/pkg/mq"
+	"go-micro/proto/taskpb"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -40,6 +43,19 @@ func main() {
 	svc := task.NewService(dbx)
 	h := task.NewHandler(svc)
 	h.Register(r)
+
+	grpcAddr := config.GetEnv("TASK_GRPC_ADDR", ":9084")
+	grpcLis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		logger.Fatal("task-grpc listen failed", zap.Error(err))
+	}
+	grpcServer := grpc.NewServer()
+	taskpb.RegisterTaskServiceServer(grpcServer, task.NewGRPCServer(svc))
+	go func() {
+		if err := grpcServer.Serve(grpcLis); err != nil {
+			logger.Fatal("task-grpc serve failed", zap.Error(err))
+		}
+	}()
 
 	mqURL := config.GetEnv("MQ_URL", "amqp://guest:guest@localhost:5672/")
 	exchange := config.GetEnv("MQ_EXCHANGE", "order.events")
@@ -81,6 +97,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 
+	grpcServer.GracefulStop()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(ctx)

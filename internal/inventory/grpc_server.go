@@ -42,3 +42,11 @@ func (s *GRPCServer) Confirm(ctx context.Context, req *inventorypb.ConfirmReques
 	}
 	return &inventorypb.SimpleResponse{Success: true}, nil
 }
+
+func (s *GRPCServer) GetReservation(ctx context.Context, req *inventorypb.GetReservationRequest) (*inventorypb.Reservation, error) {
+	resv, err := s.svc.GetReservation(req.OrderId)
+	if err != nil {
+		return nil, err
+	}
+	return &inventorypb.Reservation{ReservedId: resv.ReservedID, OrderId: resv.OrderID, Status: resv.Status}, nil
+}

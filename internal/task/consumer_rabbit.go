@@ -43,7 +43,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			continue
 		}
 
-		_, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: "FULFILL"})
+		_, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: taskTypeFulfill})
 		if err == nil {
 			if ord != nil {
 				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

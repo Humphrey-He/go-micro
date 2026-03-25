@@ -30,8 +30,19 @@ message SimpleResponse {
   bool success = 1;
 }
 
+message GetReservationRequest {
+  string order_id = 1;
+}
+
+message Reservation {
+  string reserved_id = 1;
+  string order_id = 2;
+  string status = 3;
+}
+
 service InventoryService {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
   rpc Release(ReleaseRequest) returns (SimpleResponse);
   rpc Confirm(ConfirmRequest) returns (SimpleResponse);
+  rpc GetReservation(GetReservationRequest) returns (Reservation);
 }

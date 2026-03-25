@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	InventoryService_Reserve_FullMethodName = "/inventorypb.InventoryService/Reserve"
-	InventoryService_Release_FullMethodName = "/inventorypb.InventoryService/Release"
-	InventoryService_Confirm_FullMethodName = "/inventorypb.InventoryService/Confirm"
+	InventoryService_Reserve_FullMethodName        = "/inventorypb.InventoryService/Reserve"
+	InventoryService_Release_FullMethodName        = "/inventorypb.InventoryService/Release"
+	InventoryService_Confirm_FullMethodName        = "/inventorypb.InventoryService/Confirm"
+	InventoryService_GetReservation_FullMethodName = "/inventorypb.InventoryService/GetReservation"
 )
 
 // InventoryServiceClient is the client API for InventoryService service.
@@ -31,6 +32,7 @@ type InventoryServiceClient interface {
 	Reserve(ctx context.Context, in *ReserveRequest, opts ...grpc.CallOption) (*ReserveResponse, error)
 	Release(ctx context.Context, in *ReleaseRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 	Confirm(ctx context.Context, in *ConfirmRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
+	GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*Reservation, error)
 }
 
 type inventoryServiceClient struct {
@@ -71,6 +73,16 @@ func (c *inventoryServiceClient) Confirm(ctx context.Context, in *ConfirmRequest
 	return out, nil
 }
 
+func (c *inventoryServiceClient) GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*Reservation, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Reservation)
+	err := c.cc.Invoke(ctx, InventoryService_GetReservation_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InventoryServiceServer is the server API for InventoryService service.
 // All implementations must embed UnimplementedInventoryServiceServer
 // for forward compatibility.
@@ -78,6 +90,7 @@ type InventoryServiceServer interface {
 	Reserve(context.Context, *ReserveRequest) (*ReserveResponse, error)
 	Release(context.Context, *ReleaseRequest) (*SimpleResponse, error)
 	Confirm(context.Context, *ConfirmRequest) (*SimpleResponse, error)
+	GetReservation(context.Context, *GetReservationRequest) (*Reservation, error)
 	mustEmbedUnimplementedInventoryServiceServer()
 }
 
@@ -96,6 +109,9 @@ func (UnimplementedInventoryServiceServer) Release(context.Context, *ReleaseRequ
 }
 func (UnimplementedInventoryServiceServer) Confirm(context.Context, *ConfirmRequest) (*SimpleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Confirm not implemented")
+}
+func (UnimplementedInventoryServiceServer) GetReservation(context.Context, *GetReservationRequest) (*Reservation, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReservation not implemented")
 }
 func (UnimplementedInventoryServiceServer) mustEmbedUnimplementedInventoryServiceServer() {}
 func (UnimplementedInventoryServiceServer) testEmbeddedByValue()                          {}
@@ -172,6 +188,24 @@ func _InventoryService_Confirm_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_GetReservation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReservationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).GetReservation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_GetReservation_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).GetReservation(ctx, req.(*GetReservationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InventoryService_ServiceDesc is the grpc.ServiceDesc for InventoryService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -190,6 +224,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Confirm",
 			Handler:    _InventoryService_Confirm_Handler,
+		},
+		{
+			MethodName: "GetReservation",
+			Handler:    _InventoryService_GetReservation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

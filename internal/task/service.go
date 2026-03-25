@@ -13,7 +13,8 @@ import (
 var ErrNotFound = errors.New("task not found")
 
 const (
-	statusPending = "PENDING"
+	statusPending   = "PENDING"
+	taskTypeFulfill = "FULFILL"
 )
 
 type Service struct {
@@ -66,6 +67,13 @@ func (s *Service) Retry(taskID string) (*Task, error) {
 		return nil, err
 	}
 	return s.Get(taskID)
+}
+
+func (s *Service) GetByOrder(orderID string) (*Task, error) {
+	if orderID == "" {
+		return nil, ErrNotFound
+	}
+	return s.getByOrderAndType(orderID, taskTypeFulfill)
 }
 
 func (s *Service) getByOrderAndType(orderID, typ string) (*Task, error) {

@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package taskpb;
+
+option go_package = "go-micro/proto/taskpb";
+
+message GetTaskByOrderRequest {
+  string order_id = 1;
+}
+
+message Task {
+  string task_id = 1;
+  string biz_no = 2;
+  string order_id = 3;
+  string type = 4;
+  string status = 5;
+  int32 retry_count = 6;
+  int64 next_retry_at = 7;
+}
+
+service TaskService {
+  rpc GetTaskByOrder(GetTaskByOrderRequest) returns (Task);
+}

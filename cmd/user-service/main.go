@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,7 +16,9 @@ import (
 	"go-micro/pkg/db"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
+	"go-micro/proto/userpb"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -40,6 +43,19 @@ func main() {
 	h := user.NewHandler(svc)
 	h.Register(r)
 
+	grpcAddr := config.GetEnv("USER_GRPC_ADDR", ":9083")
+	grpcLis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		logger.Fatal("user-grpc listen failed", zap.Error(err))
+	}
+	grpcServer := grpc.NewServer()
+	userpb.RegisterUserServiceServer(grpcServer, user.NewGRPCServer(svc))
+	go func() {
+		if err := grpcServer.Serve(grpcLis); err != nil {
+			logger.Fatal("user-grpc serve failed", zap.Error(err))
+		}
+	}()
+
 	addr := config.GetEnv("USER_ADDR", ":8083")
 	srv := &http.Server{Addr: addr, Handler: r}
 	go func() {
@@ -52,6 +68,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 
+	grpcServer.GracefulStop()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_ = srv.Shutdown(ctx)

@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package userpb;
+
+option go_package = "go-micro/proto/userpb";
+
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserByNameRequest {
+  string username = 1;
+}
+
+message User {
+  string user_id = 1;
+  string username = 2;
+  string role = 3;
+  int32 status = 4;
+}
+
+service UserService {
+  rpc GetUser(GetUserRequest) returns (User);
+  rpc GetUserByName(GetUserByNameRequest) returns (User);
+}

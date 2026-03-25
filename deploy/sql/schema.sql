@@ -128,6 +128,72 @@ CREATE TABLE IF NOT EXISTS payments (
   INDEX idx_payments_order_id (order_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS refunds (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  refund_id VARCHAR(64) NOT NULL,
+  order_id VARCHAR(64) NOT NULL,
+  refund_type VARCHAR(32) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  retry_count INT NOT NULL DEFAULT 0,
+  next_retry_time DATETIME DEFAULT NULL,
+  last_error VARCHAR(255) NOT NULL DEFAULT '',
+  reason VARCHAR(255) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uk_refund_id (refund_id),
+  INDEX idx_refunds_order_id (order_id),
+  INDEX idx_refunds_status (status),
+  INDEX idx_refunds_retry (next_retry_time)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS activity_coupons (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  coupon_id VARCHAR(64) NOT NULL,
+  user_id VARCHAR(64) NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  issued_at DATETIME NOT NULL,
+  used_at DATETIME DEFAULT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uk_coupon_id (coupon_id),
+  INDEX idx_coupons_user_id (user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS activity_seckill (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  sku_id VARCHAR(64) NOT NULL,
+  stock INT NOT NULL,
+  reserved INT NOT NULL DEFAULT 0,
+  status VARCHAR(32) NOT NULL,
+  start_time DATETIME NOT NULL,
+  end_time DATETIME NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uk_seckill_sku (sku_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS seckill_orders (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  sku_id VARCHAR(64) NOT NULL,
+  user_id VARCHAR(64) NOT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  status VARCHAR(32) NOT NULL,
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uk_seckill_order (sku_id, user_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS price_history (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  sku_id VARCHAR(64) NOT NULL,
+  old_price DECIMAL(10,2) NOT NULL,
+  new_price DECIMAL(10,2) NOT NULL,
+  reason VARCHAR(255) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL,
+  INDEX idx_price_sku (sku_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO inventory(sku_id, available, reserved, updated_at)
 VALUES
 ('SKU-1001', 100, 0, NOW()),

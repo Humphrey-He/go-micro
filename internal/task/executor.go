@@ -10,6 +10,7 @@ const (
 	orderStatusProcessing = "PROCESSING"
 	orderStatusSuccess    = "SUCCESS"
 	orderStatusFailed     = "FAILED"
+	orderStatusCanceled   = "CANCELED"
 )
 
 var retryBackoff = []time.Duration{

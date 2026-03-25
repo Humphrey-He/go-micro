@@ -16,6 +16,14 @@ type OrderUpdater interface {
 	UpdateStatus(ctx context.Context, orderID, from, to string) error
 }
 
+type OrderReader interface {
+	GetStatus(ctx context.Context, orderID string) (string, error)
+}
+
+type OrderCanceler interface {
+	Cancel(ctx context.Context, orderID string) error
+}
+
 type OrderCreatedEvent struct {
 	OrderID    string `json:"order_id"`
 	BizNo      string `json:"biz_no"`
@@ -50,6 +58,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 				handleTaskFailure(ctx, svc, ord, t)
 			}
 			cancel()
+			_, _ = svc.CreateTimeoutTask(evt.OrderID, evt.BizNo, 15*time.Minute)
 			_ = msg.Ack(false)
 			continue
 		}

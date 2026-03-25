@@ -19,6 +19,7 @@ const (
 	statusFailed    = "FAILED"
 	statusDead      = "DEAD"
 	taskTypeFulfill = "FULFILL"
+	taskTypeTimeout = "TIMEOUT_CANCEL"
 )
 
 const (
@@ -38,17 +39,17 @@ func (s *Service) Create(req CreateTaskRequest) (*Task, error) {
 		return nil, errors.New("invalid request")
 	}
 
-	taskID := uuid.NewString()
 	nextRetry := time.Now().Add(1 * time.Minute)
-	_, err := s.db.Exec(`INSERT INTO tasks(task_id,biz_no,order_id,type,status,retry_count,next_retry_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,NOW(),NOW())`,
-		taskID, req.BizNo, req.OrderID, req.Type, statusPending, 0, nextRetry)
-	if err != nil {
-		if isDuplicate(err) {
-			return s.getByOrderAndType(req.OrderID, req.Type)
-		}
-		return nil, err
+	return s.createWithNextRetry(req, nextRetry)
+}
+
+func (s *Service) CreateTimeoutTask(orderID, bizNo string, delay time.Duration) (*Task, error) {
+	if delay <= 0 {
+		delay = 15 * time.Minute
 	}
-	return &Task{TaskID: taskID, BizNo: req.BizNo, OrderID: req.OrderID, Type: req.Type, Status: statusPending, RetryCount: 0, NextRetryAt: nextRetry, CreatedAt: time.Now(), UpdatedAt: time.Now()}, nil
+	req := CreateTaskRequest{OrderID: orderID, BizNo: bizNo, Type: taskTypeTimeout}
+	nextRetry := time.Now().Add(delay)
+	return s.createWithNextRetry(req, nextRetry)
 }
 
 func (s *Service) Get(taskID string) (*Task, error) {
@@ -89,6 +90,15 @@ func (s *Service) MarkRunning(taskID string) error {
 	return err
 }
 
+func (s *Service) MarkRunningIfStatus(taskID, status string) (bool, error) {
+	res, err := s.db.Exec(`UPDATE tasks SET status=?, updated_at=NOW() WHERE task_id = ? AND status = ?`, statusRunning, taskID, status)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
 func (s *Service) MarkRunningIfFailed(taskID string) (bool, error) {
 	res, err := s.db.Exec(`UPDATE tasks SET status=?, updated_at=NOW() WHERE task_id = ? AND status = ?`, statusRunning, taskID, statusFailed)
 	if err != nil {
@@ -124,6 +134,22 @@ func (s *Service) ListRetryTasks(limit int) ([]Task, error) {
 	return tasks, nil
 }
 
+func (s *Service) ListTimeoutTasks(limit int) ([]Task, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	var tasks []Task
+	if err := s.db.Select(&tasks, `SELECT * FROM tasks WHERE status = ? AND type = ? AND next_retry_at <= NOW() ORDER BY next_retry_at ASC LIMIT ?`, statusPending, taskTypeTimeout, limit); err != nil {
+		return nil, err
+	}
+	return tasks, nil
+}
+
+func (s *Service) DelayTask(taskID string, retryCount int, nextRetryAt time.Time) error {
+	_, err := s.db.Exec(`UPDATE tasks SET retry_count = ?, next_retry_at = ?, updated_at = NOW() WHERE task_id = ?`, retryCount, nextRetryAt, taskID)
+	return err
+}
+
 func (s *Service) getByOrderAndType(orderID, typ string) (*Task, error) {
 	t := Task{}
 	if err := s.db.Get(&t, `SELECT * FROM tasks WHERE order_id = ? AND type = ?`, orderID, typ); err != nil {
@@ -133,6 +159,29 @@ func (s *Service) getByOrderAndType(orderID, typ string) (*Task, error) {
 		return nil, err
 	}
 	return &t, nil
+}
+
+func (s *Service) createWithNextRetry(req CreateTaskRequest, nextRetry time.Time) (*Task, error) {
+	taskID := uuid.NewString()
+	_, err := s.db.Exec(`INSERT INTO tasks(task_id,biz_no,order_id,type,status,retry_count,next_retry_at,created_at,updated_at) VALUES(?,?,?,?,?,?,?,NOW(),NOW())`,
+		taskID, req.BizNo, req.OrderID, req.Type, statusPending, 0, nextRetry)
+	if err != nil {
+		if isDuplicate(err) {
+			return s.getByOrderAndType(req.OrderID, req.Type)
+		}
+		return nil, err
+	}
+	return &Task{
+		TaskID:      taskID,
+		BizNo:       req.BizNo,
+		OrderID:     req.OrderID,
+		Type:        req.Type,
+		Status:      statusPending,
+		RetryCount:  0,
+		NextRetryAt: nextRetry,
+		CreatedAt:   time.Now(),
+		UpdatedAt:   time.Now(),
+	}, nil
 }
 
 func isDuplicate(err error) bool {

@@ -11,7 +11,9 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "go-micro/docs/swagger"
 	"go-micro/internal/gateway"
+	"go-micro/internal/inventory"
 	"go-micro/internal/order"
+	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
 	"go-micro/pkg/logx"
@@ -54,7 +56,21 @@ func main() {
 	}
 	defer userConn.Close()
 
-	svc := gateway.NewService(orderClient, userClient)
+	invTarget := config.GetEnv("INVENTORY_GRPC_TARGET", "localhost:9082")
+	invClient, invConn, err := inventory.NewGRPCClient(invTarget)
+	if err != nil {
+		logger.Fatal("inventory grpc dial failed", zap.Error(err))
+	}
+	defer invConn.Close()
+
+	taskTarget := config.GetEnv("TASK_GRPC_TARGET", "localhost:9084")
+	taskClient, taskConn, err := task.NewGRPCClient(taskTarget)
+	if err != nil {
+		logger.Fatal("task grpc dial failed", zap.Error(err))
+	}
+	defer taskConn.Close()
+
+	svc := gateway.NewService(orderClient, userClient, invClient, taskClient)
 	h := gateway.NewHandler(svc)
 	h.Register(r)
 

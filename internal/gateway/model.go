@@ -18,3 +18,10 @@ type CreateOrderResponse struct {
 	BizNo   string `json:"biz_no"`
 	Status  string `json:"status"`
 }
+
+type OrderViewResponse struct {
+	OrderNo         string `json:"order_no"`
+	Status          string `json:"status"`
+	InventoryStatus string `json:"inventory_status"`
+	TaskStatus      string `json:"task_status"`
+}

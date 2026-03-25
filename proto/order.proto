@@ -27,6 +27,10 @@ message GetOrderRequest {
   string order_id = 1;
 }
 
+message GetOrderByBizNoRequest {
+  string biz_no = 1;
+}
+
 message Order {
   string order_id = 1;
   string biz_no = 2;
@@ -49,5 +53,6 @@ message SimpleResponse {
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc GetOrderByBizNo(GetOrderByBizNoRequest) returns (Order);
   rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (SimpleResponse);
 }

@@ -178,6 +178,26 @@ func (s *Service) Get(orderID string) (*Order, error) {
 	return &order, nil
 }
 
+func (s *Service) GetByBizNo(bizNo string) (*Order, error) {
+	if bizNo == "" {
+		return nil, ErrNotFound
+	}
+	order := Order{}
+	if err := s.db.Get(&order, `SELECT * FROM orders WHERE biz_no = ?`, bizNo); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	var items []Item
+	if err := s.db.Select(&items, `SELECT sku_id,quantity,price FROM order_items WHERE order_id = ?`, order.OrderID); err != nil {
+		return nil, err
+	}
+	order.Items = items
+	_ = s.cache.setOrder(s.ctx, order.OrderID, CreateOrderResponse{OrderID: order.OrderID, BizNo: order.BizNo, Status: order.Status}, items)
+	return &order, nil
+}
+
 func (s *Service) UpdateStatus(orderID, from, to string) error {
 	if orderID == "" {
 		return ErrNotFound

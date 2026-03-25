@@ -39,6 +39,18 @@ func (s *GRPCServer) GetOrder(ctx context.Context, req *orderpb.GetOrderRequest)
 	return resp, nil
 }
 
+func (s *GRPCServer) GetOrderByBizNo(ctx context.Context, req *orderpb.GetOrderByBizNoRequest) (*orderpb.Order, error) {
+	ord, err := s.svc.GetByBizNo(req.BizNo)
+	if err != nil {
+		return nil, err
+	}
+	resp := &orderpb.Order{OrderId: ord.OrderID, BizNo: ord.BizNo, UserId: ord.UserID, Status: ord.Status, TotalAmount: ord.TotalAmount}
+	for _, it := range ord.Items {
+		resp.Items = append(resp.Items, &orderpb.Item{SkuId: it.SkuID, Quantity: int32(it.Quantity), Price: it.Price})
+	}
+	return resp, nil
+}
+
 func (s *GRPCServer) UpdateOrderStatus(ctx context.Context, req *orderpb.UpdateOrderStatusRequest) (*orderpb.SimpleResponse, error) {
 	err := s.svc.UpdateStatus(req.OrderId, req.FromStatus, req.ToStatus)
 	if err != nil {

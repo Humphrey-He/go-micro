@@ -32,6 +32,10 @@ func (c *GRPCClient) Get(ctx context.Context, orderID string) (*orderpb.Order, e
 	return c.client.GetOrder(ctx, &orderpb.GetOrderRequest{OrderId: orderID})
 }
 
+func (c *GRPCClient) GetByBizNo(ctx context.Context, bizNo string) (*orderpb.Order, error) {
+	return c.client.GetOrderByBizNo(ctx, &orderpb.GetOrderByBizNoRequest{BizNo: bizNo})
+}
+
 func (c *GRPCClient) UpdateStatus(ctx context.Context, orderID, from, to string) error {
 	_, err := c.client.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{OrderId: orderID, FromStatus: from, ToStatus: to})
 	return err

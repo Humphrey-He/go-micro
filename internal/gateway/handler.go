@@ -36,6 +36,7 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.Use(middleware.JWTAuth())
 	api.POST("/orders", h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
+	api.GET("/order-views/:order_no", h.getOrderView)
 	api.GET("/users/me", h.me)
 }
 
@@ -102,6 +103,24 @@ func (h *Handler) getOrder(c *gin.Context) {
 	resp, err := h.svc.GetOrder(id, toString(rid))
 	if err != nil {
 		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary ??????
+// @Tags Order
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param order_no path string true "??"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/order-views/{order_no} [get]
+func (h *Handler) getOrderView(c *gin.Context) {
+	orderNo := c.Param("order_no")
+	resp, err := h.svc.GetOrderView(orderNo)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order view unavailable")
 		c.JSON(code, body)
 		return
 	}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"time"
 
+	"go-micro/internal/inventory"
 	"go-micro/internal/order"
+	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
 	"go-micro/pkg/httpx"
@@ -13,12 +15,14 @@ import (
 )
 
 type Service struct {
-	order *order.GRPCClient
-	user  *user.GRPCClient
+	order     *order.GRPCClient
+	user      *user.GRPCClient
+	inventory *inventory.GRPCClient
+	task      *task.GRPCClient
 }
 
-func NewService(orderClient *order.GRPCClient, userClient *user.GRPCClient) *Service {
-	return &Service{order: orderClient, user: userClient}
+func NewService(orderClient *order.GRPCClient, userClient *user.GRPCClient, invClient *inventory.GRPCClient, taskClient *task.GRPCClient) *Service {
+	return &Service{order: orderClient, user: userClient, inventory: invClient, task: taskClient}
 }
 
 func (s *Service) CreateOrder(req CreateOrderRequest, requestID string) (httpx.Response, error) {
@@ -48,6 +52,37 @@ func (s *Service) GetOrder(orderID, requestID string) (httpx.Response, error) {
 		return httpx.Response{}, err
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) GetOrderView(bizNo string) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	ord, err := s.order.GetByBizNo(ctx, bizNo)
+	if err != nil {
+		return httpx.Response{}, err
+	}
+
+	invStatus := "UNKNOWN"
+	if s.inventory != nil {
+		if resv, err := s.inventory.GetReservation(ctx, ord.OrderId); err == nil {
+			invStatus = resv.Status
+		}
+	}
+
+	taskStatus := "UNKNOWN"
+	if s.task != nil {
+		if t, err := s.task.GetByOrder(ctx, ord.OrderId); err == nil {
+			taskStatus = t.Status
+		}
+	}
+
+	view := OrderViewResponse{
+		OrderNo:         ord.BizNo,
+		Status:          ord.Status,
+		InventoryStatus: invStatus,
+		TaskStatus:      taskStatus,
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: view}, nil
 }
 
 type LoginRequest struct {

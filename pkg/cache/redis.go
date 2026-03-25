@@ -48,3 +48,12 @@ func SetJSON(ctx context.Context, rdb *redis.Client, key string, v interface{}, 
 func SetNil(ctx context.Context, rdb *redis.Client, key string, ttl time.Duration) error {
 	return rdb.Set(ctx, key, NilValue, ttl).Err()
 }
+
+// TryLock acquires a short-lived lock for cache rebuild to avoid thundering herd.
+func TryLock(ctx context.Context, rdb *redis.Client, key string, ttl time.Duration) (bool, error) {
+	return rdb.SetNX(ctx, key, "1", ttl).Result()
+}
+
+func Unlock(ctx context.Context, rdb *redis.Client, key string) error {
+	return rdb.Del(ctx, key).Err()
+}

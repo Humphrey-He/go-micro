@@ -153,6 +153,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 
 	resp := CreateOrderResponse{OrderID: orderID, BizNo: bizNo, Status: statusReserved}
 	_ = s.cache.setOrder(s.ctx, orderID, resp, req.Items)
+	_ = s.cache.setOrderByBizNo(s.ctx, bizNo, &Order{OrderID: orderID, BizNo: bizNo, UserID: req.UserID, Status: statusReserved, TotalAmount: total, Items: req.Items})
 	return resp, nil
 }
 
@@ -162,6 +163,16 @@ func (s *Service) Get(orderID string) (*Order, error) {
 	}
 	if ord, ok := s.cache.getOrder(s.ctx, orderID); ok {
 		return ord, nil
+	}
+
+	// Cache breakdown protection: singleflight via redis lock
+	lockKey := "lock:order:" + orderID
+	locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
+	if locked {
+		defer func() { _ = cache.Unlock(s.ctx, s.cache.rdb, lockKey) }()
+		if ord, ok := s.cache.getOrder(s.ctx, orderID); ok {
+			return ord, nil
+		}
 	}
 
 	order := Order{}
@@ -187,9 +198,22 @@ func (s *Service) GetByBizNo(bizNo string) (*Order, error) {
 	if bizNo == "" {
 		return nil, ErrNotFound
 	}
+	// Try cache by bizNo
+	if ord, ok := s.cache.getOrderByBizNo(s.ctx, bizNo); ok {
+		return ord, nil
+	}
+	lockKey := "lock:orderbiz:" + bizNo
+	locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
+	if locked {
+		defer func() { _ = cache.Unlock(s.ctx, s.cache.rdb, lockKey) }()
+		if ord, ok := s.cache.getOrderByBizNo(s.ctx, bizNo); ok {
+			return ord, nil
+		}
+	}
 	order := Order{}
 	if err := s.db.Get(&order, `SELECT * FROM orders WHERE biz_no = ?`, bizNo); err != nil {
 		if err == sql.ErrNoRows {
+			_ = s.cache.setNilByBizNo(s.ctx, bizNo)
 			return nil, ErrNotFound
 		}
 		return nil, err
@@ -200,6 +224,7 @@ func (s *Service) GetByBizNo(bizNo string) (*Order, error) {
 	}
 	order.Items = items
 	_ = s.cache.setOrder(s.ctx, order.OrderID, CreateOrderResponse{OrderID: order.OrderID, BizNo: order.BizNo, Status: order.Status}, items)
+	_ = s.cache.setOrderByBizNo(s.ctx, bizNo, &order)
 	return &order, nil
 }
 
@@ -221,7 +246,12 @@ func (s *Service) UpdateStatus(orderID, from, to string) error {
 	if status != from {
 		return ErrInvalidState
 	}
-	return s.updateStatusWithVersion(orderID, from, to, "", version)
+	if err := s.updateStatusWithVersion(orderID, from, to, "", version); err != nil {
+		return err
+	}
+	_ = s.cache.delOrder(s.ctx, orderID)
+	_ = s.cache.delOrderBizIndex(s.ctx, orderID)
+	return nil
 }
 
 func (s *Service) Cancel(orderID string) error {
@@ -245,7 +275,12 @@ func (s *Service) Cancel(orderID string) error {
 	if status != statusCreated && status != statusReserved {
 		return ErrNotCancelable
 	}
-	return s.updateStatusWithVersion(orderID, status, statusCanceled, "", version)
+	if err := s.updateStatusWithVersion(orderID, status, statusCanceled, "", version); err != nil {
+		return err
+	}
+	_ = s.cache.delOrder(s.ctx, orderID)
+	_ = s.cache.delOrderBizIndex(s.ctx, orderID)
+	return nil
 }
 
 func (s *Service) getByIdempotentKey(key string) (*Order, error) {
@@ -434,6 +469,46 @@ func (c *cacheClient) setOrder(ctx context.Context, orderID string, resp CreateO
 
 func (c *cacheClient) setNil(ctx context.Context, orderID string) error {
 	key := "order:" + orderID
+	return cache.SetNil(ctx, c.rdb, key, ttlWithJitter(30*time.Second, 10*time.Second))
+}
+
+func (c *cacheClient) delOrder(ctx context.Context, orderID string) error {
+	key := "order:" + orderID
+	_ = c.rdb.Del(ctx, key).Err()
+	return nil
+}
+
+func (c *cacheClient) delOrderBizIndex(ctx context.Context, orderID string) error {
+	key := "order:biz:index:" + orderID
+	bizNo, err := c.rdb.Get(ctx, key).Result()
+	if err == nil && bizNo != "" {
+		_ = c.rdb.Del(ctx, "order:biz:"+bizNo).Err()
+	}
+	_ = c.rdb.Del(ctx, key).Err()
+	return nil
+}
+
+func (c *cacheClient) getOrderByBizNo(ctx context.Context, bizNo string) (*Order, bool) {
+	key := "order:biz:" + bizNo
+	var ord Order
+	hit, isNil, err := cache.GetJSON(ctx, c.rdb, key, &ord)
+	if err != nil || isNil || !hit {
+		return nil, false
+	}
+	if ord.OrderID == "" {
+		return nil, false
+	}
+	return &ord, true
+}
+
+func (c *cacheClient) setOrderByBizNo(ctx context.Context, bizNo string, ord *Order) error {
+	key := "order:biz:" + bizNo
+	_ = c.rdb.Set(ctx, "order:biz:index:"+ord.OrderID, bizNo, ttlWithJitter(5*time.Minute, 30*time.Second)).Err()
+	return cache.SetJSON(ctx, c.rdb, key, ord, ttlWithJitter(3*time.Minute, 30*time.Second))
+}
+
+func (c *cacheClient) setNilByBizNo(ctx context.Context, bizNo string) error {
+	key := "order:biz:" + bizNo
 	return cache.SetNil(ctx, c.rdb, key, ttlWithJitter(30*time.Second, 10*time.Second))
 }
 

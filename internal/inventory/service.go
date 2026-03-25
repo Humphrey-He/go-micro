@@ -159,6 +159,15 @@ func (s *Service) GetInventory(skuID string) (*Inventory, error) {
 		return inv, nil
 	}
 
+	lockKey := "lock:inv:" + skuID
+	locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
+	if locked {
+		defer func() { _ = cache.Unlock(s.ctx, s.cache.rdb, lockKey) }()
+		if inv, ok := s.cache.getInventory(s.ctx, skuID); ok {
+			return inv, nil
+		}
+	}
+
 	inv := Inventory{}
 	if err := s.db.Get(&inv, `SELECT * FROM inventory WHERE sku_id = ?`, skuID); err != nil {
 		if err == sql.ErrNoRows {

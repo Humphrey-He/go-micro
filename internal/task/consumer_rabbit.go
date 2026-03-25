@@ -66,17 +66,10 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			continue
 		}
 
-		// Compensation: release reserved inventory on task creation failure
-		if inv != nil && evt.ReservedID != "" {
-			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-			_ = inv.Release(ctx, evt.ReservedID)
-			cancel()
-			if ord != nil {
-				ctx2, cancel2 := context.WithTimeout(context.Background(), 3*time.Second)
-				_ = ord.UpdateStatus(ctx2, evt.OrderID, orderStatusReserved, orderStatusFailed)
-				cancel2()
-			}
-			_ = svc.MarkSagaCompensated(evt.OrderID, "task_create_failed")
+		// Compensation: enqueue saga steps on task creation failure
+		if evt.ReservedID != "" {
+			payload := `{"order_id":"` + evt.OrderID + `","reserved_id":"` + evt.ReservedID + `","from":"` + orderStatusReserved + `","to":"` + orderStatusFailed + `"}`
+			_ = svc.CreateSagaStep(evt.OrderID, stepOrderFail, stepInvRelease, "task_create_failed", payload)
 			_ = msg.Ack(false)
 			continue
 		}

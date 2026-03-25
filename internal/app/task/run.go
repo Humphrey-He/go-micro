@@ -93,7 +93,21 @@ func Run() error {
 	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb})
 	workerStop := make(chan struct{})
 	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient, cb: cb}, workerStop)
-	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient, cb: cb}, &orderCancelAdapter{c: orderClient, cb: cb}, &inventoryReleaseByOrderAdapter{c: invClient, cb: cb}, svc, workerStop)
+	go task.StartTimeoutWorker(
+		svc,
+		&orderReaderAdapter{c: orderClient, cb: cb},
+		&orderCancelAdapter{c: orderClient, cb: cb},
+		&inventoryReleaseByOrderAdapter{c: invClient, cb: cb},
+		svc,
+		svc,
+		workerStop,
+	)
+	go task.StartCompensationWorker(
+		svc,
+		&orderCompAdapter{c: orderClient, cb: cb},
+		&inventoryCompAdapter{c: invClient, cb: cb},
+		workerStop,
+	)
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -174,6 +188,40 @@ type inventoryReleaseByOrderAdapter struct {
 }
 
 func (a *inventoryReleaseByOrderAdapter) ReleaseByOrder(ctx context.Context, orderID string) error {
+	return a.cb.Execute(func() error {
+		return a.c.ReleaseByOrder(ctx, orderID)
+	})
+}
+
+type orderCompAdapter struct {
+	c  *order.GRPCClient
+	cb *resilience.CircuitBreaker
+}
+
+func (a *orderCompAdapter) UpdateStatus(ctx context.Context, orderID, from, to string) error {
+	return a.cb.Execute(func() error {
+		return a.c.UpdateStatus(ctx, orderID, from, to)
+	})
+}
+
+func (a *orderCompAdapter) Cancel(ctx context.Context, orderID string) error {
+	return a.cb.Execute(func() error {
+		return a.c.Cancel(ctx, orderID)
+	})
+}
+
+type inventoryCompAdapter struct {
+	c  *inventory.GRPCClient
+	cb *resilience.CircuitBreaker
+}
+
+func (a *inventoryCompAdapter) Release(ctx context.Context, reservedID string) error {
+	return a.cb.Execute(func() error {
+		return a.c.Release(ctx, reservedID)
+	})
+}
+
+func (a *inventoryCompAdapter) ReleaseByOrder(ctx context.Context, orderID string) error {
 	return a.cb.Execute(func() error {
 		return a.c.ReleaseByOrder(ctx, orderID)
 	})

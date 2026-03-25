@@ -71,29 +71,47 @@ func (f *fakeInventoryReleaser) ReleaseByOrder(ctx context.Context, orderID stri
 	return nil
 }
 
+type fakeSagaStepWriter struct {
+	calls       int
+	lastSaga    string
+	lastStep    string
+	lastNext    string
+	lastPayload string
+}
+
+func (f *fakeSagaStepWriter) CreateSagaStep(sagaID, step, nextStep, reason, payload string) error {
+	f.calls++
+	f.lastSaga = sagaID
+	f.lastStep = step
+	f.lastNext = nextStep
+	f.lastPayload = payload
+	return nil
+}
+
 func TestTimeoutCancelChain(t *testing.T) {
 	store := newFakeTimeoutStore([]Task{{TaskID: "T-1", OrderID: "O-1", RetryCount: 0, Status: statusPending}})
 	reader := &fakeOrderReader{status: orderStatusReserved}
 	canceler := &fakeOrderCanceler{}
 	releaser := &fakeInventoryReleaser{}
+	stepWriter := &fakeSagaStepWriter{}
 
-	processTimeoutTasks(store, reader, canceler, releaser, nil)
-	if canceler.calls != 1 {
-		t.Fatalf("expected cancel called once, got %d", canceler.calls)
+	processTimeoutTasks(store, reader, canceler, releaser, nil, stepWriter)
+	if stepWriter.calls != 1 {
+		t.Fatalf("expected saga step created once, got %d", stepWriter.calls)
 	}
-	if releaser.calls != 1 {
-		t.Fatalf("expected release called once, got %d", releaser.calls)
+	if stepWriter.lastSaga != "O-1" {
+		t.Fatalf("expected saga id O-1, got %s", stepWriter.lastSaga)
+	}
+	if stepWriter.lastStep != stepOrderCancel || stepWriter.lastNext != stepInvReleaseOrder {
+		t.Fatalf("unexpected step chain: %s -> %s", stepWriter.lastStep, stepWriter.lastNext)
 	}
 	if store.marked["T-1"] != "SUCCESS" {
 		t.Fatalf("expected task marked success, got %s", store.marked["T-1"])
 	}
 
-	// Run again to ensure no duplicate release
-	processTimeoutTasks(store, reader, canceler, releaser, nil)
-	if canceler.calls != 1 {
-		t.Fatalf("expected cancel called once after repeat, got %d", canceler.calls)
-	}
-	if releaser.calls != 1 {
-		t.Fatalf("expected release called once after repeat, got %d", releaser.calls)
+	// Run again to ensure no duplicate step creation
+	processTimeoutTasks(store, reader, canceler, releaser, nil, stepWriter)
+	if stepWriter.calls != 1 {
+		t.Fatalf("expected saga step created once after repeat, got %d", stepWriter.calls)
 	}
 }

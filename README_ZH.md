@@ -93,6 +93,21 @@ go test ./... -v -cover -race
 - 库存幂等释放：覆盖重复释放与异常场景
 - timeout cancel 链路：覆盖完整补偿流程
 
+## 缓存指标与验证
+指标：
+- `cache_hits_total{cache="..."}`  
+- `cache_misses_total{cache="..."}`
+
+PromQL 示例：
+```
+sum(rate(cache_hits_total[5m])) / (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])))
+```
+
+验证方式：
+1. 调用订单/库存/用户查询接口，观察命中率变化  
+2. 停止 Redis 后确认降级为本地缓存，日志有告警  
+3. 访问 `/metrics` 查看命中/未命中计数
+
 ## 可观测性与部署演示
 详见：[docs/可观测性与部署演示.md](./docs/可观测性与部署演示.md)
 

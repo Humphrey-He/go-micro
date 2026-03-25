@@ -93,6 +93,21 @@ Coverage focus:
 - Idempotent release: repeated release and not-found
 - Timeout cancel chain: full compensation flow
 
+## Cache Metrics and Verification
+Metrics:
+- `cache_hits_total{cache="..."}`
+- `cache_misses_total{cache="..."}`
+
+PromQL example:
+```
+sum(rate(cache_hits_total[5m])) / (sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])))
+```
+
+Verification:
+1. Query order/inventory/user endpoints and observe hit rate changes  
+2. Stop Redis to verify local fallback and warning logs  
+3. Check `/metrics` for hit/miss counters
+
 ## Observability and Deployment Demo
 See: [docs/可观测性与部署演示.md](./docs/可观测性与部署演示.md)
 

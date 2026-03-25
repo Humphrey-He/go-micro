@@ -18,6 +18,7 @@ import (
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
 	"go-micro/pkg/mq"
+	"go-micro/pkg/resilience"
 	"go-micro/proto/taskpb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -83,10 +84,11 @@ func main() {
 	}
 	defer orderConn.Close()
 
-	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient}, &orderUpdateAdapter{c: orderClient})
+	cb := newBreakerFromEnv()
+	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb})
 	workerStop := make(chan struct{})
-	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient}, workerStop)
-	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient}, &orderCancelAdapter{c: orderClient}, &inventoryReleaseByOrderAdapter{c: invClient}, workerStop)
+	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient, cb: cb}, workerStop)
+	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient, cb: cb}, &orderCancelAdapter{c: orderClient, cb: cb}, &inventoryReleaseByOrderAdapter{c: invClient, cb: cb}, workerStop)
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -108,45 +110,92 @@ func main() {
 }
 
 type inventoryReleaseAdapter struct {
-	c *inventory.GRPCClient
+	c  *inventory.GRPCClient
+	cb *resilience.CircuitBreaker
 }
 
 func (a *inventoryReleaseAdapter) Release(ctx context.Context, reservedID string) error {
-	return a.c.Release(ctx, reservedID)
+	return a.cb.Execute(func() error {
+		return a.c.Release(ctx, reservedID)
+	})
 }
 
 type orderUpdateAdapter struct {
-	c *order.GRPCClient
+	c  *order.GRPCClient
+	cb *resilience.CircuitBreaker
 }
 
 func (a *orderUpdateAdapter) UpdateStatus(ctx context.Context, orderID, from, to string) error {
-	return a.c.UpdateStatus(ctx, orderID, from, to)
+	return a.cb.Execute(func() error {
+		return a.c.UpdateStatus(ctx, orderID, from, to)
+	})
 }
 
 type orderReaderAdapter struct {
-	c *order.GRPCClient
+	c  *order.GRPCClient
+	cb *resilience.CircuitBreaker
 }
 
 func (a *orderReaderAdapter) GetStatus(ctx context.Context, orderID string) (string, error) {
-	ord, err := a.c.Get(ctx, orderID)
+	var status string
+	err := a.cb.Execute(func() error {
+		ord, callErr := a.c.Get(ctx, orderID)
+		if callErr != nil {
+			return callErr
+		}
+		status = ord.Status
+		return nil
+	})
 	if err != nil {
 		return "", err
 	}
-	return ord.Status, nil
+	return status, nil
 }
 
 type orderCancelAdapter struct {
-	c *order.GRPCClient
+	c  *order.GRPCClient
+	cb *resilience.CircuitBreaker
 }
 
 func (a *orderCancelAdapter) Cancel(ctx context.Context, orderID string) error {
-	return a.c.Cancel(ctx, orderID)
+	return a.cb.Execute(func() error {
+		return a.c.Cancel(ctx, orderID)
+	})
 }
 
 type inventoryReleaseByOrderAdapter struct {
-	c *inventory.GRPCClient
+	c  *inventory.GRPCClient
+	cb *resilience.CircuitBreaker
 }
 
 func (a *inventoryReleaseByOrderAdapter) ReleaseByOrder(ctx context.Context, orderID string) error {
-	return a.c.ReleaseByOrder(ctx, orderID)
+	return a.cb.Execute(func() error {
+		return a.c.ReleaseByOrder(ctx, orderID)
+	})
+}
+
+func newBreakerFromEnv() *resilience.CircuitBreaker {
+	fail := getInt("CB_FAIL_THRESHOLD", 5)
+	reset := getInt("CB_RESET_SECONDS", 10)
+	half := getInt("CB_HALF_OPEN_SUCCESS", 1)
+	return resilience.NewCircuitBreaker(fail, time.Duration(reset)*time.Second, half)
+}
+
+func getInt(key string, def int) int {
+	v := config.GetEnv(key, "")
+	if v == "" {
+		return def
+	}
+	n := 0
+	for i := 0; i < len(v); i++ {
+		ch := v[i]
+		if ch < '0' || ch > '9' {
+			return def
+		}
+		n = n*10 + int(ch-'0')
+	}
+	if n == 0 {
+		return def
+	}
+	return n
 }

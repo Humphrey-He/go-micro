@@ -13,7 +13,9 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
 	"go-micro/pkg/cache"
+	"go-micro/pkg/config"
 	"go-micro/pkg/db"
+	"go-micro/pkg/resilience"
 )
 
 var (
@@ -42,6 +44,7 @@ type Service struct {
 	cache     *cacheClient
 	invClient InventoryClient
 	publisher Publisher
+	cbInv     *resilience.CircuitBreaker
 }
 
 type InventoryClient interface {
@@ -86,6 +89,7 @@ func NewService(dbx *sqlx.DB, rdb *redis.Client, invClient InventoryClient, publ
 		cache:     &cacheClient{rdb: rdb},
 		invClient: invClient,
 		publisher: publisher,
+		cbInv:     newBreakerFromEnv(),
 	}
 }
 
@@ -303,11 +307,42 @@ func (s *Service) reserveInventory(orderID string, items []Item) (string, error)
 	}
 	ctx, cancel := context.WithTimeout(s.ctx, 3*time.Second)
 	defer cancel()
-	reservedID, err := s.invClient.Reserve(ctx, orderID, items)
+	var reservedID string
+	err := s.cbInv.Execute(func() error {
+		var callErr error
+		reservedID, callErr = s.invClient.Reserve(ctx, orderID, items)
+		return callErr
+	})
 	if err != nil {
 		return "", err
 	}
 	return reservedID, nil
+}
+
+func newBreakerFromEnv() *resilience.CircuitBreaker {
+	fail := getInt("CB_FAIL_THRESHOLD", 5)
+	reset := getInt("CB_RESET_SECONDS", 10)
+	half := getInt("CB_HALF_OPEN_SUCCESS", 1)
+	return resilience.NewCircuitBreaker(fail, time.Duration(reset)*time.Second, half)
+}
+
+func getInt(key string, def int) int {
+	v := config.GetEnv(key, "")
+	if v == "" {
+		return def
+	}
+	n := 0
+	for i := 0; i < len(v); i++ {
+		ch := v[i]
+		if ch < '0' || ch > '9' {
+			return def
+		}
+		n = n*10 + int(ch-'0')
+	}
+	if n == 0 {
+		return def
+	}
+	return n
 }
 
 func isDuplicate(err error) bool {

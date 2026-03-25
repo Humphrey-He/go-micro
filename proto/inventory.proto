@@ -22,6 +22,10 @@ message ReleaseRequest {
   string reserved_id = 1;
 }
 
+message ReleaseByOrderRequest {
+  string order_id = 1;
+}
+
 message ConfirmRequest {
   string reserved_id = 1;
 }
@@ -43,6 +47,7 @@ message Reservation {
 service InventoryService {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
   rpc Release(ReleaseRequest) returns (SimpleResponse);
+  rpc ReleaseByOrder(ReleaseByOrderRequest) returns (SimpleResponse);
   rpc Confirm(ConfirmRequest) returns (SimpleResponse);
   rpc GetReservation(GetReservationRequest) returns (Reservation);
 }

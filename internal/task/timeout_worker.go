@@ -5,7 +5,11 @@ import (
 	"time"
 )
 
-func StartTimeoutWorker(svc *Service, ord OrderReader, canceler OrderCanceler, stop <-chan struct{}) {
+type InventoryReleaserByOrder interface {
+	ReleaseByOrder(ctx context.Context, orderID string) error
+}
+
+func StartTimeoutWorker(svc *Service, ord OrderReader, canceler OrderCanceler, inv InventoryReleaserByOrder, stop <-chan struct{}) {
 	if svc == nil {
 		return
 	}
@@ -46,6 +50,9 @@ func StartTimeoutWorker(svc *Service, ord OrderReader, canceler OrderCanceler, s
 				}
 				if canceler != nil {
 					if err := canceler.Cancel(ctx, t.OrderID); err == nil {
+						if inv != nil {
+							_ = inv.ReleaseByOrder(ctx, t.OrderID)
+						}
 						_ = svc.MarkSuccess(t.TaskID)
 						cancel()
 						continue

@@ -100,6 +100,9 @@ func (s *Service) Release(reservedID string) error {
 			}
 			return err
 		}
+		if resv.Status == resvReleased {
+			return nil
+		}
 		if resv.Status != resvReserved {
 			return ErrInvalidState
 		}
@@ -118,6 +121,17 @@ func (s *Service) Release(reservedID string) error {
 		_, err := tx.Exec(`UPDATE inventory_reserved SET status=?, updated_at=NOW() WHERE reserved_id = ?`, resvReleased, reservedID)
 		return err
 	})
+}
+
+func (s *Service) ReleaseByOrder(orderID string) error {
+	if orderID == "" {
+		return ErrNotFound
+	}
+	resv, err := s.GetReservation(orderID)
+	if err != nil {
+		return err
+	}
+	return s.Release(resv.ReservedID)
 }
 
 func (s *Service) Confirm(reservedID string) error {

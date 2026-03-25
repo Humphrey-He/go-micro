@@ -35,6 +35,13 @@ func (s *GRPCServer) Release(ctx context.Context, req *inventorypb.ReleaseReques
 	return &inventorypb.SimpleResponse{Success: true}, nil
 }
 
+func (s *GRPCServer) ReleaseByOrder(ctx context.Context, req *inventorypb.ReleaseByOrderRequest) (*inventorypb.SimpleResponse, error) {
+	if err := s.svc.ReleaseByOrder(req.OrderId); err != nil {
+		return nil, err
+	}
+	return &inventorypb.SimpleResponse{Success: true}, nil
+}
+
 func (s *GRPCServer) Confirm(ctx context.Context, req *inventorypb.ConfirmRequest) (*inventorypb.SimpleResponse, error) {
 	err := s.svc.Confirm(req.ReservedId)
 	if err != nil {

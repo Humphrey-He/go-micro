@@ -37,6 +37,11 @@ func (c *GRPCClient) Release(ctx context.Context, reservedID string) error {
 	return err
 }
 
+func (c *GRPCClient) ReleaseByOrder(ctx context.Context, orderID string) error {
+	_, err := c.client.ReleaseByOrder(ctx, &inventorypb.ReleaseByOrderRequest{OrderId: orderID})
+	return err
+}
+
 func (c *GRPCClient) Confirm(ctx context.Context, reservedID string) error {
 	_, err := c.client.Confirm(ctx, &inventorypb.ConfirmRequest{ReservedId: reservedID})
 	return err

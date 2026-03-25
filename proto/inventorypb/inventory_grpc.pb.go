@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	InventoryService_Reserve_FullMethodName        = "/inventorypb.InventoryService/Reserve"
 	InventoryService_Release_FullMethodName        = "/inventorypb.InventoryService/Release"
+	InventoryService_ReleaseByOrder_FullMethodName = "/inventorypb.InventoryService/ReleaseByOrder"
 	InventoryService_Confirm_FullMethodName        = "/inventorypb.InventoryService/Confirm"
 	InventoryService_GetReservation_FullMethodName = "/inventorypb.InventoryService/GetReservation"
 )
@@ -31,6 +32,7 @@ const (
 type InventoryServiceClient interface {
 	Reserve(ctx context.Context, in *ReserveRequest, opts ...grpc.CallOption) (*ReserveResponse, error)
 	Release(ctx context.Context, in *ReleaseRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
+	ReleaseByOrder(ctx context.Context, in *ReleaseByOrderRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 	Confirm(ctx context.Context, in *ConfirmRequest, opts ...grpc.CallOption) (*SimpleResponse, error)
 	GetReservation(ctx context.Context, in *GetReservationRequest, opts ...grpc.CallOption) (*Reservation, error)
 }
@@ -63,6 +65,16 @@ func (c *inventoryServiceClient) Release(ctx context.Context, in *ReleaseRequest
 	return out, nil
 }
 
+func (c *inventoryServiceClient) ReleaseByOrder(ctx context.Context, in *ReleaseByOrderRequest, opts ...grpc.CallOption) (*SimpleResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SimpleResponse)
+	err := c.cc.Invoke(ctx, InventoryService_ReleaseByOrder_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *inventoryServiceClient) Confirm(ctx context.Context, in *ConfirmRequest, opts ...grpc.CallOption) (*SimpleResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(SimpleResponse)
@@ -89,6 +101,7 @@ func (c *inventoryServiceClient) GetReservation(ctx context.Context, in *GetRese
 type InventoryServiceServer interface {
 	Reserve(context.Context, *ReserveRequest) (*ReserveResponse, error)
 	Release(context.Context, *ReleaseRequest) (*SimpleResponse, error)
+	ReleaseByOrder(context.Context, *ReleaseByOrderRequest) (*SimpleResponse, error)
 	Confirm(context.Context, *ConfirmRequest) (*SimpleResponse, error)
 	GetReservation(context.Context, *GetReservationRequest) (*Reservation, error)
 	mustEmbedUnimplementedInventoryServiceServer()
@@ -106,6 +119,9 @@ func (UnimplementedInventoryServiceServer) Reserve(context.Context, *ReserveRequ
 }
 func (UnimplementedInventoryServiceServer) Release(context.Context, *ReleaseRequest) (*SimpleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Release not implemented")
+}
+func (UnimplementedInventoryServiceServer) ReleaseByOrder(context.Context, *ReleaseByOrderRequest) (*SimpleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReleaseByOrder not implemented")
 }
 func (UnimplementedInventoryServiceServer) Confirm(context.Context, *ConfirmRequest) (*SimpleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Confirm not implemented")
@@ -170,6 +186,24 @@ func _InventoryService_Release_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InventoryService_ReleaseByOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReleaseByOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InventoryServiceServer).ReleaseByOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: InventoryService_ReleaseByOrder_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InventoryServiceServer).ReleaseByOrder(ctx, req.(*ReleaseByOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _InventoryService_Confirm_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ConfirmRequest)
 	if err := dec(in); err != nil {
@@ -220,6 +254,10 @@ var InventoryService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Release",
 			Handler:    _InventoryService_Release_Handler,
+		},
+		{
+			MethodName: "ReleaseByOrder",
+			Handler:    _InventoryService_ReleaseByOrder_Handler,
 		},
 		{
 			MethodName: "Confirm",

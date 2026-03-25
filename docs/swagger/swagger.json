@@ -23,6 +23,13 @@
                 "summary": "Issue coupon",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "issue coupon",
                         "name": "body",
                         "in": "body",
@@ -56,6 +63,13 @@
                 "summary": "Seckill request",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "seckill request",
                         "name": "body",
                         "in": "body",
@@ -85,6 +99,13 @@
                 ],
                 "summary": "Activity status",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "coupon id",

@@ -185,6 +185,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: issue coupon
         in: body
         name: body
@@ -206,6 +211,11 @@ paths:
       consumes:
       - application/json
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: seckill request
         in: body
         name: body
@@ -225,6 +235,11 @@ paths:
   /api/v1/activity/status:
     get:
       parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
       - description: coupon id
         in: query
         name: coupon_id

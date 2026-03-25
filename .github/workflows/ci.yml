@@ -25,5 +25,20 @@ jobs:
       - name: Go test (cover)
         run: go test ./... -v -cover
 
+  race:
+    runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 1
+      GOTOOLCHAIN: auto
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25.x"
+          check-latest: true
+
       - name: Go test (race)
         run: go test ./... -race

@@ -50,10 +50,10 @@ func main() {
 
 	mqURL := config.GetEnv("MQ_URL", "amqp://guest:guest@localhost:5672/")
 	exchange := config.GetEnv("MQ_EXCHANGE", "order.events")
-	queue := config.GetEnv("MQ_QUEUE", "order.created")
-	routeKey := config.GetEnv("MQ_ROUTING_KEY", "order.created")
+	queue := config.GetEnv("MQ_QUEUE", "order_reserved")
+	routeKey := config.GetEnv("MQ_ROUTING_KEY", "order_reserved")
 	dlx := config.GetEnv("MQ_DLX", "order.events.dlx")
-	dlq := config.GetEnv("MQ_DLQ", "order.created.dlq")
+	dlq := config.GetEnv("MQ_DLQ", "order_reserved.dlq")
 	publisher, err := mq.NewRabbit(mqURL, exchange, queue, routeKey, dlx, dlq)
 	if err != nil {
 		logger.Fatal("mq connect failed", zap.Error(err))

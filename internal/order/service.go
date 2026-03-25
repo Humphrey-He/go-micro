@@ -59,6 +59,7 @@ var allowedTransitions = map[string]map[string]bool{
 	statusReserved: {
 		statusProcessing: true,
 		statusFailed:     true,
+		statusCanceled:   true,
 	},
 	statusProcessing: {
 		statusSuccess: true,
@@ -138,7 +139,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 			return err
 		}
 		payload, _ := json.Marshal(event)
-		_, err := tx.Exec(`INSERT INTO order_outbox(event_type,payload,status,retry_count,last_error,created_at) VALUES(?,?,?,?,?,NOW())`, "order.created", payload, outboxPending, 0, "")
+		_, err := tx.Exec(`INSERT INTO order_outbox(event_type,payload,status,retry_count,last_error,created_at) VALUES(?,?,?,?,?,NOW())`, "order_reserved", payload, outboxPending, 0, "")
 		return err
 	})
 	if txErr != nil {
@@ -175,6 +176,24 @@ func (s *Service) Get(orderID string) (*Order, error) {
 	order.Items = items
 	_ = s.cache.setOrder(s.ctx, orderID, CreateOrderResponse{OrderID: order.OrderID, BizNo: order.BizNo, Status: order.Status}, items)
 	return &order, nil
+}
+
+func (s *Service) UpdateStatus(orderID, from, to string) error {
+	if orderID == "" {
+		return ErrNotFound
+	}
+	var status string
+	var version int64
+	if err := s.db.QueryRow(`SELECT status,version FROM orders WHERE order_id = ?`, orderID).Scan(&status, &version); err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNotFound
+		}
+		return err
+	}
+	if status != from {
+		return ErrInvalidState
+	}
+	return s.updateStatusWithVersion(orderID, from, to, "", version)
 }
 
 func (s *Service) getByIdempotentKey(key string) (*Order, error) {

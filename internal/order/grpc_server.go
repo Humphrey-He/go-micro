@@ -38,3 +38,11 @@ func (s *GRPCServer) GetOrder(ctx context.Context, req *orderpb.GetOrderRequest)
 	}
 	return resp, nil
 }
+
+func (s *GRPCServer) UpdateOrderStatus(ctx context.Context, req *orderpb.UpdateOrderStatusRequest) (*orderpb.SimpleResponse, error) {
+	err := s.svc.UpdateStatus(req.OrderId, req.FromStatus, req.ToStatus)
+	if err != nil {
+		return nil, err
+	}
+	return &orderpb.SimpleResponse{Success: true}, nil
+}

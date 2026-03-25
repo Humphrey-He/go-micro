@@ -31,3 +31,8 @@ func (c *GRPCClient) Create(ctx context.Context, req CreateOrderRequest) (*order
 func (c *GRPCClient) Get(ctx context.Context, orderID string) (*orderpb.Order, error) {
 	return c.client.GetOrder(ctx, &orderpb.GetOrderRequest{OrderId: orderID})
 }
+
+func (c *GRPCClient) UpdateStatus(ctx context.Context, orderID, from, to string) error {
+	_, err := c.client.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{OrderId: orderID, FromStatus: from, ToStatus: to})
+	return err
+}

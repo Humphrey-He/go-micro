@@ -36,7 +36,18 @@ message Order {
   repeated Item items = 6;
 }
 
+message UpdateOrderStatusRequest {
+  string order_id = 1;
+  string from_status = 2;
+  string to_status = 3;
+}
+
+message SimpleResponse {
+  bool success = 1;
+}
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (Order);
+  rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (SimpleResponse);
 }

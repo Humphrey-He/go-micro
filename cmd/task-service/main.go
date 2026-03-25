@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go-micro/internal/inventory"
+	"go-micro/internal/order"
 	"go-micro/internal/task"
 	"go-micro/pkg/config"
 	"go-micro/pkg/db"
@@ -42,10 +43,10 @@ func main() {
 
 	mqURL := config.GetEnv("MQ_URL", "amqp://guest:guest@localhost:5672/")
 	exchange := config.GetEnv("MQ_EXCHANGE", "order.events")
-	queue := config.GetEnv("MQ_QUEUE", "order.created")
-	routeKey := config.GetEnv("MQ_ROUTING_KEY", "order.created")
+	queue := config.GetEnv("MQ_QUEUE", "order_reserved")
+	routeKey := config.GetEnv("MQ_ROUTING_KEY", "order_reserved")
 	dlx := config.GetEnv("MQ_DLX", "order.events.dlx")
-	dlq := config.GetEnv("MQ_DLQ", "order.created.dlq")
+	dlq := config.GetEnv("MQ_DLQ", "order_reserved.dlq")
 	consumer, err := mq.NewRabbit(mqURL, exchange, queue, routeKey, dlx, dlq)
 	if err != nil {
 		logger.Fatal("mq connect failed", zap.Error(err))
@@ -59,7 +60,14 @@ func main() {
 	}
 	defer invConn.Close()
 
-	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient})
+	orderTarget := config.GetEnv("ORDER_GRPC_TARGET", "localhost:9081")
+	orderClient, orderConn, err := order.NewGRPCClient(orderTarget)
+	if err != nil {
+		logger.Fatal("order grpc dial failed", zap.Error(err))
+	}
+	defer orderConn.Close()
+
+	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient}, &orderUpdateAdapter{c: orderClient})
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -84,4 +92,12 @@ type inventoryReleaseAdapter struct {
 
 func (a *inventoryReleaseAdapter) Release(ctx context.Context, reservedID string) error {
 	return a.c.Release(ctx, reservedID)
+}
+
+type orderUpdateAdapter struct {
+	c *order.GRPCClient
+}
+
+func (a *orderUpdateAdapter) UpdateStatus(ctx context.Context, orderID, from, to string) error {
+	return a.c.UpdateStatus(ctx, orderID, from, to)
 }

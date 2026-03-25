@@ -12,6 +12,10 @@ type InventoryReleaser interface {
 	Release(ctx context.Context, reservedID string) error
 }
 
+type OrderUpdater interface {
+	UpdateStatus(ctx context.Context, orderID, from, to string) error
+}
+
 type OrderCreatedEvent struct {
 	OrderID    string `json:"order_id"`
 	BizNo      string `json:"biz_no"`
@@ -20,7 +24,7 @@ type OrderCreatedEvent struct {
 	ReservedID string `json:"reserved_id"`
 }
 
-func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser) {
+func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord OrderUpdater) {
 	if r == nil {
 		return
 	}
@@ -41,6 +45,12 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser) {
 
 		_, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: "FULFILL"})
 		if err == nil {
+			if ord != nil {
+				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+				_ = ord.UpdateStatus(ctx, evt.OrderID, "RESERVED", "PROCESSING")
+				_ = ord.UpdateStatus(ctx, evt.OrderID, "PROCESSING", "SUCCESS")
+				cancel()
+			}
 			_ = msg.Ack(false)
 			continue
 		}
@@ -50,6 +60,11 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser) {
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 			_ = inv.Release(ctx, evt.ReservedID)
 			cancel()
+			if ord != nil {
+				ctx2, cancel2 := context.WithTimeout(context.Background(), 3*time.Second)
+				_ = ord.UpdateStatus(ctx2, evt.OrderID, "RESERVED", "FAILED")
+				cancel2()
+			}
 			_ = msg.Ack(false)
 			continue
 		}

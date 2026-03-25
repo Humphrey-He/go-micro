@@ -20,8 +20,10 @@ type CreateOrderResponse struct {
 }
 
 type OrderViewResponse struct {
-	OrderNo         string `json:"order_no"`
-	Status          string `json:"status"`
-	InventoryStatus string `json:"inventory_status"`
-	TaskStatus      string `json:"task_status"`
+	OrderNo           string `json:"order_no"`
+	ViewStatus        string `json:"view_status"`
+	OrderStatus       string `json:"order_status"`
+	TaskStatus        string `json:"task_status"`
+	ReservationStatus string `json:"reservation_status"`
+	CancelReason      string `json:"cancel_reason"`
 }

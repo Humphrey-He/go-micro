@@ -23,6 +23,40 @@
 - **统一错误码**：跨服务一致的错误码与错误语义。
 - **可测试性**：核心逻辑单测覆盖（订单、库存、缓存）。
 
+## 聚合视图状态映射
+聚合接口 `GET /api/v1/order-views/{order_no}` 会返回主状态与明细状态，并按以下规则计算 `view_status`：
+
+优先级规则（从高到低）：
+1. `order_status == CANCELED` 且 `task_type == TIMEOUT_CANCEL` -> `view_status = TIMEOUT`
+2. `order_status == CANCELED` -> `view_status = CANCELED`
+3. `task_status == DEAD` -> `view_status = DEAD`
+4. `task_status == FAILED` -> `view_status = FAILED`
+5. `order_status == SUCCESS` -> `view_status = SUCCESS`
+6. `task_status == RUNNING` -> `view_status = PROCESSING`
+7. `order_status == RESERVED` 且 `task_status in (PENDING, NOT_FOUND)` -> `view_status = PENDING`
+
+返回结构示例：
+```json
+{
+  "order_no": "BIZ-xxxx",
+  "view_status": "CANCELED",
+  "order_status": "CANCELED",
+  "task_status": "DEAD",
+  "reservation_status": "RELEASED",
+  "cancel_reason": "timeout"
+}
+```
+
+示例映射表：
+```
+order_status   task_status   reservation_status   view_status
+RESERVED       PENDING       RESERVED            PENDING
+PROCESSING     RUNNING       RESERVED            PROCESSING
+SUCCESS        SUCCESS       CONFIRMED           SUCCESS
+CANCELED       FAILED        RELEASED            CANCELED
+CANCELED       DEAD          RELEASED            TIMEOUT/DEAD
+```
+
 ## 快速开始
 1. 初始化数据库：执行 `deploy/sql/schema.sql`
 2. 启动依赖：MySQL、Redis、RabbitMQ

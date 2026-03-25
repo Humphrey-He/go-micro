@@ -62,27 +62,60 @@ func (s *Service) GetOrderView(bizNo string) (httpx.Response, error) {
 		return httpx.Response{}, err
 	}
 
-	invStatus := "UNKNOWN"
+	resvStatus := "UNKNOWN"
 	if s.inventory != nil {
 		if resv, err := s.inventory.GetReservation(ctx, ord.OrderId); err == nil {
-			invStatus = resv.Status
+			resvStatus = resv.Status
 		}
 	}
 
-	taskStatus := "UNKNOWN"
+	taskStatus := "NOT_FOUND"
+	taskType := ""
 	if s.task != nil {
 		if t, err := s.task.GetByOrder(ctx, ord.OrderId); err == nil {
 			taskStatus = t.Status
+			taskType = t.Type
 		}
 	}
 
+	viewStatus, cancelReason := computeViewStatus(ord.Status, taskStatus, taskType, resvStatus)
 	view := OrderViewResponse{
-		OrderNo:         ord.BizNo,
-		Status:          ord.Status,
-		InventoryStatus: invStatus,
-		TaskStatus:      taskStatus,
+		OrderNo:           ord.BizNo,
+		ViewStatus:        viewStatus,
+		OrderStatus:       ord.Status,
+		TaskStatus:        taskStatus,
+		ReservationStatus: resvStatus,
+		CancelReason:      cancelReason,
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: view}, nil
+}
+
+func computeViewStatus(orderStatus, taskStatus, taskType, resvStatus string) (string, string) {
+	if orderStatus == "CANCELED" {
+		if taskType == "TIMEOUT_CANCEL" {
+			return "TIMEOUT", "timeout"
+		}
+		return "CANCELED", ""
+	}
+	if taskStatus == "DEAD" {
+		return "DEAD", ""
+	}
+	if taskStatus == "FAILED" {
+		return "FAILED", ""
+	}
+	if orderStatus == "SUCCESS" {
+		return "SUCCESS", ""
+	}
+	if taskStatus == "RUNNING" {
+		return "PROCESSING", ""
+	}
+	if orderStatus == "RESERVED" && (taskStatus == "PENDING" || taskStatus == "NOT_FOUND") {
+		return "PENDING", ""
+	}
+	if orderStatus != "" {
+		return orderStatus, ""
+	}
+	return "UNKNOWN", ""
 }
 
 type LoginRequest struct {

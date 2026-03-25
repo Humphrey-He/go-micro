@@ -23,6 +23,40 @@ This project simulates a real-world e-commerce order fulfillment flow with a Go 
 - **Unified error codes** across services.
 - **Testability**: unit tests for order, inventory, and cache.
 
+## Aggregated View Status Mapping
+The aggregated endpoint `GET /api/v1/order-views/{order_no}` returns a primary `view_status` and detailed states. The `view_status` is computed by the following priority rules:
+
+Priority rules (high to low):
+1. `order_status == CANCELED` and `task_type == TIMEOUT_CANCEL` -> `view_status = TIMEOUT`
+2. `order_status == CANCELED` -> `view_status = CANCELED`
+3. `task_status == DEAD` -> `view_status = DEAD`
+4. `task_status == FAILED` -> `view_status = FAILED`
+5. `order_status == SUCCESS` -> `view_status = SUCCESS`
+6. `task_status == RUNNING` -> `view_status = PROCESSING`
+7. `order_status == RESERVED` and `task_status in (PENDING, NOT_FOUND)` -> `view_status = PENDING`
+
+Response example:
+```json
+{
+  "order_no": "BIZ-xxxx",
+  "view_status": "CANCELED",
+  "order_status": "CANCELED",
+  "task_status": "DEAD",
+  "reservation_status": "RELEASED",
+  "cancel_reason": "timeout"
+}
+```
+
+Example mapping table:
+```
+order_status   task_status   reservation_status   view_status
+RESERVED       PENDING       RESERVED            PENDING
+PROCESSING     RUNNING       RESERVED            PROCESSING
+SUCCESS        SUCCESS       CONFIRMED           SUCCESS
+CANCELED       FAILED        RELEASED            CANCELED
+CANCELED       DEAD          RELEASED            TIMEOUT/DEAD
+```
+
 ## Quick Start
 1. Initialize DB: run `deploy/sql/schema.sql`
 2. Start dependencies: MySQL, Redis, RabbitMQ

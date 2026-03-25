@@ -74,7 +74,7 @@ func TestCreateOrder_Success(t *testing.T) {
 		WithArgs(statusReserved, "RESV-1", sqlmock.AnyArg(), statusCreated, int64(0)).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("INSERT INTO order_outbox").
-		WithArgs("order.created", sqlmock.AnyArg(), outboxPending).
+		WithArgs("order_reserved", sqlmock.AnyArg(), outboxPending, 0, "").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 

@@ -22,6 +22,7 @@ This project simulates a real-world e-commerce order fulfillment flow with a Go 
 - **Cache resilience**: null-cache for penetration, TTL jitter to mitigate avalanche.
 - **Unified error codes** across services.
 - **Testability**: unit tests for order, inventory, and cache.
+ - **Timeout compensation**: timeout cancel task releases inventory with idempotency.
 
 ## Aggregated View Status Mapping
 The aggregated endpoint `GET /api/v1/order-views/{order_no}` returns a primary `view_status` and detailed states. `view_status` is the unified status for callers, and conflicts are resolved by priority rules below:
@@ -73,6 +74,19 @@ Generate manually:
 swag init -g cmd/gateway-api/main.go -o ./docs/swagger
 ```
 Open: `http://localhost:8080/swagger/index.html`
+
+## Testing
+Recommended:
+```bash
+go test ./... -v -cover -race
+```
+Notes:
+- `-race` requires CGO and a C compiler (gcc on Windows).
+- If Go toolchain download is enabled, ensure network access or set `GOTOOLCHAIN=local`.
+Coverage focus:
+- View status mapping: all status branches
+- Idempotent release: repeated release and not-found
+- Timeout cancel chain: full compensation flow
 
 ## Repository Structure
 ```

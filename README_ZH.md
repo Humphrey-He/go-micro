@@ -22,6 +22,7 @@
 - **缓存稳定性设计**：空值缓存防穿透、TTL 抖动防雪崩。
 - **统一错误码**：跨服务一致的错误码与错误语义。
 - **可测试性**：核心逻辑单测覆盖（订单、库存、缓存）。
+ - **超时取消补偿**：订单超时触发取消任务，释放库存并保持幂等。
 
 ## 聚合视图状态映射
 聚合接口 `GET /api/v1/order-views/{order_no}` 会返回主状态与明细状态。`view_status` 是面向调用方的统一状态，当底层状态冲突时按优先级规则映射：
@@ -73,6 +74,19 @@ CANCELED       DEAD          RELEASED            TIMEOUT/DEAD
 swag init -g cmd/gateway-api/main.go -o ./docs/swagger
 ```
 访问：`http://localhost:8080/swagger/index.html`
+
+## 测试说明
+建议执行：
+```bash
+go test ./... -v -cover -race
+```
+说明：
+- `-race` 需要启用 CGO 且系统具备 C 编译器（Windows 需安装 gcc）
+- 如果启用 Go Toolchain 下载，请确保网络可达或设置 `GOTOOLCHAIN=local`
+覆盖重点：
+- 状态映射逻辑：覆盖所有状态分支
+- 库存幂等释放：覆盖重复释放与异常场景
+- timeout cancel 链路：覆盖完整补偿流程
 
 ## 目录结构
 ```

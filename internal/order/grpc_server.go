@@ -58,3 +58,10 @@ func (s *GRPCServer) UpdateOrderStatus(ctx context.Context, req *orderpb.UpdateO
 	}
 	return &orderpb.SimpleResponse{Success: true}, nil
 }
+
+func (s *GRPCServer) CancelOrder(ctx context.Context, req *orderpb.CancelOrderRequest) (*orderpb.SimpleResponse, error) {
+	if err := s.svc.Cancel(req.OrderId); err != nil {
+		return nil, err
+	}
+	return &orderpb.SimpleResponse{Success: true}, nil
+}

@@ -21,6 +21,7 @@ var (
 	ErrInventoryFail = errors.New("inventory reserve failed")
 	ErrNotFound      = errors.New("order not found")
 	ErrInvalidState  = errors.New("invalid order state")
+	ErrNotCancelable = errors.New("order not cancelable")
 )
 
 const (
@@ -217,6 +218,30 @@ func (s *Service) UpdateStatus(orderID, from, to string) error {
 		return ErrInvalidState
 	}
 	return s.updateStatusWithVersion(orderID, from, to, "", version)
+}
+
+func (s *Service) Cancel(orderID string) error {
+	if orderID == "" {
+		return ErrNotFound
+	}
+	var status string
+	var version int64
+	if err := s.db.QueryRow(`SELECT status,version FROM orders WHERE order_id = ?`, orderID).Scan(&status, &version); err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNotFound
+		}
+		return err
+	}
+	if status == statusCanceled {
+		return nil
+	}
+	if status == statusSuccess {
+		return ErrNotCancelable
+	}
+	if status != statusCreated && status != statusReserved {
+		return ErrNotCancelable
+	}
+	return s.updateStatusWithVersion(orderID, status, statusCanceled, "", version)
 }
 
 func (s *Service) getByIdempotentKey(key string) (*Order, error) {

@@ -50,9 +50,14 @@ message SimpleResponse {
   bool success = 1;
 }
 
+message CancelOrderRequest {
+  string order_id = 1;
+}
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (Order);
   rpc GetOrderByBizNo(GetOrderByBizNoRequest) returns (Order);
   rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (SimpleResponse);
+  rpc CancelOrder(CancelOrderRequest) returns (SimpleResponse);
 }

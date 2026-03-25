@@ -86,7 +86,7 @@ func main() {
 	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient}, &orderUpdateAdapter{c: orderClient})
 	workerStop := make(chan struct{})
 	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient}, workerStop)
-	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient}, nil, workerStop)
+	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient}, &orderCancelAdapter{c: orderClient}, workerStop)
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -133,4 +133,12 @@ func (a *orderReaderAdapter) GetStatus(ctx context.Context, orderID string) (str
 		return "", err
 	}
 	return ord.Status, nil
+}
+
+type orderCancelAdapter struct {
+	c *order.GRPCClient
+}
+
+func (a *orderCancelAdapter) Cancel(ctx context.Context, orderID string) error {
+	return a.c.Cancel(ctx, orderID)
 }

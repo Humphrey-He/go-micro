@@ -40,3 +40,8 @@ func (c *GRPCClient) UpdateStatus(ctx context.Context, orderID, from, to string)
 	_, err := c.client.UpdateOrderStatus(ctx, &orderpb.UpdateOrderStatusRequest{OrderId: orderID, FromStatus: from, ToStatus: to})
 	return err
 }
+
+func (c *GRPCClient) Cancel(ctx context.Context, orderID string) error {
+	_, err := c.client.CancelOrder(ctx, &orderpb.CancelOrderRequest{OrderId: orderID})
+	return err
+}

@@ -22,7 +22,8 @@ This project simulates a real-world e-commerce order fulfillment flow with a Go 
 - **Cache resilience**: null-cache for penetration, TTL jitter to mitigate avalanche.
 - **Unified error codes** across services.
 - **Testability**: unit tests for order, inventory, and cache.
- - **Timeout compensation**: timeout cancel task releases inventory with idempotency.
+- **Timeout compensation**: timeout cancel task releases inventory with idempotency.
+ - **Payment state machine**: success/failed/timeout/refund with compensation.
 
 ## Aggregated View Status Mapping
 The aggregated endpoint `GET /api/v1/order-views/{order_no}` returns a primary `view_status` and detailed states. `view_status` is the unified status for callers, and conflicts are resolved by priority rules below:
@@ -67,6 +68,7 @@ CANCELED       DEAD          RELEASED            TIMEOUT/DEAD
    - inventory-service
    - user-service
    - task-service
+   - payment-service
 
 ## Swagger Docs
 Generate manually:
@@ -125,6 +127,7 @@ docs/           documentation
 - MySQL 8
 - Redis
 - RabbitMQ
+ - Elasticsearch/Fluentd (optional, for logging)
 
 ## Key Configs
 - `MYSQL_DSN`

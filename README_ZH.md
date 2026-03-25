@@ -22,7 +22,8 @@
 - **缓存稳定性设计**：空值缓存防穿透、TTL 抖动防雪崩。
 - **统一错误码**：跨服务一致的错误码与错误语义。
 - **可测试性**：核心逻辑单测覆盖（订单、库存、缓存）。
- - **超时取消补偿**：订单超时触发取消任务，释放库存并保持幂等。
+- **超时取消补偿**：订单超时触发取消任务，释放库存并保持幂等。
+ - **支付状态机**：支付成功/失败/超时/退款全流程，失败触发补偿。
 
 ## 聚合视图状态映射
 聚合接口 `GET /api/v1/order-views/{order_no}` 会返回主状态与明细状态。`view_status` 是面向调用方的统一状态，当底层状态冲突时按优先级规则映射：
@@ -67,6 +68,7 @@ CANCELED       DEAD          RELEASED            TIMEOUT/DEAD
    - inventory-service
    - user-service
    - task-service
+   - payment-service
 
 ## Swagger 文档
 手动生成：
@@ -125,6 +127,7 @@ docs/           文档与说明
 - MySQL 8
 - Redis
 - RabbitMQ
+ - Elasticsearch/Fluentd（可选，用于日志系统）
 
 ## 配置项（核心）
 - `MYSQL_DSN`

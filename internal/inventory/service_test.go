@@ -75,3 +75,73 @@ func TestGetInventory_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestReleaseByOrder_Idempotent(t *testing.T) {
+	svc, mock, mr := newInventoryService(t)
+	defer mr.Close()
+
+	// First release: RESERVED -> RELEASED
+	mock.ExpectQuery(`SELECT \* FROM inventory_reserved WHERE order_id = \? ORDER BY created_at DESC LIMIT 1`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "reserved_id", "order_id", "status", "created_at", "updated_at"}).
+			AddRow(1, "R-1", "O-1", resvReserved, time.Now(), time.Now()))
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(`SELECT \* FROM inventory_reserved WHERE reserved_id = \? FOR UPDATE`).
+		WithArgs("R-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "reserved_id", "order_id", "status", "created_at", "updated_at"}).
+			AddRow(1, "R-1", "O-1", resvReserved, time.Now(), time.Now()))
+	mock.ExpectQuery(`SELECT sku_id,quantity FROM inventory_reserved_item WHERE reserved_id = \?`).
+		WithArgs("R-1").
+		WillReturnRows(sqlmock.NewRows([]string{"sku_id", "quantity"}).
+			AddRow("SKU-1", 2))
+	mock.ExpectExec(`UPDATE inventory SET available = available \+ \?, reserved = reserved - \?, updated_at = NOW\(\) WHERE sku_id = \?`).
+		WithArgs(2, 2, "SKU-1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`UPDATE inventory_reserved SET status=\?, updated_at=NOW\(\) WHERE reserved_id = \?`).
+		WithArgs(resvReleased, "R-1").
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+
+	if err := svc.ReleaseByOrder("O-1"); err != nil {
+		t.Fatalf("first release error: %v", err)
+	}
+
+	// Second release: already RELEASED -> idempotent success
+	mock.ExpectQuery(`SELECT \* FROM inventory_reserved WHERE order_id = \? ORDER BY created_at DESC LIMIT 1`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "reserved_id", "order_id", "status", "created_at", "updated_at"}).
+			AddRow(1, "R-1", "O-1", resvReleased, time.Now(), time.Now()))
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(`SELECT \* FROM inventory_reserved WHERE reserved_id = \? FOR UPDATE`).
+		WithArgs("R-1").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "reserved_id", "order_id", "status", "created_at", "updated_at"}).
+			AddRow(1, "R-1", "O-1", resvReleased, time.Now(), time.Now()))
+	mock.ExpectCommit()
+
+	if err := svc.ReleaseByOrder("O-1"); err != nil {
+		t.Fatalf("second release error: %v", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestReleaseByOrder_NotFound(t *testing.T) {
+	svc, mock, mr := newInventoryService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT \* FROM inventory_reserved WHERE order_id = \? ORDER BY created_at DESC LIMIT 1`).
+		WithArgs("O-404").
+		WillReturnError(sql.ErrNoRows)
+
+	err := svc.ReleaseByOrder("O-404")
+	if err != ErrResvNotFound {
+		t.Fatalf("expected %v, got %v", ErrResvNotFound, err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}

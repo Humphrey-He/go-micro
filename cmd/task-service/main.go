@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
+
 	"github.com/gin-gonic/gin"
+	"go-micro/internal/inventory"
 	"go-micro/internal/task"
 	"go-micro/pkg/config"
 	"go-micro/pkg/db"
@@ -41,10 +44,25 @@ func main() {
 	}
 	defer consumer.Close()
 
-	go task.StartRabbitConsumer(consumer, svc)
+	invTarget := config.GetEnv("INVENTORY_GRPC_TARGET", "localhost:9082")
+	invClient, invConn, err := inventory.NewGRPCClient(invTarget)
+	if err != nil {
+		logger.Fatal("inventory grpc dial failed", zap.Error(err))
+	}
+	defer invConn.Close()
+
+	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient})
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	if err := r.Run(addr); err != nil {
 		logger.Fatal("task-service start failed", zap.Error(err))
 	}
+}
+
+type inventoryReleaseAdapter struct {
+	c *inventory.GRPCClient
+}
+
+func (a *inventoryReleaseAdapter) Release(ctx context.Context, reservedID string) error {
+	return a.c.Release(ctx, reservedID)
 }

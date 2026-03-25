@@ -31,3 +31,13 @@ func (c *GRPCClient) Reserve(ctx context.Context, orderID string, items []Item) 
 	}
 	return resp.ReservedId, nil
 }
+
+func (c *GRPCClient) Release(ctx context.Context, reservedID string) error {
+	_, err := c.client.Release(ctx, &inventorypb.ReleaseRequest{ReservedId: reservedID})
+	return err
+}
+
+func (c *GRPCClient) Confirm(ctx context.Context, reservedID string) error {
+	_, err := c.client.Confirm(ctx, &inventorypb.ConfirmRequest{ReservedId: reservedID})
+	return err
+}

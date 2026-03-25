@@ -75,8 +75,13 @@ swag init -g cmd/gateway-api/main.go -o ./docs/swagger
 ```
 Open: `http://localhost:8080/swagger/index.html`
 
-## Testing
-Recommended:
+## Testing and Evidence
+CI configured: `.github/workflows/ci.yml`  
+Jobs:
+- `go test ./... -v -cover`
+- `go test ./... -race`
+
+Recommended locally:
 ```bash
 go test ./... -v -cover -race
 ```
@@ -87,6 +92,9 @@ Coverage focus:
 - View status mapping: all status branches
 - Idempotent release: repeated release and not-found
 - Timeout cancel chain: full compensation flow
+
+## Observability and Deployment Demo
+See: [docs/可观测性与部署演示.md](./docs/可观测性与部署演示.md)
 
 ## Repository Structure
 ```

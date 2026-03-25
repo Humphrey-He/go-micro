@@ -75,8 +75,13 @@ swag init -g cmd/gateway-api/main.go -o ./docs/swagger
 ```
 访问：`http://localhost:8080/swagger/index.html`
 
-## 测试说明
-建议执行：
+## 测试与证据
+CI 已配置：`.github/workflows/ci.yml`  
+执行项：
+- `go test ./... -v -cover`
+- `go test ./... -race`
+
+建议本地执行：
 ```bash
 go test ./... -v -cover -race
 ```
@@ -87,6 +92,9 @@ go test ./... -v -cover -race
 - 状态映射逻辑：覆盖所有状态分支
 - 库存幂等释放：覆盖重复释放与异常场景
 - timeout cancel 链路：覆盖完整补偿流程
+
+## 可观测性与部署演示
+详见：[docs/可观测性与部署演示.md](./docs/可观测性与部署演示.md)
 
 ## 目录结构
 ```

@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package refund;
+
+option go_package = "go-micro/proto/refundpb";
+
+service RefundService {
+  rpc Initiate (InitiateRequest) returns (Refund);
+  rpc Status (StatusRequest) returns (Refund);
+  rpc Rollback (RollbackRequest) returns (Refund);
+}
+
+message InitiateRequest {
+  string refund_id = 1;
+  string order_id = 2;
+  string refund_type = 3;
+  string reason = 4;
+}
+
+message StatusRequest {
+  string refund_id = 1;
+}
+
+message RollbackRequest {
+  string refund_id = 1;
+  string order_id = 2;
+  string reason = 3;
+}
+
+message Refund {
+  string refund_id = 1;
+  string order_id = 2;
+  string refund_type = 3;
+  string status = 4;
+  int32 retry_count = 5;
+  string last_error = 6;
+  string reason = 7;
+}

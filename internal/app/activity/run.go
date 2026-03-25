@@ -2,6 +2,7 @@ package activityapp
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,11 +14,13 @@ import (
 	"go-micro/pkg/cache"
 	"go-micro/pkg/config"
 	"go-micro/pkg/db"
+	"go-micro/pkg/grpcx"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"google.golang.org/grpc"
 )
 
 func Run() error {
@@ -50,9 +53,23 @@ func Run() error {
 	h := activity.NewHandler(svc)
 	h.Register(r)
 
+	grpcAddr := config.GetEnv("ACTIVITY_GRPC_ADDR", ":9087")
+	grpcLis, err := net.Listen("tcp", grpcAddr)
+	if err != nil {
+		logger.Error("activity-grpc listen failed", zap.Error(err))
+		return err
+	}
+	grpcServer := grpc.NewServer(grpc.ForceServerCodec(grpcx.JSONCodec{}))
+	activity.RegisterActivityServiceServer(grpcServer, activity.NewGRPCServer(svc))
+	go func() {
+		if err := grpcServer.Serve(grpcLis); err != nil {
+			logger.Error("activity-grpc serve failed", zap.Error(err))
+		}
+	}()
+
 	addr := config.GetEnv("ACTIVITY_ADDR", ":8087")
 	srv := &http.Server{Addr: addr, Handler: r}
-	logger.Info("activity-service starting", zap.String("http_addr", addr))
+	logger.Info("activity-service starting", zap.String("http_addr", addr), zap.String("grpc_addr", grpcAddr))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("activity-service start failed", zap.Error(err))
@@ -60,6 +77,7 @@ func Run() error {
 	}()
 
 	<-ctx.Done()
+	grpcServer.GracefulStop()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	logger.Info("activity-service shutting down")

@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package activity;
+
+option go_package = "go-micro/proto/activitypb";
+
+service ActivityService {
+  rpc IssueCoupon (CouponRequest) returns (Coupon);
+  rpc Seckill (SeckillRequest) returns (SeckillOrder);
+  rpc GetCoupon (StatusQuery) returns (Coupon);
+  rpc GetSeckill (StatusQuery) returns (Seckill);
+}
+
+message CouponRequest {
+  string coupon_id = 1;
+  string user_id = 2;
+  double amount = 3;
+}
+
+message SeckillRequest {
+  string sku_id = 1;
+  string user_id = 2;
+  int32 quantity = 3;
+}
+
+message StatusQuery {
+  string coupon_id = 1;
+  string sku_id = 2;
+}
+
+message Coupon {
+  string coupon_id = 1;
+  string user_id = 2;
+  double amount = 3;
+  string status = 4;
+}
+
+message Seckill {
+  string sku_id = 1;
+  int32 stock = 2;
+  int32 reserved = 3;
+  string status = 4;
+}
+
+message SeckillOrder {
+  string sku_id = 1;
+  string user_id = 2;
+  int32 quantity = 3;
+  string status = 4;
+}

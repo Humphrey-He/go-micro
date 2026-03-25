@@ -38,6 +38,7 @@ func main() {
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger(logger))
+	r.Use(middleware.RateLimit())
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))

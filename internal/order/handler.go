@@ -45,6 +45,11 @@ func (h *Handler) create(c *gin.Context) {
 			c.JSON(code, body)
 			return
 		}
+		if err == ErrInvalidState {
+			code, body := httpx.Fail(errx.CodeInvalidState, "invalid order state")
+			c.JSON(code, body)
+			return
+		}
 		code, body := httpx.Fail(errx.CodeInternalError, "create order failed")
 		c.JSON(code, body)
 		return

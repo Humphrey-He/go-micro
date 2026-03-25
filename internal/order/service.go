@@ -19,12 +19,16 @@ var (
 	ErrIdempotentHit = errors.New("idempotent hit")
 	ErrInventoryFail = errors.New("inventory reserve failed")
 	ErrNotFound      = errors.New("order not found")
+	ErrInvalidState  = errors.New("invalid order state")
 )
 
 const (
-	statusPending = "PENDING"
-	statusCreated = "CREATED"
-	statusFailed  = "FAILED"
+	statusCreated    = "CREATED"
+	statusReserved   = "RESERVED"
+	statusProcessing = "PROCESSING"
+	statusSuccess    = "SUCCESS"
+	statusFailed     = "FAILED"
+	statusCanceled   = "CANCELED"
 
 	outboxPending = "PENDING"
 	outboxSent    = "SENT"
@@ -44,6 +48,21 @@ type InventoryClient interface {
 
 type Publisher interface {
 	Publish(ctx context.Context, body []byte) error
+}
+
+var allowedTransitions = map[string]map[string]bool{
+	statusCreated: {
+		statusReserved: true,
+		statusCanceled: true,
+	},
+	statusReserved: {
+		statusProcessing: true,
+		statusFailed:     true,
+	},
+	statusProcessing: {
+		statusSuccess: true,
+		statusFailed:  true,
+	},
 }
 
 func NewService(dbx *sqlx.DB, rdb *redis.Client, invClient InventoryClient, publisher Publisher) *Service {
@@ -70,9 +89,9 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 
 	insertErr := db.Tx(s.db, func(tx *sqlx.Tx) error {
 		_, err := tx.Exec(
-			`INSERT INTO orders(order_id,biz_no,user_id,status,total_amount,idempotent_key,reserved_id,created_at,updated_at)
-			VALUES(?,?,?,?,?,?,?,NOW(),NOW())`,
-			orderID, bizNo, req.UserID, statusPending, total, req.RequestID, "",
+			`INSERT INTO orders(order_id,biz_no,user_id,status,total_amount,idempotent_key,reserved_id,version,created_at,updated_at)
+			VALUES(?,?,?,?,?,?,?,?,NOW(),NOW())`,
+			orderID, bizNo, req.UserID, statusCreated, total, req.RequestID, "", 0,
 		)
 		if err != nil {
 			return err
@@ -97,13 +116,13 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 
 	reservedID, err := s.reserveInventory(orderID, req.Items)
 	if err != nil {
-		_ = s.updateStatus(orderID, statusFailed, "")
+		_ = s.updateStatusWithVersion(orderID, statusCreated, statusFailed, "", 0)
 		return CreateOrderResponse{}, ErrInventoryFail
 	}
 
-	event := OrderCreatedEvent{OrderID: orderID, BizNo: bizNo, Status: statusCreated, UserID: req.UserID, ReservedID: reservedID}
+	event := OrderCreatedEvent{OrderID: orderID, BizNo: bizNo, Status: statusReserved, UserID: req.UserID, ReservedID: reservedID}
 	txErr := db.Tx(s.db, func(tx *sqlx.Tx) error {
-		if _, err := tx.Exec(`UPDATE orders SET status=?, reserved_id=?, updated_at=NOW() WHERE order_id=?`, statusCreated, reservedID, orderID); err != nil {
+		if err := updateStatusTx(tx, orderID, statusCreated, statusReserved, reservedID, 0); err != nil {
 			return err
 		}
 		payload, _ := json.Marshal(event)
@@ -114,7 +133,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 		return CreateOrderResponse{}, txErr
 	}
 
-	resp := CreateOrderResponse{OrderID: orderID, BizNo: bizNo, Status: statusCreated}
+	resp := CreateOrderResponse{OrderID: orderID, BizNo: bizNo, Status: statusReserved}
 	_ = s.cache.setOrder(s.ctx, orderID, resp, req.Items)
 	return resp, nil
 }
@@ -158,9 +177,45 @@ func (s *Service) getByIdempotentKey(key string) (*Order, error) {
 	return &order, nil
 }
 
-func (s *Service) updateStatus(orderID, status, reservedID string) error {
-	_, err := s.db.Exec(`UPDATE orders SET status=?, reserved_id=?, updated_at=NOW() WHERE order_id=?`, status, reservedID, orderID)
-	return err
+func (s *Service) updateStatusWithVersion(orderID, from, to, reservedID string, version int64) error {
+	if !canTransition(from, to) {
+		return ErrInvalidState
+	}
+	res, err := s.db.Exec(`UPDATE orders SET status=?, reserved_id=?, version=version+1, updated_at=NOW() WHERE order_id=? AND status=? AND version=?`, to, reservedID, orderID, from, version)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return ErrInvalidState
+	}
+	return nil
+}
+
+func updateStatusTx(tx *sqlx.Tx, orderID, from, to, reservedID string, version int64) error {
+	if !canTransition(from, to) {
+		return ErrInvalidState
+	}
+	res, err := tx.Exec(`UPDATE orders SET status=?, reserved_id=?, version=version+1, updated_at=NOW() WHERE order_id=? AND status=? AND version=?`, to, reservedID, orderID, from, version)
+	if err != nil {
+		return err
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		return ErrInvalidState
+	}
+	return nil
+}
+
+func canTransition(from, to string) bool {
+	if from == to {
+		return true
+	}
+	nexts, ok := allowedTransitions[from]
+	if !ok {
+		return false
+	}
+	return nexts[to]
 }
 
 func (s *Service) reserveInventory(orderID string, items []Item) (string, error) {

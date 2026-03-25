@@ -62,7 +62,7 @@ func TestCreateOrder_Success(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO orders").
-		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), req.UserID, statusPending, int64(200), req.RequestID, "").
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), req.UserID, statusCreated, int64(200), req.RequestID, "", int64(0)).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("INSERT INTO order_items").
 		WithArgs(sqlmock.AnyArg(), "SKU-1001", 2, int64(100)).
@@ -71,7 +71,7 @@ func TestCreateOrder_Success(t *testing.T) {
 
 	mock.ExpectBegin()
 	mock.ExpectExec("UPDATE orders SET status=").
-		WithArgs(statusCreated, "RESV-1", sqlmock.AnyArg()).
+		WithArgs(statusReserved, "RESV-1", sqlmock.AnyArg(), statusCreated, int64(0)).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("INSERT INTO order_outbox").
 		WithArgs("order.created", sqlmock.AnyArg(), outboxPending).
@@ -82,7 +82,7 @@ func TestCreateOrder_Success(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.Status != statusCreated {
+	if resp.Status != statusReserved {
 		t.Fatalf("status mismatch: %s", resp.Status)
 	}
 
@@ -104,13 +104,13 @@ func TestCreateOrder_IdempotentHit(t *testing.T) {
 	dupErr := &mysql.MySQLError{Number: 1062}
 	mock.ExpectBegin()
 	mock.ExpectExec("INSERT INTO orders").
-		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), req.UserID, statusPending, int64(50), req.RequestID, "").
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), req.UserID, statusCreated, int64(50), req.RequestID, "", int64(0)).
 		WillReturnError(dupErr)
 	mock.ExpectRollback()
 
 	now := time.Now()
-	rows := sqlmock.NewRows([]string{"id", "order_id", "biz_no", "user_id", "status", "total_amount", "idempotent_key", "reserved_id", "created_at", "updated_at"}).
-		AddRow(1, "O-1", "B-1", req.UserID, statusCreated, int64(50), req.RequestID, "", now, now)
+	rows := sqlmock.NewRows([]string{"id", "order_id", "biz_no", "user_id", "status", "total_amount", "idempotent_key", "reserved_id", "version", "created_at", "updated_at"}).
+		AddRow(1, "O-1", "B-1", req.UserID, statusReserved, int64(50), req.RequestID, "", int64(1), now, now)
 	mock.ExpectQuery(`SELECT \* FROM orders WHERE idempotent_key`).
 		WithArgs(req.RequestID).
 		WillReturnRows(rows)

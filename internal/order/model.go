@@ -30,6 +30,7 @@ type Order struct {
 	TotalAmount   int64     `db:"total_amount" json:"total_amount"`
 	IdempotentKey string    `db:"idempotent_key" json:"-"`
 	ReservedID    string    `db:"reserved_id" json:"reserved_id"`
+	Version       int64     `db:"version" json:"version"`
 	CreatedAt     time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt     time.Time `db:"updated_at" json:"updated_at"`
 	Items         []Item    `json:"items"`

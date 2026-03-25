@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_amount BIGINT NOT NULL,
   idempotent_key VARCHAR(128) NOT NULL UNIQUE,
   reserved_id VARCHAR(64) NOT NULL DEFAULT '',
+  version BIGINT NOT NULL DEFAULT 0,
   created_at DATETIME NOT NULL,
   updated_at DATETIME NOT NULL,
   INDEX idx_orders_user_id (user_id)

@@ -1,5 +1,23 @@
 basePath: /
 definitions:
+  activity.CouponRequest:
+    properties:
+      amount:
+        type: number
+      coupon_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  activity.SeckillRequest:
+    properties:
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+      user_id:
+        type: string
+    type: object
   gateway.CreateOrderRequest:
     properties:
       items:
@@ -22,6 +40,13 @@ definitions:
       sku_id:
         type: string
     type: object
+  gateway.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   httpx.Response:
     properties:
       code:
@@ -42,6 +67,11 @@ definitions:
       sku_id:
         type: string
     type: object
+  inventory.ReleaseByOrderRequest:
+    properties:
+      order_id:
+        type: string
+    type: object
   inventory.ReleaseRequest:
     properties:
       reserved_id:
@@ -56,6 +86,73 @@ definitions:
       order_id:
         type: string
     type: object
+  order.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/order.Item'
+        type: array
+      remark:
+        type: string
+      request_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  order.Item:
+    properties:
+      price:
+        type: integer
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  payment.CreatePaymentRequest:
+    properties:
+      amount:
+        type: integer
+      order_id:
+        type: string
+      request_id:
+        type: string
+    type: object
+  price.CalculateRequest:
+    properties:
+      base_price:
+        type: number
+      coupon_amount:
+        type: number
+      sku_id:
+        type: string
+      user_level:
+        type: integer
+    type: object
+  refund.InitiateRequest:
+    properties:
+      order_id:
+        type: string
+      reason:
+        type: string
+      refund_id:
+        type: string
+      refund_type:
+        type: string
+    type: object
+  refund.RollbackRequest:
+    properties:
+      order_id:
+        type: string
+      reason:
+        type: string
+      refund_id:
+        type: string
+    type: object
+  refund.StatusRequest:
+    properties:
+      refund_id:
+        type: string
+    type: object
   task.CreateTaskRequest:
     properties:
       biz_no:
@@ -67,11 +164,13 @@ definitions:
     type: object
   user.CreateUserRequest:
     properties:
-      mobile:
+      password:
         type: string
-      name:
+      role:
         type: string
       user_id:
+        type: string
+      username:
         type: string
     type: object
 host: localhost:8080
@@ -81,6 +180,116 @@ info:
   title: Go-Micro Gateway API
   version: "1.0"
 paths:
+  /api/v1/activity/coupon:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: issue coupon
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/activity.CouponRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Issue coupon
+      tags:
+      - Activity
+  /api/v1/activity/seckill:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: seckill request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/activity.SeckillRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Seckill request
+      tags:
+      - Activity
+  /api/v1/activity/status:
+    get:
+      parameters:
+      - description: coupon id
+        in: query
+        name: coupon_id
+        type: string
+      - description: sku id
+        in: query
+        name: sku_id
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Activity status
+      tags:
+      - Activity
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ??
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ??
+      tags:
+      - Auth
+  /api/v1/order-views/{order_no}:
+    get:
+      description: |-
+        view_status 为聚合层统一展示状态，优先级高于单一服务原始状态。
+        view_status 枚举：PENDING、PROCESSING、SUCCESS、FAILED、DEAD、CANCELED、TIMEOUT。
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 业务订单号
+        in: path
+        name: order_no
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 订单聚合视图
+      tags:
+      - Order
   /api/v1/orders:
     post:
       consumes:
@@ -130,6 +339,248 @@ paths:
       summary: ????
       tags:
       - Order
+  /api/v1/payments:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 创建支付请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/payment.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 创建支付
+      tags:
+      - Payment
+  /api/v1/payments/{id}:
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 查询支付
+      tags:
+      - Payment
+  /api/v1/payments/{id}/failed:
+    post:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付失败
+      tags:
+      - Payment
+  /api/v1/payments/{id}/success:
+    post:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付成功
+      tags:
+      - Payment
+  /api/v1/payments/{id}/timeout:
+    post:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付超时
+      tags:
+      - Payment
+  /api/v1/price/calculate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: calculate price
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/price.CalculateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Calculate price
+      tags:
+      - Price
+  /api/v1/price/history:
+    get:
+      parameters:
+      - description: sku id
+        in: query
+        name: sku_id
+        required: true
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Price history
+      tags:
+      - Price
+  /api/v1/refund/initiate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: initiate refund
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/refund.InitiateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Initiate refund
+      tags:
+      - Refund
+  /api/v1/refund/rollback:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: rollback refund
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/refund.RollbackRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Rollback on cancel
+      tags:
+      - Refund
+  /api/v1/refund/status:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: refund status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/refund.StatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: Refund status
+      tags:
+      - Refund
+  /api/v1/users/me:
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ??????
+      tags:
+      - User
   /inventory/{sku_id}:
     get:
       parameters:
@@ -145,7 +596,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 查询库存
       tags:
       - Inventory
   /inventory/confirm:
@@ -153,7 +604,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: ????
+      - description: 确认请求
         in: body
         name: body
         required: true
@@ -166,15 +617,16 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 确认扣减
       tags:
       - Inventory
   /inventory/release:
     post:
       consumes:
       - application/json
+      description: 基于 reserved_id 释放，重复调用幂等
       parameters:
-      - description: ????
+      - description: 释放请求
         in: body
         name: body
         required: true
@@ -187,7 +639,47 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 释放库存
+      tags:
+      - Inventory
+  /inventory/release-by-order:
+    post:
+      consumes:
+      - application/json
+      description: 基于订单号幂等释放库存，重复调用不会重复回补
+      parameters:
+      - description: 订单号释放请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/inventory.ReleaseByOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 按订单号释放
+      tags:
+      - Inventory
+  /inventory/reservations/{order_id}:
+    get:
+      parameters:
+      - description: 订单ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 查询预占记录
       tags:
       - Inventory
   /inventory/reserve:
@@ -195,7 +687,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: ????
+      - description: 预占请求
         in: body
         name: body
         required: true
@@ -208,15 +700,202 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 预占库存
       tags:
       - Inventory
+  /orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建订单请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/order.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 创建订单
+      tags:
+      - Order
+  /orders/{id}:
+    get:
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 查询订单
+      tags:
+      - Order
+  /orders/{id}/cancel:
+    post:
+      description: 幂等语义：已取消返回成功，已完成不可取消
+      parameters:
+      - description: 订单ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 取消订单
+      tags:
+      - Order
+  /orders/biz/{biz_no}:
+    get:
+      parameters:
+      - description: 业务订单号
+        in: path
+        name: biz_no
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 按业务单号查询
+      tags:
+      - Order
+  /payments:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建支付请求
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/payment.CreatePaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 创建支付
+      tags:
+      - Payment
+  /payments/{id}:
+    get:
+      parameters:
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 查询支付
+      tags:
+      - Payment
+  /payments/{id}/failed:
+    post:
+      parameters:
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付失败
+      tags:
+      - Payment
+  /payments/{id}/refund:
+    post:
+      parameters:
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 退款
+      tags:
+      - Payment
+  /payments/{id}/success:
+    post:
+      parameters:
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付成功
+      tags:
+      - Payment
+  /payments/{id}/timeout:
+    post:
+      parameters:
+      - description: 支付ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 支付超时
+      tags:
+      - Payment
   /tasks:
     post:
       consumes:
       - application/json
       parameters:
-      - description: ????
+      - description: 创建任务请求
         in: body
         name: body
         required: true
@@ -229,13 +908,13 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 创建任务
       tags:
       - Task
   /tasks/{id}:
     get:
       parameters:
-      - description: ??ID
+      - description: 任务ID
         in: path
         name: id
         required: true
@@ -247,13 +926,13 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 查询任务
       tags:
       - Task
   /tasks/{id}/retry:
     post:
       parameters:
-      - description: ??ID
+      - description: 任务ID
         in: path
         name: id
         required: true
@@ -265,7 +944,25 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 手动重试任务
+      tags:
+      - Task
+  /tasks/by-order/{order_id}:
+    get:
+      parameters:
+      - description: 订单ID
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: 按订单查询任务
       tags:
       - Task
   /users:

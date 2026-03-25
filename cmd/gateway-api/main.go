@@ -1,7 +1,15 @@
 package main
 
 import (
+	"context"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	_ "go-micro/docs/swagger"
 	"go-micro/internal/gateway"
 	"go-micro/internal/order"
 	"go-micro/pkg/config"
@@ -9,9 +17,9 @@ import (
 	"go-micro/pkg/middleware"
 	"go.uber.org/zap"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
-	_ "go-micro/docs/swagger"
 )
 
 // @title Go-Micro Gateway API
@@ -29,6 +37,7 @@ func main() {
 	r.Use(middleware.Logger(logger))
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	orderTarget := config.GetEnv("ORDER_GRPC_TARGET", "localhost:9081")
 	orderClient, orderConn, err := order.NewGRPCClient(orderTarget)
@@ -42,7 +51,19 @@ func main() {
 	h.Register(r)
 
 	addr := config.GetEnv("GATEWAY_ADDR", ":8080")
-	if err := r.Run(addr); err != nil {
-		logger.Fatal("gateway-api start failed", zap.Error(err))
-	}
+	srv := &http.Server{Addr: addr, Handler: r}
+
+	go func() {
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Fatal("gateway-api start failed", zap.Error(err))
+		}
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	_ = srv.Shutdown(ctx)
 }

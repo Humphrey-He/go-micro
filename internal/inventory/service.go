@@ -96,6 +96,7 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 }
 
 func (s *Service) Release(reservedID string) error {
+	alreadyReleased := false
 	err := db.Tx(s.db, func(tx *sqlx.Tx) error {
 		resv := Reservation{}
 		if err := tx.Get(&resv, `SELECT * FROM inventory_reserved WHERE reserved_id = ? FOR UPDATE`, reservedID); err != nil {
@@ -105,6 +106,7 @@ func (s *Service) Release(reservedID string) error {
 			return err
 		}
 		if resv.Status == resvReleased {
+			alreadyReleased = true
 			return nil
 		}
 		if resv.Status != resvReserved {
@@ -127,6 +129,9 @@ func (s *Service) Release(reservedID string) error {
 	})
 	if err != nil {
 		return err
+	}
+	if alreadyReleased {
+		return nil
 	}
 
 	var items []Item

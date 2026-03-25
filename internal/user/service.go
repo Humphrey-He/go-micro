@@ -10,6 +10,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 	"go-micro/pkg/cache"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var ErrNotFound = errors.New("user not found")
@@ -34,14 +35,22 @@ func (s *Service) Create(req CreateUserRequest) (*User, error) {
 	if req.UserID == "" {
 		req.UserID = uuid.NewString()
 	}
-	if req.Mobile == "" {
+	if req.Username == "" || req.Password == "" {
 		return nil, errors.New("invalid request")
 	}
-	_, err := s.db.Exec(`INSERT INTO users(user_id,name,mobile,status,created_at,updated_at) VALUES(?,?,?,?,NOW(),NOW())`, req.UserID, req.Name, req.Mobile, defaultStatus)
+	if req.Role == "" {
+		req.Role = "user"
+	}
+	pwdHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
-	user := &User{UserID: req.UserID, Name: req.Name, Mobile: req.Mobile, Status: defaultStatus, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	_, err = s.db.Exec(`INSERT INTO users(user_id,username,password_hash,role,status,created_at,updated_at) VALUES(?,?,?,?,?,NOW(),NOW())`,
+		req.UserID, req.Username, string(pwdHash), req.Role, defaultStatus)
+	if err != nil {
+		return nil, err
+	}
+	user := &User{UserID: req.UserID, Username: req.Username, Role: req.Role, Status: defaultStatus, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	_ = s.cache.setUser(s.ctx, req.UserID, user)
 	return user, nil
 }
@@ -63,6 +72,27 @@ func (s *Service) Get(userID string) (*User, error) {
 	}
 	_ = s.cache.setUser(s.ctx, userID, &user)
 	return &user, nil
+}
+
+func (s *Service) GetByUsername(username string) (*User, error) {
+	if username == "" {
+		return nil, ErrNotFound
+	}
+	user := User{}
+	if err := s.db.Get(&user, `SELECT * FROM users WHERE username = ?`, username); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (s *Service) VerifyPassword(user *User, password string) bool {
+	if user == nil {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) == nil
 }
 
 type cacheClient struct {

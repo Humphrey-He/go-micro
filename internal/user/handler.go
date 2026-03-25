@@ -41,7 +41,7 @@ func (h *Handler) Register(r *gin.Engine) {
 // @Router /users [post]
 func (h *Handler) create(c *gin.Context) {
 	var req CreateUserRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.Mobile == "" {
+	if err := c.ShouldBindJSON(&req); err != nil || req.Username == "" || req.Password == "" {
 		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
 		c.JSON(code, body)
 		return

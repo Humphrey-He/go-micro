@@ -101,6 +101,21 @@ CREATE TABLE IF NOT EXISTS sagas (
   INDEX idx_sagas_biz_no (biz_no)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS saga_steps (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  saga_id VARCHAR(64) NOT NULL,
+  step VARCHAR(64) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  reason VARCHAR(128) NOT NULL DEFAULT '',
+  payload JSON NOT NULL,
+  next_step VARCHAR(64) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  UNIQUE KEY uniq_saga_step (saga_id, step),
+  INDEX idx_saga_steps_saga_id (saga_id),
+  INDEX idx_saga_steps_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 CREATE TABLE IF NOT EXISTS payments (
   id BIGINT AUTO_INCREMENT PRIMARY KEY,
   payment_id VARCHAR(64) NOT NULL UNIQUE,

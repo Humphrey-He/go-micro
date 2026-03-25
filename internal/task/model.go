@@ -31,3 +31,15 @@ type Saga struct {
 	CreatedAt time.Time `db:"created_at" json:"created_at"`
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
+
+type SagaStep struct {
+	ID        int64     `db:"id" json:"-"`
+	SagaID    string    `db:"saga_id" json:"saga_id"`
+	Step      string    `db:"step" json:"step"`
+	Status    string    `db:"status" json:"status"`
+	Reason    string    `db:"reason" json:"reason"`
+	Payload   string    `db:"payload" json:"payload"`
+	NextStep  string    `db:"next_step" json:"next_step"`
+	CreatedAt time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
+}

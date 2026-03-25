@@ -30,6 +30,17 @@ const (
 )
 
 const (
+	stepPending         = "PENDING"
+	stepRunning         = "RUNNING"
+	stepDone            = "COMPLETED"
+	stepFailed          = "FAILED"
+	stepOrderFail       = "ORDER_FAIL"
+	stepOrderCancel     = "ORDER_CANCEL"
+	stepInvRelease      = "INVENTORY_RELEASE"
+	stepInvReleaseOrder = "INVENTORY_RELEASE_BY_ORDER"
+)
+
+const (
 	maxRetryCount = 3
 )
 
@@ -174,7 +185,7 @@ func (s *Service) MarkSagaCompleted(sagaID string) error {
 	if sagaID == "" {
 		return nil
 	}
-	_, err := s.db.Exec(`UPDATE sagas SET status=?, updated_at=NOW() WHERE saga_id = ?`, sagaStatusDone, sagaID)
+	_, err := s.db.Exec(`UPDATE sagas SET status=?, updated_at=NOW() WHERE saga_id = ? AND status = ?`, sagaStatusDone, sagaID, sagaStatusStart)
 	return err
 }
 
@@ -182,7 +193,56 @@ func (s *Service) MarkSagaCompensated(sagaID, reason string) error {
 	if sagaID == "" {
 		return nil
 	}
-	_, err := s.db.Exec(`UPDATE sagas SET status=?, reason=?, updated_at=NOW() WHERE saga_id = ?`, sagaStatusComp, reason, sagaID)
+	_, err := s.db.Exec(`UPDATE sagas SET status=?, reason=?, updated_at=NOW() WHERE saga_id = ? AND status <> ?`, sagaStatusComp, reason, sagaID, sagaStatusDone)
+	return err
+}
+
+func (s *Service) CreateSagaStep(sagaID, step, nextStep, reason, payload string) error {
+	if sagaID == "" || step == "" {
+		return errors.New("invalid saga step")
+	}
+	if payload == "" {
+		payload = "{}"
+	}
+	_, err := s.db.Exec(`INSERT INTO saga_steps(saga_id,step,status,reason,payload,next_step,created_at,updated_at) VALUES(?,?,?,?,?,?,NOW(),NOW())`,
+		sagaID, step, stepPending, reason, payload, nextStep)
+	if err != nil {
+		if isDuplicate(err) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *Service) ListPendingSagaSteps(limit int) ([]SagaStep, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	var steps []SagaStep
+	if err := s.db.Select(&steps, `SELECT * FROM saga_steps WHERE status = ? ORDER BY created_at ASC LIMIT ?`, stepPending, limit); err != nil {
+		return nil, err
+	}
+	return steps, nil
+}
+
+func (s *Service) MarkSagaStepRunning(sagaID, step string) (bool, error) {
+	res, err := s.db.Exec(`UPDATE saga_steps SET status=?, updated_at=NOW() WHERE saga_id = ? AND step = ? AND status = ?`,
+		stepRunning, sagaID, step, stepPending)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *Service) MarkSagaStepCompleted(sagaID, step string) error {
+	_, err := s.db.Exec(`UPDATE saga_steps SET status=?, updated_at=NOW() WHERE saga_id = ? AND step = ?`, stepDone, sagaID, step)
+	return err
+}
+
+func (s *Service) MarkSagaStepFailed(sagaID, step, reason string) error {
+	_, err := s.db.Exec(`UPDATE saga_steps SET status=?, reason=?, updated_at=NOW() WHERE saga_id = ? AND step = ?`, stepFailed, reason, sagaID, step)
 	return err
 }
 

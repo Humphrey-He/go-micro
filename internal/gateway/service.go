@@ -173,7 +173,15 @@ func (s *Service) Login(username, password string) (*LoginResponse, error) {
 	var u *user.User
 	err := s.cbUser.Execute(func() error {
 		var callErr error
-		u, callErr = s.user.Authenticate(ctx, username, password)
+		upb, callErr := s.user.Authenticate(ctx, username, password)
+		if callErr == nil && upb != nil {
+			u = &user.User{
+				UserID:   upb.UserId,
+				Username: upb.Username,
+				Role:     upb.Role,
+				Status:   int(upb.Status),
+			}
+		}
 		return callErr
 	})
 	if err != nil {
@@ -181,7 +189,7 @@ func (s *Service) Login(username, password string) (*LoginResponse, error) {
 	}
 	secret := []byte(config.GetEnv("JWT_SECRET", "dev-secret"))
 	claims := jwt.MapClaims{
-		"user_id":  u.UserId,
+		"user_id":  u.UserID,
 		"username": u.Username,
 		"role":     u.Role,
 		"exp":      time.Now().Add(2 * time.Hour).Unix(),
@@ -193,7 +201,7 @@ func (s *Service) Login(username, password string) (*LoginResponse, error) {
 	}
 	return &LoginResponse{
 		Token: signed,
-		User:  &user.User{UserID: u.UserId, Username: u.Username, Role: u.Role, Status: int(u.Status)},
+		User:  &user.User{UserID: u.UserID, Username: u.Username, Role: u.Role, Status: int(u.Status)},
 	}, nil
 }
 

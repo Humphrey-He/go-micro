@@ -113,6 +113,22 @@ func Unlock(ctx context.Context, rdb *redis.Client, key string) error {
 	return rdb.Del(ctx, key).Err()
 }
 
+func IncHit(cacheName string) {
+	cacheHits.WithLabelValues(cacheName).Inc()
+}
+
+func IncMiss(cacheName string) {
+	cacheMisses.WithLabelValues(cacheName).Inc()
+}
+
+func SetLocalString(key, val string, ttl time.Duration, isNil bool) {
+	setLocal(key, val, ttl, isNil)
+}
+
+func GetLocalString(key string) (string, bool, bool) {
+	return getLocal(key)
+}
+
 func setLocal(key, val string, ttl time.Duration, isNil bool) {
 	if ttl <= 0 {
 		return

@@ -16,8 +16,8 @@ import (
 	"go-micro/internal/payment"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
-	"go-micro/pkg/db"
 	"go-micro/pkg/config"
+	"go-micro/pkg/db"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
 	"go.uber.org/zap"
@@ -31,11 +31,20 @@ func Run() error {
 	logger := logx.L()
 	defer logx.Sync()
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.RateLimit())
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	r.GET("/readyz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
 
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
@@ -85,6 +94,7 @@ func Run() error {
 
 	addr := config.GetEnv("GATEWAY_ADDR", ":8080")
 	srv := &http.Server{Addr: addr, Handler: r}
+	logger.Info("gateway-api starting", zap.String("http_addr", addr))
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -92,13 +102,11 @@ func Run() error {
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	<-ctx.Done()
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return srv.Shutdown(ctx)
+	logger.Info("gateway-api shutting down")
+	return srv.Shutdown(shutdownCtx)
 }
 
 type orderCancelAdapter struct {

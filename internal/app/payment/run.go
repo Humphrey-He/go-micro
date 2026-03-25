@@ -23,6 +23,9 @@ func Run() error {
 	logger := logx.L()
 	defer logx.Sync()
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	dbx, err := db.NewMySQL()
 	if err != nil {
 		logger.Error("mysql connect failed", zap.Error(err))
@@ -33,6 +36,12 @@ func Run() error {
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger(logger))
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	r.GET("/readyz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
 
 	orderTarget := config.GetEnv("ORDER_GRPC_TARGET", "localhost:9081")
 	orderClient, orderConn, err := order.NewGRPCClient(orderTarget)
@@ -59,20 +68,20 @@ func Run() error {
 
 	addr := config.GetEnv("PAYMENT_ADDR", ":8085")
 	srv := &http.Server{Addr: addr, Handler: r}
+	logger.Info("payment-service starting", zap.String("http_addr", addr))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("payment-service start failed", zap.Error(err))
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	<-ctx.Done()
 
 	close(stopTimeout)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return srv.Shutdown(ctx)
+	logger.Info("payment-service shutting down")
+	return srv.Shutdown(shutdownCtx)
 }
 
 type orderCancelAdapter struct {

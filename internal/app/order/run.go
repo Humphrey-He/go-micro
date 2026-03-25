@@ -29,6 +29,9 @@ func Run() error {
 	logger := logx.L()
 	defer logx.Sync()
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	dbx, err := db.NewMySQL()
 	if err != nil {
 		logger.Error("mysql connect failed", zap.Error(err))
@@ -40,6 +43,12 @@ func Run() error {
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger(logger))
+	r.GET("/healthz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+	})
+	r.GET("/readyz", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ready"})
+	})
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	invTarget := config.GetEnv("INVENTORY_GRPC_TARGET", "localhost:9082")
@@ -86,21 +95,21 @@ func Run() error {
 
 	addr := config.GetEnv("ORDER_ADDR", ":8081")
 	srv := &http.Server{Addr: addr, Handler: r}
+	logger.Info("order-service starting", zap.String("http_addr", addr), zap.String("grpc_addr", grpcAddr))
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Error("order-service start failed", zap.Error(err))
 		}
 	}()
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
-	<-stop
+	<-ctx.Done()
 
 	close(stopOutbox)
 	grpcServer.GracefulStop()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	return srv.Shutdown(ctx)
+	logger.Info("order-service shutting down")
+	return srv.Shutdown(shutdownCtx)
 }
 
 type inventoryAdapter struct {

@@ -31,13 +31,14 @@ func (h *Handler) Register(r *gin.Engine) {
 	r.POST("/tasks", h.create)
 	r.POST("/tasks/:id/retry", h.retry)
 	r.GET("/tasks/:id", h.get)
+	r.GET("/tasks/by-order/:order_id", h.getByOrder)
 }
 
-// @Summary ????
+// @Summary 创建任务
 // @Tags Task
 // @Accept json
 // @Produce json
-// @Param body body CreateTaskRequest true "????"
+// @Param body body CreateTaskRequest true "创建任务请求"
 // @Success 200 {object} httpx.Response
 // @Router /tasks [post]
 func (h *Handler) create(c *gin.Context) {
@@ -57,10 +58,10 @@ func (h *Handler) create(c *gin.Context) {
 	c.JSON(code, body)
 }
 
-// @Summary ????
+// @Summary 查询任务
 // @Tags Task
 // @Produce json
-// @Param id path string true "??ID"
+// @Param id path string true "任务ID"
 // @Success 200 {object} httpx.Response
 // @Router /tasks/{id} [get]
 func (h *Handler) get(c *gin.Context) {
@@ -75,15 +76,33 @@ func (h *Handler) get(c *gin.Context) {
 	c.JSON(code, body)
 }
 
-// @Summary ????
+// @Summary 手动重试任务
 // @Tags Task
 // @Produce json
-// @Param id path string true "??ID"
+// @Param id path string true "任务ID"
 // @Success 200 {object} httpx.Response
 // @Router /tasks/{id}/retry [post]
 func (h *Handler) retry(c *gin.Context) {
 	id := c.Param("id")
 	t, err := h.svc.Retry(id)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeNotFound, "task not found")
+		c.JSON(code, body)
+		return
+	}
+	code, body := httpx.OK(t)
+	c.JSON(code, body)
+}
+
+// @Summary 按订单查询任务
+// @Tags Task
+// @Produce json
+// @Param order_id path string true "订单ID"
+// @Success 200 {object} httpx.Response
+// @Router /tasks/by-order/{order_id} [get]
+func (h *Handler) getByOrder(c *gin.Context) {
+	orderID := c.Param("order_id")
+	t, err := h.svc.GetByOrder(orderID)
 	if err != nil {
 		code, body := httpx.Fail(errx.CodeNotFound, "task not found")
 		c.JSON(code, body)

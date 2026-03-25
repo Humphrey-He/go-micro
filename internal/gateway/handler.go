@@ -109,11 +109,13 @@ func (h *Handler) getOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// @Summary ??????
+// @Summary 订单聚合视图
+// @Description view_status 为聚合层统一展示状态，优先级高于单一服务原始状态。
+// @Description view_status 枚举：PENDING、PROCESSING、SUCCESS、FAILED、DEAD、CANCELED、TIMEOUT。
 // @Tags Order
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param order_no path string true "??"
+// @Param order_no path string true "业务订单号"
 // @Success 200 {object} httpx.Response
 // @Router /api/v1/order-views/{order_no} [get]
 func (h *Handler) getOrderView(c *gin.Context) {

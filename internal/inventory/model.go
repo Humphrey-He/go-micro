@@ -20,6 +20,10 @@ type ReleaseRequest struct {
 	ReservedID string `json:"reserved_id"`
 }
 
+type ReleaseByOrderRequest struct {
+	OrderID string `json:"order_id"`
+}
+
 type ConfirmRequest struct {
 	ReservedID string `json:"reserved_id"`
 }

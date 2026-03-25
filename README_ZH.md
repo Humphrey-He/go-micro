@@ -24,7 +24,7 @@
 - **可测试性**：核心逻辑单测覆盖（订单、库存、缓存）。
 
 ## 聚合视图状态映射
-聚合接口 `GET /api/v1/order-views/{order_no}` 会返回主状态与明细状态，并按以下规则计算 `view_status`：
+聚合接口 `GET /api/v1/order-views/{order_no}` 会返回主状态与明细状态。`view_status` 是面向调用方的统一状态，当底层状态冲突时按优先级规则映射：
 
 优先级规则（从高到低）：
 1. `order_status == CANCELED` 且 `task_type == TIMEOUT_CANCEL` -> `view_status = TIMEOUT`

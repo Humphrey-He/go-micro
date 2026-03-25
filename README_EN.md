@@ -24,7 +24,7 @@ This project simulates a real-world e-commerce order fulfillment flow with a Go 
 - **Testability**: unit tests for order, inventory, and cache.
 
 ## Aggregated View Status Mapping
-The aggregated endpoint `GET /api/v1/order-views/{order_no}` returns a primary `view_status` and detailed states. The `view_status` is computed by the following priority rules:
+The aggregated endpoint `GET /api/v1/order-views/{order_no}` returns a primary `view_status` and detailed states. `view_status` is the unified status for callers, and conflicts are resolved by priority rules below:
 
 Priority rules (high to low):
 1. `order_status == CANCELED` and `task_type == TIMEOUT_CANCEL` -> `view_status = TIMEOUT`

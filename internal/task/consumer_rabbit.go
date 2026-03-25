@@ -43,14 +43,13 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			continue
 		}
 
-		_, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: taskTypeFulfill})
+		t, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: taskTypeFulfill})
 		if err == nil {
-			if ord != nil {
-				ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-				_ = ord.UpdateStatus(ctx, evt.OrderID, "RESERVED", "PROCESSING")
-				_ = ord.UpdateStatus(ctx, evt.OrderID, "PROCESSING", "SUCCESS")
-				cancel()
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			if err := processFulfillment(ctx, svc, ord, t); err != nil {
+				handleTaskFailure(ctx, svc, ord, t)
 			}
+			cancel()
 			_ = msg.Ack(false)
 			continue
 		}
@@ -62,7 +61,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			cancel()
 			if ord != nil {
 				ctx2, cancel2 := context.WithTimeout(context.Background(), 3*time.Second)
-				_ = ord.UpdateStatus(ctx2, evt.OrderID, "RESERVED", "FAILED")
+				_ = ord.UpdateStatus(ctx2, evt.OrderID, orderStatusReserved, orderStatusFailed)
 				cancel2()
 			}
 			_ = msg.Ack(false)

@@ -14,7 +14,15 @@ var ErrNotFound = errors.New("task not found")
 
 const (
 	statusPending   = "PENDING"
+	statusRunning   = "RUNNING"
+	statusSuccess   = "SUCCESS"
+	statusFailed    = "FAILED"
+	statusDead      = "DEAD"
 	taskTypeFulfill = "FULFILL"
+)
+
+const (
+	maxRetryCount = 3
 )
 
 type Service struct {
@@ -74,6 +82,46 @@ func (s *Service) GetByOrder(orderID string) (*Task, error) {
 		return nil, ErrNotFound
 	}
 	return s.getByOrderAndType(orderID, taskTypeFulfill)
+}
+
+func (s *Service) MarkRunning(taskID string) error {
+	_, err := s.db.Exec(`UPDATE tasks SET status=?, updated_at=NOW() WHERE task_id = ?`, statusRunning, taskID)
+	return err
+}
+
+func (s *Service) MarkRunningIfFailed(taskID string) (bool, error) {
+	res, err := s.db.Exec(`UPDATE tasks SET status=?, updated_at=NOW() WHERE task_id = ? AND status = ?`, statusRunning, taskID, statusFailed)
+	if err != nil {
+		return false, err
+	}
+	affected, _ := res.RowsAffected()
+	return affected > 0, nil
+}
+
+func (s *Service) MarkSuccess(taskID string) error {
+	_, err := s.db.Exec(`UPDATE tasks SET status=?, updated_at=NOW() WHERE task_id = ?`, statusSuccess, taskID)
+	return err
+}
+
+func (s *Service) MarkFailed(taskID string, retryCount int, nextRetryAt time.Time) error {
+	_, err := s.db.Exec(`UPDATE tasks SET status=?, retry_count=?, next_retry_at=?, updated_at=NOW() WHERE task_id = ?`, statusFailed, retryCount, nextRetryAt, taskID)
+	return err
+}
+
+func (s *Service) MarkDead(taskID string, retryCount int) error {
+	_, err := s.db.Exec(`UPDATE tasks SET status=?, retry_count=?, updated_at=NOW() WHERE task_id = ?`, statusDead, retryCount, taskID)
+	return err
+}
+
+func (s *Service) ListRetryTasks(limit int) ([]Task, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	var tasks []Task
+	if err := s.db.Select(&tasks, `SELECT * FROM tasks WHERE status = ? AND retry_count < ? AND next_retry_at <= NOW() ORDER BY next_retry_at ASC LIMIT ?`, statusFailed, maxRetryCount, limit); err != nil {
+		return nil, err
+	}
+	return tasks, nil
 }
 
 func (s *Service) getByOrderAndType(orderID, typ string) (*Task, error) {

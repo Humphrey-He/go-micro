@@ -210,6 +210,9 @@ func (s *Service) UpdateStatus(orderID, from, to string) error {
 		}
 		return err
 	}
+	if status == to {
+		return nil
+	}
 	if status != from {
 		return ErrInvalidState
 	}

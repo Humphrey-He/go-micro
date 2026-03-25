@@ -84,6 +84,8 @@ func main() {
 	defer orderConn.Close()
 
 	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient}, &orderUpdateAdapter{c: orderClient})
+	workerStop := make(chan struct{})
+	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient}, workerStop)
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}
@@ -97,6 +99,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 
+	close(workerStop)
 	grpcServer.GracefulStop()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

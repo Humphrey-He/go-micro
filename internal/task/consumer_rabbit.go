@@ -51,6 +51,8 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			continue
 		}
 
+		_ = svc.CreateSaga(evt.OrderID, evt.BizNo, sagaTypeOrder)
+
 		t, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: taskTypeFulfill})
 		if err == nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
@@ -58,6 +60,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 				handleTaskFailure(ctx, svc, ord, t)
 			}
 			cancel()
+			_ = svc.MarkSagaCompleted(evt.OrderID)
 			_, _ = svc.CreateTimeoutTask(evt.OrderID, evt.BizNo, 15*time.Minute)
 			_ = msg.Ack(false)
 			continue
@@ -73,6 +76,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 				_ = ord.UpdateStatus(ctx2, evt.OrderID, orderStatusReserved, orderStatusFailed)
 				cancel2()
 			}
+			_ = svc.MarkSagaCompensated(evt.OrderID, "task_create_failed")
 			_ = msg.Ack(false)
 			continue
 		}

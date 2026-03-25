@@ -9,6 +9,10 @@ type InventoryReleaserByOrder interface {
 	ReleaseByOrder(ctx context.Context, orderID string) error
 }
 
+type SagaUpdater interface {
+	MarkSagaCompensated(sagaID, reason string) error
+}
+
 type TimeoutTaskStore interface {
 	ListTimeoutTasks(limit int) ([]Task, error)
 	MarkRunningIfStatus(taskID, status string) (bool, error)
@@ -17,7 +21,7 @@ type TimeoutTaskStore interface {
 	MarkDead(taskID string, retryCount int) error
 }
 
-func StartTimeoutWorker(svc TimeoutTaskStore, ord OrderReader, canceler OrderCanceler, inv InventoryReleaserByOrder, stop <-chan struct{}) {
+func StartTimeoutWorker(svc TimeoutTaskStore, ord OrderReader, canceler OrderCanceler, inv InventoryReleaserByOrder, saga SagaUpdater, stop <-chan struct{}) {
 	if svc == nil {
 		return
 	}
@@ -29,12 +33,12 @@ func StartTimeoutWorker(svc TimeoutTaskStore, ord OrderReader, canceler OrderCan
 		case <-stop:
 			return
 		case <-ticker.C:
-			processTimeoutTasks(svc, ord, canceler, inv)
+			processTimeoutTasks(svc, ord, canceler, inv, saga)
 		}
 	}
 }
 
-func processTimeoutTasks(svc TimeoutTaskStore, ord OrderReader, canceler OrderCanceler, inv InventoryReleaserByOrder) {
+func processTimeoutTasks(svc TimeoutTaskStore, ord OrderReader, canceler OrderCanceler, inv InventoryReleaserByOrder, saga SagaUpdater) {
 	tasks, err := svc.ListTimeoutTasks(20)
 	if err != nil {
 		return
@@ -66,6 +70,9 @@ func processTimeoutTasks(svc TimeoutTaskStore, ord OrderReader, canceler OrderCa
 			if err := canceler.Cancel(ctx, t.OrderID); err == nil {
 				if inv != nil {
 					_ = inv.ReleaseByOrder(ctx, t.OrderID)
+				}
+				if saga != nil {
+					_ = saga.MarkSagaCompensated(t.OrderID, "timeout")
 				}
 				_ = svc.MarkSuccess(t.TaskID)
 				cancel()

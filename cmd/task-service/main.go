@@ -88,7 +88,7 @@ func main() {
 	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb})
 	workerStop := make(chan struct{})
 	go task.StartRetryWorker(svc, &orderUpdateAdapter{c: orderClient, cb: cb}, workerStop)
-	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient, cb: cb}, &orderCancelAdapter{c: orderClient, cb: cb}, &inventoryReleaseByOrderAdapter{c: invClient, cb: cb}, workerStop)
+	go task.StartTimeoutWorker(svc, &orderReaderAdapter{c: orderClient, cb: cb}, &orderCancelAdapter{c: orderClient, cb: cb}, &inventoryReleaseByOrderAdapter{c: invClient, cb: cb}, svc, workerStop)
 
 	addr := config.GetEnv("TASK_ADDR", ":8084")
 	srv := &http.Server{Addr: addr, Handler: r}

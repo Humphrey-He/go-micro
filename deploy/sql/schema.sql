@@ -89,6 +89,18 @@ CREATE TABLE IF NOT EXISTS tasks (
   UNIQUE KEY uniq_tasks_order_type (order_id, type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE IF NOT EXISTS sagas (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  saga_id VARCHAR(64) NOT NULL UNIQUE,
+  biz_no VARCHAR(64) NOT NULL,
+  type VARCHAR(32) NOT NULL,
+  status VARCHAR(32) NOT NULL,
+  reason VARCHAR(128) NOT NULL DEFAULT '',
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL,
+  INDEX idx_sagas_biz_no (biz_no)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 INSERT INTO inventory(sku_id, available, reserved, updated_at)
 VALUES
 ('SKU-1001', 100, 0, NOW()),

@@ -77,7 +77,7 @@ func TestTimeoutCancelChain(t *testing.T) {
 	canceler := &fakeOrderCanceler{}
 	releaser := &fakeInventoryReleaser{}
 
-	processTimeoutTasks(store, reader, canceler, releaser)
+	processTimeoutTasks(store, reader, canceler, releaser, nil)
 	if canceler.calls != 1 {
 		t.Fatalf("expected cancel called once, got %d", canceler.calls)
 	}
@@ -89,7 +89,7 @@ func TestTimeoutCancelChain(t *testing.T) {
 	}
 
 	// Run again to ensure no duplicate release
-	processTimeoutTasks(store, reader, canceler, releaser)
+	processTimeoutTasks(store, reader, canceler, releaser, nil)
 	if canceler.calls != 1 {
 		t.Fatalf("expected cancel called once after repeat, got %d", canceler.calls)
 	}

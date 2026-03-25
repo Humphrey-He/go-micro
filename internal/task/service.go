@@ -23,6 +23,13 @@ const (
 )
 
 const (
+	sagaTypeOrder   = "ORDER_FULFILL"
+	sagaStatusStart = "STARTED"
+	sagaStatusDone  = "COMPLETED"
+	sagaStatusComp  = "COMPENSATED"
+)
+
+const (
 	maxRetryCount = 3
 )
 
@@ -143,6 +150,40 @@ func (s *Service) ListTimeoutTasks(limit int) ([]Task, error) {
 		return nil, err
 	}
 	return tasks, nil
+}
+
+func (s *Service) CreateSaga(sagaID, bizNo, typ string) error {
+	if sagaID == "" || bizNo == "" {
+		return errors.New("invalid saga")
+	}
+	if typ == "" {
+		typ = sagaTypeOrder
+	}
+	_, err := s.db.Exec(`INSERT INTO sagas(saga_id,biz_no,type,status,reason,created_at,updated_at) VALUES(?,?,?,?,?,NOW(),NOW())`,
+		sagaID, bizNo, typ, sagaStatusStart, "")
+	if err != nil {
+		if isDuplicate(err) {
+			return nil
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *Service) MarkSagaCompleted(sagaID string) error {
+	if sagaID == "" {
+		return nil
+	}
+	_, err := s.db.Exec(`UPDATE sagas SET status=?, updated_at=NOW() WHERE saga_id = ?`, sagaStatusDone, sagaID)
+	return err
+}
+
+func (s *Service) MarkSagaCompensated(sagaID, reason string) error {
+	if sagaID == "" {
+		return nil
+	}
+	_, err := s.db.Exec(`UPDATE sagas SET status=?, reason=?, updated_at=NOW() WHERE saga_id = ?`, sagaStatusComp, reason, sagaID)
+	return err
 }
 
 func (s *Service) DelayTask(taskID string, retryCount int, nextRetryAt time.Time) error {

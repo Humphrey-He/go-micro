@@ -2,9 +2,13 @@ package gateway
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"go-micro/internal/activity"
 	"go-micro/internal/payment"
+	"go-micro/internal/price"
+	"go-micro/internal/refund"
 	"go-micro/pkg/errx"
 	"go-micro/pkg/httpx"
 	"go-micro/pkg/middleware"
@@ -43,6 +47,14 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.POST("/payments/:id/success", h.markPaymentSuccess)
 	api.POST("/payments/:id/failed", h.markPaymentFailed)
 	api.POST("/payments/:id/timeout", h.markPaymentTimeout)
+	api.POST("/refund/initiate", h.refundInitiate)
+	api.POST("/refund/status", h.refundStatus)
+	api.POST("/refund/rollback", h.refundRollback)
+	api.POST("/activity/coupon", h.issueCoupon)
+	api.POST("/activity/seckill", h.seckill)
+	api.GET("/activity/status", h.activityStatus)
+	api.POST("/price/calculate", h.calculatePrice)
+	api.GET("/price/history", h.priceHistory)
 	api.GET("/users/me", h.me)
 }
 
@@ -225,6 +237,195 @@ func (h *Handler) markPaymentTimeout(c *gin.Context) {
 	resp, err := h.svc.MarkPaymentTimeout(id)
 	if err != nil {
 		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Initiate refund
+// @Tags Refund
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body refund.InitiateRequest true "refund initiate"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/refund/initiate [post]
+func (h *Handler) refundInitiate(c *gin.Context) {
+	var req refund.InitiateRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.RefundID == "" || req.OrderID == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.RefundInitiate(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "refund service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Refund status
+// @Tags Refund
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body refund.StatusRequest true "refund status"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/refund/status [post]
+func (h *Handler) refundStatus(c *gin.Context) {
+	var req refund.StatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.RefundID == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.RefundStatus(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "refund service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Refund rollback
+// @Tags Refund
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body refund.RollbackRequest true "refund rollback"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/refund/rollback [post]
+func (h *Handler) refundRollback(c *gin.Context) {
+	var req refund.RollbackRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.RefundID == "" || req.OrderID == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.RefundRollback(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "refund service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Issue coupon
+// @Tags Activity
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body activity.CouponRequest true "issue coupon"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/activity/coupon [post]
+func (h *Handler) issueCoupon(c *gin.Context) {
+	var req activity.CouponRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.CouponID == "" || req.UserID == "" || req.Amount <= 0 {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.IssueCoupon(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "activity service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Seckill request
+// @Tags Activity
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body activity.SeckillRequest true "seckill request"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/activity/seckill [post]
+func (h *Handler) seckill(c *gin.Context) {
+	var req activity.SeckillRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.UserID == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.Seckill(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "activity service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Activity status
+// @Tags Activity
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param coupon_id query string false "coupon id"
+// @Param sku_id query string false "sku id"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/activity/status [get]
+func (h *Handler) activityStatus(c *gin.Context) {
+	couponID := c.Query("coupon_id")
+	skuID := c.Query("sku_id")
+	resp, err := h.svc.GetActivityStatus(couponID, skuID)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, err.Error())
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Calculate price
+// @Tags Price
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param body body price.CalculateRequest true "calculate price"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/price/calculate [post]
+func (h *Handler) calculatePrice(c *gin.Context) {
+	var req price.CalculateRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.BasePrice <= 0 {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.CalculatePrice(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "price service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary Price history
+// @Tags Price
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param sku_id query string true "sku id"
+// @Param limit query int false "limit"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/price/history [get]
+func (h *Handler) priceHistory(c *gin.Context) {
+	skuID := c.Query("sku_id")
+	limit := 20
+	if v := c.Query("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil {
+			limit = n
+		}
+	}
+	resp, err := h.svc.GetPriceHistory(skuID, limit)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "price service unavailable")
 		c.JSON(code, body)
 		return
 	}

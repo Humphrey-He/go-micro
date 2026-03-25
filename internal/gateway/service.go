@@ -5,9 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"go-micro/internal/activity"
 	"go-micro/internal/inventory"
 	"go-micro/internal/order"
 	"go-micro/internal/payment"
+	"go-micro/internal/price"
+	"go-micro/internal/refund"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
@@ -23,25 +26,37 @@ type Service struct {
 	user      *user.GRPCClient
 	inventory *inventory.GRPCClient
 	task      *task.GRPCClient
+	refund    *refund.GRPCClient
+	activity  *activity.GRPCClient
+	price     *price.GRPCClient
 	payment   *payment.Service
 	cbOrder   *resilience.CircuitBreaker
 	cbUser    *resilience.CircuitBreaker
 	cbInv     *resilience.CircuitBreaker
 	cbTask    *resilience.CircuitBreaker
+	cbRefund  *resilience.CircuitBreaker
+	cbAct     *resilience.CircuitBreaker
+	cbPrice   *resilience.CircuitBreaker
 }
 
-func NewService(orderClient *order.GRPCClient, userClient *user.GRPCClient, invClient *inventory.GRPCClient, taskClient *task.GRPCClient) *Service {
+func NewService(orderClient *order.GRPCClient, userClient *user.GRPCClient, invClient *inventory.GRPCClient, taskClient *task.GRPCClient, refundClient *refund.GRPCClient, activityClient *activity.GRPCClient, priceClient *price.GRPCClient) *Service {
 	cb := newBreakerFromEnv()
 	return &Service{
 		order:     orderClient,
 		user:      userClient,
 		inventory: invClient,
 		task:      taskClient,
+		refund:    refundClient,
+		activity:  activityClient,
+		price:     priceClient,
 		payment:   nil,
 		cbOrder:   cb,
 		cbUser:    cb,
 		cbInv:     cb,
 		cbTask:    cb,
+		cbRefund:  cb,
+		cbAct:     cb,
+		cbPrice:   cb,
 	}
 }
 
@@ -187,6 +202,141 @@ func (s *Service) MarkPaymentTimeout(paymentID string) (httpx.Response, error) {
 		return httpx.Response{}, err
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: map[string]bool{"success": true}}, nil
+}
+
+func (s *Service) RefundInitiate(req refund.InitiateRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *refund.Refund
+	err := s.cbRefund.Execute(func() error {
+		var callErr error
+		resp, callErr = s.refund.Initiate(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) RefundStatus(req refund.StatusRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *refund.Refund
+	err := s.cbRefund.Execute(func() error {
+		var callErr error
+		resp, callErr = s.refund.Status(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) RefundRollback(req refund.RollbackRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *refund.Refund
+	err := s.cbRefund.Execute(func() error {
+		var callErr error
+		resp, callErr = s.refund.Rollback(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) IssueCoupon(req activity.CouponRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *activity.Coupon
+	err := s.cbAct.Execute(func() error {
+		var callErr error
+		resp, callErr = s.activity.IssueCoupon(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) Seckill(req activity.SeckillRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *activity.SeckillOrder
+	err := s.cbAct.Execute(func() error {
+		var callErr error
+		resp, callErr = s.activity.Seckill(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) GetActivityStatus(couponID, skuID string) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if couponID != "" {
+		var resp *activity.Coupon
+		err := s.cbAct.Execute(func() error {
+			var callErr error
+			resp, callErr = s.activity.GetCoupon(ctx, couponID)
+			return callErr
+		})
+		if err != nil {
+			return httpx.Response{}, err
+		}
+		return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+	}
+	if skuID != "" {
+		var resp *activity.Seckill
+		err := s.cbAct.Execute(func() error {
+			var callErr error
+			resp, callErr = s.activity.GetSeckill(ctx, skuID)
+			return callErr
+		})
+		if err != nil {
+			return httpx.Response{}, err
+		}
+		return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+	}
+	return httpx.Response{}, errors.New("coupon_id or sku_id required")
+}
+
+func (s *Service) CalculatePrice(req price.CalculateRequest) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp *price.CalculateResponse
+	err := s.cbPrice.Execute(func() error {
+		var callErr error
+		resp, callErr = s.price.Calculate(ctx, req)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
+}
+
+func (s *Service) GetPriceHistory(skuID string, limit int) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	var resp []price.History
+	err := s.cbPrice.Execute(func() error {
+		var callErr error
+		resp, callErr = s.price.History(ctx, skuID, limit)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
 }
 
 var errPaymentNotInit = errors.New("payment service not initialized")

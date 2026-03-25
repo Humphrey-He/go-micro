@@ -10,10 +10,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	_ "go-micro/docs/swagger"
+	"go-micro/internal/activity"
 	"go-micro/internal/gateway"
 	"go-micro/internal/inventory"
 	"go-micro/internal/order"
 	"go-micro/internal/payment"
+	"go-micro/internal/price"
+	"go-micro/internal/refund"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
@@ -81,13 +84,37 @@ func Run() error {
 	}
 	defer taskConn.Close()
 
+	refundTarget := config.GetEnv("REFUND_GRPC_TARGET", "localhost:9086")
+	refundClient, refundConn, err := refund.NewGRPCClient(refundTarget)
+	if err != nil {
+		logger.Error("refund grpc dial failed", zap.Error(err))
+		return err
+	}
+	defer refundConn.Close()
+
+	activityTarget := config.GetEnv("ACTIVITY_GRPC_TARGET", "localhost:9087")
+	activityClient, activityConn, err := activity.NewGRPCClient(activityTarget)
+	if err != nil {
+		logger.Error("activity grpc dial failed", zap.Error(err))
+		return err
+	}
+	defer activityConn.Close()
+
+	priceTarget := config.GetEnv("PRICE_GRPC_TARGET", "localhost:9088")
+	priceClient, priceConn, err := price.NewGRPCClient(priceTarget)
+	if err != nil {
+		logger.Error("price grpc dial failed", zap.Error(err))
+		return err
+	}
+	defer priceConn.Close()
+
 	dbx, err := db.NewMySQL()
 	if err != nil {
 		logger.Error("mysql connect failed", zap.Error(err))
 		return err
 	}
 	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})
-	svc := gateway.NewService(orderClient, userClient, invClient, taskClient)
+	svc := gateway.NewService(orderClient, userClient, invClient, taskClient, refundClient, activityClient, priceClient)
 	svc.SetPayment(paySvc)
 	h := gateway.NewHandler(svc)
 	h.Register(r)

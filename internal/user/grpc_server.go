@@ -30,3 +30,14 @@ func (s *GRPCServer) GetUserByName(ctx context.Context, req *userpb.GetUserByNam
 	}
 	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status)}, nil
 }
+
+func (s *GRPCServer) Authenticate(ctx context.Context, req *userpb.AuthRequest) (*userpb.User, error) {
+	u, err := s.svc.GetByUsername(req.Username)
+	if err != nil {
+		return nil, err
+	}
+	if !s.svc.VerifyPassword(u, req.Password) {
+		return nil, ErrNotFound
+	}
+	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status)}, nil
+}

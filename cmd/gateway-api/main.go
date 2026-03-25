@@ -12,6 +12,7 @@ import (
 	_ "go-micro/docs/swagger"
 	"go-micro/internal/gateway"
 	"go-micro/internal/order"
+	"go-micro/internal/user"
 	"go-micro/pkg/config"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
@@ -46,7 +47,14 @@ func main() {
 	}
 	defer orderConn.Close()
 
-	svc := gateway.NewService(orderClient)
+	userTarget := config.GetEnv("USER_GRPC_TARGET", "localhost:9083")
+	userClient, userConn, err := user.NewGRPCClient(userTarget)
+	if err != nil {
+		logger.Fatal("user grpc dial failed", zap.Error(err))
+	}
+	defer userConn.Close()
+
+	svc := gateway.NewService(orderClient, userClient)
 	h := gateway.NewHandler(svc)
 	h.Register(r)
 

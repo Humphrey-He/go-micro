@@ -27,3 +27,7 @@ func (c *GRPCClient) GetUser(ctx context.Context, userID string) (*userpb.User, 
 func (c *GRPCClient) GetUserByName(ctx context.Context, username string) (*userpb.User, error) {
 	return c.client.GetUserByName(ctx, &userpb.GetUserByNameRequest{Username: username})
 }
+
+func (c *GRPCClient) Authenticate(ctx context.Context, username, password string) (*userpb.User, error) {
+	return c.client.Authenticate(ctx, &userpb.AuthRequest{Username: username, Password: password})
+}

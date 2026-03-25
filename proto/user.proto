@@ -12,6 +12,11 @@ message GetUserByNameRequest {
   string username = 1;
 }
 
+message AuthRequest {
+  string username = 1;
+  string password = 2;
+}
+
 message User {
   string user_id = 1;
   string username = 2;
@@ -22,4 +27,5 @@ message User {
 service UserService {
   rpc GetUser(GetUserRequest) returns (User);
   rpc GetUserByName(GetUserByNameRequest) returns (User);
+  rpc Authenticate(AuthRequest) returns (User);
 }

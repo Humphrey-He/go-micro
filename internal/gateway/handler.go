@@ -32,9 +32,35 @@ func (h *Handler) Register(r *gin.Engine) {
 	})
 
 	api := r.Group("/api/v1")
-	api.Use(middleware.AuthRequired())
+	api.POST("/auth/login", h.login)
+	api.Use(middleware.JWTAuth())
 	api.POST("/orders", h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
+	api.GET("/users/me", h.me)
+}
+
+// @Summary ??
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param body body LoginRequest true "??"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/auth/login [post]
+func (h *Handler) login(c *gin.Context) {
+	var req LoginRequest
+	if err := c.ShouldBindJSON(&req); err != nil || req.Username == "" || req.Password == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
+		c.JSON(code, body)
+		return
+	}
+	resp, err := h.svc.Login(req.Username, req.Password)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid username or password")
+		c.JSON(code, body)
+		return
+	}
+	code, body := httpx.OK(resp)
+	c.JSON(code, body)
 }
 
 // @Summary ????
@@ -80,6 +106,20 @@ func (h *Handler) getOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary ??????
+// @Tags User
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/users/me [get]
+func (h *Handler) me(c *gin.Context) {
+	userID, _ := c.Get(middleware.CtxUserID)
+	username, _ := c.Get(middleware.CtxName)
+	role, _ := c.Get(middleware.CtxRole)
+	code, body := httpx.OK(gin.H{"user_id": userID, "username": username, "role": role})
+	c.JSON(code, body)
 }
 
 func toString(v interface{}) string {

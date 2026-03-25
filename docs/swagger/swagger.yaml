@@ -1,0 +1,310 @@
+basePath: /
+definitions:
+  gateway.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/gateway.Item'
+        type: array
+      remark:
+        type: string
+      request_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  gateway.Item:
+    properties:
+      price:
+        type: integer
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  httpx.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  inventory.ConfirmRequest:
+    properties:
+      reserved_id:
+        type: string
+    type: object
+  inventory.Item:
+    properties:
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  inventory.ReleaseRequest:
+    properties:
+      reserved_id:
+        type: string
+    type: object
+  inventory.ReserveRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/inventory.Item'
+        type: array
+      order_id:
+        type: string
+    type: object
+  task.CreateTaskRequest:
+    properties:
+      biz_no:
+        type: string
+      order_id:
+        type: string
+      type:
+        type: string
+    type: object
+  user.CreateUserRequest:
+    properties:
+      mobile:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: ???? API ??
+  title: Go-Micro Gateway API
+  version: "1.0"
+paths:
+  /api/v1/orders:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/gateway.CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Order
+  /api/v1/orders/{id}:
+    get:
+      parameters:
+      - description: Bearer token
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      - description: ??ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Order
+  /inventory/{sku_id}:
+    get:
+      parameters:
+      - description: SKU ID
+        in: path
+        name: sku_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Inventory
+  /inventory/confirm:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/inventory.ConfirmRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Inventory
+  /inventory/release:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/inventory.ReleaseRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Inventory
+  /inventory/reserve:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/inventory.ReserveRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Inventory
+  /tasks:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/task.CreateTaskRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Task
+  /tasks/{id}:
+    get:
+      parameters:
+      - description: ??ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Task
+  /tasks/{id}/retry:
+    post:
+      parameters:
+      - description: ??ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - Task
+  /users:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: ????
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - User
+  /users/{id}:
+    get:
+      parameters:
+      - description: ??ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpx.Response'
+      summary: ????
+      tags:
+      - User
+swagger: "2.0"

@@ -1,0 +1,13 @@
+# syntax=docker/dockerfile:1
+FROM golang:1.22 AS builder
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/inventory ./cmd/inventory-service
+
+FROM alpine:3.19
+WORKDIR /app
+COPY --from=builder /out/inventory /app/inventory
+EXPOSE 8082 9082
+CMD ["/app/inventory"]

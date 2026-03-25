@@ -23,6 +23,7 @@ var (
 	ErrInvalidState = errors.New("invalid reservation state")
 	ErrSkuNotFound  = errors.New("sku not found")
 	ErrResvNotFound = errors.New("reservation by order not found")
+	ErrBusy         = errors.New("inventory locked")
 )
 
 const (
@@ -49,6 +50,24 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 	if req.OrderID == "" || len(req.Items) == 0 {
 		return ReserveResponse{}, errors.New("invalid request")
 	}
+
+	locks := make([]string, 0, len(req.Items))
+	for _, it := range req.Items {
+		lockKey := "lock:inventory:" + it.SkuID
+		locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
+		if !locked {
+			for _, lk := range locks {
+				_ = cache.Unlock(s.ctx, s.cache.rdb, lk)
+			}
+			return ReserveResponse{}, ErrBusy
+		}
+		locks = append(locks, lockKey)
+	}
+	defer func() {
+		for _, lk := range locks {
+			_ = cache.Unlock(s.ctx, s.cache.rdb, lk)
+		}
+	}()
 
 	reservedID := uuid.NewString()
 	err := db.Tx(s.db, func(tx *sqlx.Tx) error {
@@ -97,6 +116,7 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 
 func (s *Service) Release(reservedID string) error {
 	alreadyReleased := false
+	var cachedItems []Item
 	err := db.Tx(s.db, func(tx *sqlx.Tx) error {
 		resv := Reservation{}
 		if err := tx.Get(&resv, `SELECT * FROM inventory_reserved WHERE reserved_id = ? FOR UPDATE`, reservedID); err != nil {
@@ -117,6 +137,7 @@ func (s *Service) Release(reservedID string) error {
 		if err := tx.Select(&items, `SELECT sku_id,quantity FROM inventory_reserved_item WHERE reserved_id = ?`, reservedID); err != nil {
 			return err
 		}
+		cachedItems = items
 		for _, it := range items {
 			_, err := tx.Exec(`UPDATE inventory SET available = available + ?, reserved = reserved - ?, updated_at = NOW() WHERE sku_id = ?`, it.Quantity, it.Quantity, it.SkuID)
 			if err != nil {
@@ -134,11 +155,7 @@ func (s *Service) Release(reservedID string) error {
 		return nil
 	}
 
-	var items []Item
-	if err := s.db.Select(&items, `SELECT sku_id,quantity FROM inventory_reserved_item WHERE reserved_id = ?`, reservedID); err != nil {
-		return err
-	}
-	for _, it := range items {
+	for _, it := range cachedItems {
 		_ = s.cache.refreshInventory(s.ctx, s.db, it.SkuID)
 	}
 	return nil

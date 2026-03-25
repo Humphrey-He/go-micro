@@ -98,6 +98,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 		return CreateOrderResponse{}, errors.New("invalid request")
 	}
 
+	// Idempotency: request_id is unique, return existing order on duplicate.
 	orderID := uuid.NewString()
 	bizNo := "BIZ-" + uuid.NewString()
 	total := int64(0)
@@ -132,6 +133,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 		return CreateOrderResponse{}, insertErr
 	}
 
+	// Reserve inventory synchronously; failure marks order FAILED.
 	reservedID, err := s.reserveInventory(orderID, req.Items)
 	if err != nil {
 		_ = s.updateStatusWithVersion(orderID, statusCreated, statusFailed, "", 0)
@@ -140,6 +142,7 @@ func (s *Service) Create(req CreateOrderRequest) (CreateOrderResponse, error) {
 
 	event := OrderCreatedEvent{OrderID: orderID, BizNo: bizNo, Status: statusReserved, UserID: req.UserID, ReservedID: reservedID}
 	txErr := db.Tx(s.db, func(tx *sqlx.Tx) error {
+		// Transactionally update order status and persist outbox event.
 		if err := updateStatusTx(tx, orderID, statusCreated, statusReserved, reservedID, 0); err != nil {
 			return err
 		}
@@ -340,6 +343,7 @@ func (s *Service) reserveInventory(orderID string, items []Item) (string, error)
 	if s.invClient == nil {
 		return "", ErrInventoryFail
 	}
+	// Remote reserve call with circuit breaker and timeout.
 	ctx, cancel := context.WithTimeout(s.ctx, 3*time.Second)
 	defer cancel()
 	var reservedID string
@@ -401,6 +405,7 @@ type OrderCreatedEvent struct {
 }
 
 func (s *Service) publishOutboxBatch(limit int) error {
+	// Outbox publisher: fetch PENDING rows, publish, then mark SENT.
 	if s.publisher == nil {
 		return nil
 	}
@@ -436,6 +441,7 @@ func (s *Service) publishOutboxBatch(limit int) error {
 }
 
 func (s *Service) StartOutboxPublisher(stop <-chan struct{}) {
+	// Background worker for reliable event delivery.
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
 	for {

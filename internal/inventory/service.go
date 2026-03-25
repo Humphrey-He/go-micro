@@ -51,6 +51,7 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 		return ReserveResponse{}, errors.New("invalid request")
 	}
 
+	// Distributed lock per SKU to avoid oversell in high concurrency.
 	locks := make([]string, 0, len(req.Items))
 	for _, it := range req.Items {
 		lockKey := "lock:inventory:" + it.SkuID
@@ -107,6 +108,7 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 		return ReserveResponse{}, err
 	}
 
+	// Write-through cache refresh after DB commit.
 	for _, it := range req.Items {
 		_ = s.cache.refreshInventory(s.ctx, s.db, it.SkuID)
 	}
@@ -126,6 +128,7 @@ func (s *Service) Release(reservedID string) error {
 			return err
 		}
 		if resv.Status == resvReleased {
+			// Idempotent release: already released, return success.
 			alreadyReleased = true
 			return nil
 		}
@@ -155,6 +158,7 @@ func (s *Service) Release(reservedID string) error {
 		return nil
 	}
 
+	// Write-through cache refresh after release.
 	for _, it := range cachedItems {
 		_ = s.cache.refreshInventory(s.ctx, s.db, it.SkuID)
 	}
@@ -165,6 +169,7 @@ func (s *Service) ReleaseByOrder(orderID string) error {
 	if orderID == "" {
 		return ErrNotFound
 	}
+	// Idempotent by order: will no-op if reservation already released.
 	resv, err := s.GetReservation(orderID)
 	if err != nil {
 		return err

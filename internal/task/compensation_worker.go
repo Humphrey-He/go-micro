@@ -27,6 +27,7 @@ func StartCompensationWorker(svc *Service, ord CompensationOrderUpdater, inv Com
 	if svc == nil {
 		return
 	}
+	// Poll saga_steps and execute compensation asynchronously.
 	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 

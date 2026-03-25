@@ -71,6 +71,7 @@ func processTimeoutTasks(svc TimeoutTaskStore, ord OrderReader, canceler OrderCa
 			continue
 		}
 		if stepWriter != nil {
+			// Create saga steps for cancel + release; execution is async via compensation worker.
 			payload := `{"order_id":"` + t.OrderID + `"}`
 			_ = stepWriter.CreateSagaStep(t.OrderID, stepOrderCancel, stepInvReleaseOrder, "timeout", payload)
 			_ = svc.MarkSuccess(t.TaskID)

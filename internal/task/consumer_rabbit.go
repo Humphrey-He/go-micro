@@ -41,6 +41,7 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 		return
 	}
 	for msg := range msgs {
+		// Consume order_reserved event to create fulfillment task.
 		var evt OrderCreatedEvent
 		if err := json.Unmarshal(msg.Body, &evt); err != nil {
 			_ = msg.Nack(false, false)
@@ -51,16 +52,19 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 			continue
 		}
 
+		// Record saga for tracing and compensation.
 		_ = svc.CreateSaga(evt.OrderID, evt.BizNo, sagaTypeOrder)
 
 		t, err := svc.Create(CreateTaskRequest{BizNo: evt.BizNo, OrderID: evt.OrderID, Type: taskTypeFulfill})
 		if err == nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			// Execute fulfillment and update order status.
 			if err := processFulfillment(ctx, svc, ord, t); err != nil {
 				handleTaskFailure(ctx, svc, ord, t)
 			}
 			cancel()
 			_ = svc.MarkSagaCompleted(evt.OrderID)
+			// Schedule timeout cancel task for compensation if not completed.
 			_, _ = svc.CreateTimeoutTask(evt.OrderID, evt.BizNo, 15*time.Minute)
 			_ = msg.Ack(false)
 			continue

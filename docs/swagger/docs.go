@@ -29,6 +29,13 @@ const docTemplate = `{
                 "summary": "Issue coupon",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "issue coupon",
                         "name": "body",
                         "in": "body",
@@ -62,6 +69,13 @@ const docTemplate = `{
                 "summary": "Seckill request",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "seckill request",
                         "name": "body",
                         "in": "body",
@@ -91,6 +105,13 @@ const docTemplate = `{
                 ],
                 "summary": "Activity status",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "coupon id",
@@ -1575,8 +1596,6 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "???? API ??",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {

@@ -1,7 +1,6 @@
 package price
 
 import (
-	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

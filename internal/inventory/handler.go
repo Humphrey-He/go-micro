@@ -19,14 +19,6 @@ func (h *Handler) Register(r *gin.Engine) {
 		code, body := httpx.OK(gin.H{"status": "ok"})
 		c.JSON(code, body)
 	})
-	r.GET("/healthz", func(c *gin.Context) {
-		code, body := httpx.OK(gin.H{"status": "ok"})
-		c.JSON(code, body)
-	})
-	r.GET("/readyz", func(c *gin.Context) {
-		code, body := httpx.OK(gin.H{"status": "ready"})
-		c.JSON(code, body)
-	})
 
 	r.GET("/inventory/:sku_id", h.getInventory)
 	r.POST("/inventory/reserve", h.reserve)

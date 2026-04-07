@@ -11,7 +11,7 @@ import (
 )
 
 func NewMySQL() (*sqlx.DB, error) {
-	dsn := config.GetEnv("MYSQL_DSN", "root:root@tcp(127.0.0.1:3306)/go_micro?parseTime=true&charset=utf8mb4&loc=Local")
+	dsn := config.GetEnv("MYSQL_DSN", "root:root@tcp(127.0.0.1:3307)/go_micro?parseTime=true&charset=utf8mb4&loc=Local")
 	db, err := sqlx.Open("mysql", dsn)
 	if err != nil {
 		return nil, err

@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# 设置环境变量
+export MYSQL_DSN="root:password@tcp(localhost:3306)/go_micro?charset=utf8mb4&parseTime=True&loc=Local"
+export REDIS_ADDR="localhost:6379"
+export MQ_URL="amqp://guest:guest@localhost:5672/"
+export ORDER_GRPC_ADDR="localhost:50051"
+export INVENTORY_GRPC_ADDR="localhost:50052"
+
+echo "启动核心微服务..."
+echo "请在不同的终端窗口中运行以下命令："
+echo ""
+echo "终端1 - 网关服务:"
+echo "  go run cmd/gateway-api/main.go"
+echo ""
+echo "终端2 - 订单服务:"
+echo "  go run cmd/order-service/main.go"
+echo ""
+echo "终端3 - 库存服务:"
+echo "  go run cmd/inventory-service/main.go"
+echo ""
+echo "终端4 - 用户服务:"
+echo "  go run cmd/user-service/main.go"
+echo ""
+echo "终端5 - 任务服务:"
+echo "  go run cmd/task-service/main.go"
+echo ""
+echo "确保先启动依赖服务: MySQL、Redis、RabbitMQ"

@@ -3,6 +3,7 @@ package price
 import (
 	"database/sql"
 	"errors"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -38,14 +39,18 @@ func (s *Service) Calculate(req CalculateRequest) (*CalculateResponse, error) {
 		reason = "vip-level-2"
 	}
 	final := price * discount
-	return &CalculateResponse{
+	resp := &CalculateResponse{
 		SkuID:          req.SkuID,
 		BasePrice:      req.BasePrice,
 		CouponAmount:   req.CouponAmount,
 		LevelDiscount:  discount,
 		FinalPrice:     final,
 		DiscountReason: reason,
-	}, nil
+	}
+	if err := s.recordHistory(req, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (s *Service) History(skuID string, limit int) ([]History, error) {
@@ -63,4 +68,27 @@ func (s *Service) History(skuID string, limit int) ([]History, error) {
 		return nil, err
 	}
 	return rows, nil
+}
+
+func (s *Service) recordHistory(req CalculateRequest, resp *CalculateResponse) error {
+	if s.db == nil {
+		return nil
+	}
+	reason := resp.DiscountReason
+	if req.CouponAmount > 0 {
+		if reason == "none" {
+			reason = "coupon"
+		} else {
+			reason = "coupon+" + reason
+		}
+	}
+	_, err := s.db.Exec(
+		`INSERT INTO price_history(sku_id,old_price,new_price,reason,created_at) VALUES(?,?,?,?,?)`,
+		req.SkuID,
+		req.BasePrice,
+		resp.FinalPrice,
+		reason,
+		time.Now(),
+	)
+	return err
 }

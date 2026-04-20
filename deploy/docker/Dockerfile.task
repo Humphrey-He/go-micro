@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM golang:1.22 AS builder
+FROM golang:1.25 AS builder
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
@@ -9,5 +9,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/task ./cmd/task-servi
 FROM alpine:3.19
 WORKDIR /app
 COPY --from=builder /out/task /app/task
-EXPOSE 8084
+EXPOSE 8084 9084
 CMD ["/app/task"]

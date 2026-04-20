@@ -1,17 +1,25 @@
-name: go-test
+name: ci
 
 on:
   push:
     branches: [ "main" ]
+    tags: [ "v*" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  GO_VERSION: "1.25.x"
+  GOTOOLCHAIN: auto
 
 jobs:
-  test:
+  quality:
+    name: quality
     runs-on: ubuntu-latest
-    env:
-      CGO_ENABLED: 1
-      GOTOOLCHAIN: auto
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,17 +27,33 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.x"
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
+          cache: true
 
-      - name: Go test (cover)
-        run: go test ./... -v -cover
+      - name: Verify gofmt
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go test with coverage
+        run: go test ./... -v -coverprofile=coverage.out
+
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage.out
 
   race:
+    name: race
     runs-on: ubuntu-latest
-    env:
-      CGO_ENABLED: 1
-      GOTOOLCHAIN: auto
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,8 +61,154 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.25.x"
+          go-version: ${{ env.GO_VERSION }}
           check-latest: true
+          cache: true
 
-      - name: Go test (race)
+      - name: Go test with race detector
         run: go test ./... -race
+
+  build:
+    name: build ${{ matrix.service }} ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - activity-service
+          - gateway-api
+          - inventory-service
+          - order-service
+          - payment-service
+          - price-service
+          - refund-service
+          - task-service
+          - user-service
+        goos: [ linux ]
+        goarch: [ amd64, arm64 ]
+    env:
+      CGO_ENABLED: 0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          cache: true
+
+      - name: Build service
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -trimpath -ldflags="-s -w" -o dist/${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/${{ matrix.service }}
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/${{ matrix.service }}-${{ matrix.goos }}-${{ matrix.goarch }}
+
+  docker-build:
+    name: docker build ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    needs: quality
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: activity
+            dockerfile: deploy/docker/Dockerfile.activity
+          - image: gateway
+            dockerfile: deploy/docker/Dockerfile.gateway
+          - image: inventory
+            dockerfile: deploy/docker/Dockerfile.inventory
+          - image: order
+            dockerfile: deploy/docker/Dockerfile.order
+          - image: payment
+            dockerfile: deploy/docker/Dockerfile.payment
+          - image: price
+            dockerfile: deploy/docker/Dockerfile.price
+          - image: refund
+            dockerfile: deploy/docker/Dockerfile.refund
+          - image: task
+            dockerfile: deploy/docker/Dockerfile.task
+          - image: user
+            dockerfile: deploy/docker/Dockerfile.user
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: false
+          tags: go-micro/${{ matrix.image }}:ci
+
+  docker-publish:
+    name: docker publish ${{ matrix.image }}
+    runs-on: ubuntu-latest
+    needs: [ quality, build, docker-build ]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: activity
+            dockerfile: deploy/docker/Dockerfile.activity
+          - image: gateway
+            dockerfile: deploy/docker/Dockerfile.gateway
+          - image: inventory
+            dockerfile: deploy/docker/Dockerfile.inventory
+          - image: order
+            dockerfile: deploy/docker/Dockerfile.order
+          - image: payment
+            dockerfile: deploy/docker/Dockerfile.payment
+          - image: price
+            dockerfile: deploy/docker/Dockerfile.price
+          - image: refund
+            dockerfile: deploy/docker/Dockerfile.refund
+          - image: task
+            dockerfile: deploy/docker/Dockerfile.task
+          - image: user
+            dockerfile: deploy/docker/Dockerfile.user
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.image }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=tag
+            type=sha,prefix=sha-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

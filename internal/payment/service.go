@@ -76,6 +76,20 @@ func (s *Service) Get(paymentID string) (*Payment, error) {
 	return &p, nil
 }
 
+func (s *Service) GetByOrderID(orderID string) (*Payment, error) {
+	if orderID == "" {
+		return nil, ErrNotFound
+	}
+	p := Payment{}
+	if err := s.db.Get(&p, `SELECT * FROM payments WHERE order_id = ? LIMIT 1`, orderID); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
 func (s *Service) MarkSuccess(paymentID string) error {
 	return s.updateStatus(paymentID, statusCreated, statusSuccess)
 }

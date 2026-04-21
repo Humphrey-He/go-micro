@@ -325,10 +325,10 @@ export const OrderDetailPage: React.FC = () => {
                     </Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {formatDateTime(data.createdAt)}
+                    {data.createdAt ? formatDateTime(data.createdAt) : '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {formatDateTime(data.updatedAt)}
+                    {data.updatedAt ? formatDateTime(data.updatedAt) : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>

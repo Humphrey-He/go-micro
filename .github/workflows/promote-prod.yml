@@ -1,0 +1,71 @@
+name: promote-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Branch to promote into prod"
+        required: true
+        default: "main"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promote-prod
+  cancel-in-progress: false
+
+env:
+  GO_VERSION: "1.25.x"
+  GOTOOLCHAIN: auto
+
+jobs:
+  verify-and-promote:
+    name: verify and promote to prod
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_branch }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          cache: true
+
+      - name: Verify gofmt
+        run: |
+          files="$(gofmt -l .)"
+          if [ -n "$files" ]; then
+            echo "$files"
+            exit 1
+          fi
+
+      - name: Go vet
+        run: go vet ./...
+
+      - name: Go test
+        run: go test ./... -race
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fast-forward prod
+        run: |
+          git fetch origin ${{ inputs.source_branch }}
+          git fetch origin prod || true
+          if git rev-parse --verify origin/prod >/dev/null 2>&1; then
+            git checkout prod
+            git reset --hard origin/prod
+            git merge --ff-only origin/${{ inputs.source_branch }}
+          else
+            git checkout -b prod origin/${{ inputs.source_branch }}
+          fi
+          git push origin HEAD:prod

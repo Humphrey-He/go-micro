@@ -146,10 +146,10 @@ const docTemplate = `{
                 "tags": [
                     "Auth"
                 ],
-                "summary": "??",
+                "summary": "用户登录",
                 "parameters": [
                     {
-                        "description": "??",
+                        "description": "登录请求",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -215,7 +215,7 @@ const docTemplate = `{
                 "tags": [
                     "Order"
                 ],
-                "summary": "????",
+                "summary": "创建订单",
                 "parameters": [
                     {
                         "type": "string",
@@ -225,7 +225,7 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "????",
+                        "description": "订单创建请求",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -252,7 +252,7 @@ const docTemplate = `{
                 "tags": [
                     "Order"
                 ],
-                "summary": "????",
+                "summary": "查询订单",
                 "parameters": [
                     {
                         "type": "string",
@@ -263,7 +263,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "??ID",
+                        "description": "订单ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -633,7 +633,7 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "??????",
+                "summary": "获取当前用户信息",
                 "parameters": [
                     {
                         "type": "string",
@@ -1262,10 +1262,10 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "????",
+                "summary": "创建用户",
                 "parameters": [
                     {
-                        "description": "????",
+                        "description": "用户创建请求",
                         "name": "body",
                         "in": "body",
                         "required": true,
@@ -1292,11 +1292,11 @@ const docTemplate = `{
                 "tags": [
                     "User"
                 ],
-                "summary": "????",
+                "summary": "查询用户",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "??ID",
+                        "description": "用户ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1593,11 +1593,9 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "Go-Micro Gateway API",
-	Description:      "???? API ??",
+	Description:      "Go-Micro 网关服务 API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
 }
 
 func init() {

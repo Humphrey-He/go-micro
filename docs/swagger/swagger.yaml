@@ -176,7 +176,7 @@ definitions:
 host: localhost:8080
 info:
   contact: {}
-  description: ???? API ??
+  description: Go-Micro 网关服务 API
   title: Go-Micro Gateway API
   version: "1.0"
 paths:
@@ -263,7 +263,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: ??
+      - description: 登录请求
         in: body
         name: body
         required: true
@@ -276,7 +276,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ??
+      summary: 用户登录
       tags:
       - Auth
   /api/v1/order-views/{order_no}:
@@ -315,7 +315,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: ????
+      - description: 订单创建请求
         in: body
         name: body
         required: true
@@ -328,7 +328,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 创建订单
       tags:
       - Order
   /api/v1/orders/{id}:
@@ -339,7 +339,7 @@ paths:
         name: Authorization
         required: true
         type: string
-      - description: ??ID
+      - description: 订单ID
         in: path
         name: id
         required: true
@@ -351,7 +351,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 查询订单
       tags:
       - Order
   /api/v1/payments:
@@ -593,7 +593,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ??????
+      summary: 获取当前用户信息
       tags:
       - User
   /inventory/{sku_id}:
@@ -985,7 +985,7 @@ paths:
       consumes:
       - application/json
       parameters:
-      - description: ????
+      - description: 用户创建请求
         in: body
         name: body
         required: true
@@ -998,13 +998,13 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 创建用户
       tags:
       - User
   /users/{id}:
     get:
       parameters:
-      - description: ??ID
+      - description: 用户ID
         in: path
         name: id
         required: true
@@ -1016,7 +1016,7 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/httpx.Response'
-      summary: ????
+      summary: 查询用户
       tags:
       - User
 swagger: "2.0"

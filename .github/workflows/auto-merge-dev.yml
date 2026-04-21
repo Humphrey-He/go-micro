@@ -1,0 +1,40 @@
+name: auto-merge-dev
+
+on:
+  workflow_run:
+    workflows: [ "ci" ]
+    types: [ completed ]
+    branches: [ "dev" ]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: auto-merge-dev
+  cancel-in-progress: false
+
+jobs:
+  merge-dev-to-main:
+    name: merge dev into main
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git author
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge dev into main
+        run: |
+          git fetch origin dev main
+          git checkout main
+          git reset --hard origin/main
+          git merge --no-ff --no-edit origin/dev
+          git push origin HEAD:main
+

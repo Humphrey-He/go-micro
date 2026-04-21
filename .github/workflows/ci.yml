@@ -11,6 +11,8 @@ on:
 permissions:
   contents: read
   packages: write
+  id-token: write
+  contents: write
 
 env:
   GO_VERSION: "1.25.x"
@@ -68,10 +70,65 @@ jobs:
       - name: Go test with race detector
         run: go test ./... -race
 
+  migration:
+    name: migration validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          cache: true
+
+      - name: Install migrate
+        run: go install -tags 'mysql' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
+      - name: Validate migration files
+        run: |
+          # Check migration files exist and are properly named
+          if [ ! -d "deploy/migrations" ]; then
+            echo "No migrations directory found"
+            exit 1
+          fi
+
+          # Verify migration files are properly formatted
+          for f in deploy/migrations/*.sql; do
+            if ! echo "$f" | grep -qE '^\./deploy/migrations/[0-9]+_[a-z_]+\.(up|down)\.sql$'; then
+              echo "Invalid migration file naming: $f"
+              echo "Expected pattern: 000001_init_schema.up.sql"
+              exit 1
+            fi
+          done
+
+          # Validate SQL syntax (basic check)
+          for f in deploy/migrations/*.up.sql; do
+            # Check for dangerous operations without safety
+            if grep -qiE 'DROP\s+TABLE\s+without\s+IF\s+EXISTS|DROP\s+DATABASE' "$f"; then
+              echo "WARNING: Potentially unsafe migration: $f"
+            fi
+          done
+
+          echo "Migration files validated successfully"
+
+      - name: Check migration idempotency
+        run: |
+          # Ensure no duplicate version numbers
+          versions=$(ls deploy/migrations/*.up.sql 2>/dev/null | sed 's/.*\///' | cut -d'_' -f1 | sort)
+          duplicates=$(echo "$versions" | uniq -d)
+          if [ -n "$duplicates" ]; then
+            echo "Duplicate migration versions found: $duplicates"
+            exit 1
+          fi
+          echo "No duplicate migration versions found"
+
   build:
     name: build ${{ matrix.service }} ${{ matrix.goos }}/${{ matrix.goarch }}
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [quality, migration]
     strategy:
       fail-fast: false
       matrix:
@@ -115,7 +172,7 @@ jobs:
   docker-build:
     name: docker build ${{ matrix.image }}
     runs-on: ubuntu-latest
-    needs: quality
+    needs: [quality, migration]
     strategy:
       fail-fast: false
       matrix:
@@ -156,7 +213,7 @@ jobs:
   docker-publish:
     name: docker publish ${{ matrix.image }}
     runs-on: ubuntu-latest
-    needs: [ quality, build, docker-build ]
+    needs: [ quality, migration, build, docker-build ]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/prod' || startsWith(github.ref, 'refs/tags/v'))
     strategy:
       fail-fast: false

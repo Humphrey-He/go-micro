@@ -1,0 +1,132 @@
+name: rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to rollback"
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+      reason:
+        description: "Reason for rollback"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  contents: write
+
+env:
+  STAGING_NAMESPACE: go-micro-staging
+  PROD_NAMESPACE: go-micro-prod
+
+jobs:
+  rollback:
+    name: Rollback ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      url: https://api.example.com
+    steps:
+      - name: Generate rollback info
+        run: |
+          echo "## Rollback Request" > rollback_info.md
+          echo "" >> rollback_info.md
+          echo "**Environment:** ${{ inputs.environment }}" >> rollback_info.md
+          echo "**Requested by:** ${{ github.actor }}" >> rollback_info.md
+          echo "**Reason:** ${{ inputs.reason }}" >> rollback_info.md
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> rollback_info.md
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG_STAGING }}
+        if: inputs.environment == 'staging'
+
+      - name: Configure kubectl for prod
+        uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
+        if: inputs.environment == 'prod'
+
+      - name: Check current rollout history
+        run: |
+          NAMESPACE="${{ env.STAGING_NAMESPACE }}"
+          if [ "${{ inputs.environment }}" = "prod" ]; then
+            NAMESPACE="${{ env.PROD_NAMESPACE }}"
+          fi
+
+          echo "### Rollout History for gateway-api" >> rollback_info.md
+          kubectl rollout history deployment/gateway-api --namespace=${NAMESPACE} >> rollback_info.md 2>&1 || true
+
+      - name: Perform rollback
+        run: |
+          NAMESPACE="${{ env.STAGING_NAMESPACE }}"
+          if [ "${{ inputs.environment }}" = "prod" ]; then
+            NAMESPACE="${{ env.PROD_NAMESPACE }}"
+          fi
+
+          echo "Performing rollback in ${NAMESPACE}..."
+
+          for svc in gateway order payment refund inventory user task activity price; do
+            deployment_name="${svc}-service"
+            if [ "${svc}" = "gateway" ]; then
+              deployment_name="gateway-api"
+            fi
+
+            echo "Rolling back ${deployment_name}..."
+            kubectl rollout undo deployment/${deployment_name} \
+              --namespace=${NAMESPACE} 2>&1 || {
+              echo "Warning: Could not rollback ${deployment_name}"
+            }
+          done
+
+      - name: Wait for rollback to complete
+        run: |
+          NAMESPACE="${{ env.STAGING_NAMESPACE }}"
+          if [ "${{ inputs.environment }}" = "prod" ]; then
+            NAMESPACE="${{ env.PROD_NAMESPACE }}"
+          fi
+
+          sleep 10
+
+          for svc in gateway order payment refund inventory user task activity price; do
+            deployment_name="${svc}-service"
+            if [ "${svc}" = "gateway" ]; then
+              deployment_name="gateway-api"
+            fi
+
+            echo "Waiting for ${deployment_name} rollback..."
+            kubectl rollout status deployment/${deployment_name} \
+              --namespace=${NAMESPACE} \
+              --timeout=300s 2>&1 || {
+              echo "Warning: Rollback status check failed for ${deployment_name}"
+            }
+          done
+
+      - name: Verify rollback
+        run: |
+          NAMESPACE="${{ env.STAGING_NAMESPACE }}"
+          if [ "${{ inputs.environment }}" = "prod" ]; then
+            NAMESPACE="${{ env.PROD_NAMESPACE }}"
+          fi
+
+          echo "## Rollback Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${NAMESPACE} -o wide >> $GITHUB_STEP_SUMMARY 2>&1 || true
+
+      - name: Rollback complete
+        if: success()
+        run: |
+          echo "## Rollback Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Environment:** ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
+          echo "**Initiated by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY

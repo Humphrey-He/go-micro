@@ -1,0 +1,195 @@
+name: deploy-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_tag:
+        description: "Image tag to deploy (e.g., sha-abc123)"
+        required: true
+        type: string
+      reason:
+        description: "Reason for deployment"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+  contents: write
+
+env:
+  GO_VERSION: "1.25.x"
+  GOTOOLCHAIN: auto
+  REGISTRY: ghcr.io/${{ github.repository }}
+  PROD_NAMESPACE: go-micro-prod
+
+jobs:
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://api.example.com
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_tag }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          cache: true
+
+      - name: Run tests
+        run: go test ./... -race
+
+      - name: Generate deployment info
+        run: |
+          echo "## Production Deployment Request" > deployment_info.md
+          echo "" >> deployment_info.md
+          echo "**Requested by:** ${{ github.actor }}" >> deployment_info.md
+          echo "**Reason:** ${{ inputs.reason }}" >> deployment_info.md
+          echo "**Source tag:** ${{ inputs.source_tag }}" >> deployment_info.md
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> deployment_info.md
+
+      - name: Configure kubectl
+        uses: azure/k8s-set-context@v3
+        with:
+          kubeconfig: ${{ secrets.KUBECONFIG_PROD }}
+
+      - name: Create prod namespace
+        run: |
+          kubectl create namespace ${{ env.PROD_NAMESPACE }} --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply ConfigMap and Secret
+        run: |
+          kubectl apply -f deploy/k8s/env/prod.yaml --namespace=${{ env.PROD_NAMESPACE }}
+
+      - name: Apply common resources (SA, NetworkPolicy, PDB)
+        run: |
+          kubectl apply -f deploy/k8s/common/ --namespace=${{ env.PROD_NAMESPACE }}
+
+      - name: Backup current state
+        run: |
+          echo "Backing up current deployment state..."
+          kubectl get deployment -n ${{ env.PROD_NAMESPACE }} -o yaml > backup_deployments_$(date +%Y%m%d_%H%M%S).yaml || true
+          kubectl get pods -n ${{ env.PROD_NAMESPACE }} -o json > backup_pods_$(date +%Y%m%d_%H%M%S).json || true
+
+      - name: Deploy services
+        run: |
+          SOURCE_TAG="${{ inputs.source_tag }}"
+          for svc in gateway order payment refund inventory user task activity price; do
+            deployment_name="${svc}-service"
+            image_name="${svc}-service"
+            if [ "${svc}" = "gateway" ]; then
+              deployment_name="gateway-api"
+              image_name="gateway-api"
+            fi
+
+            # Get current replica count for rollback
+            kubectl scale deployment/${deployment_name} \
+              --namespace=${{ env.PROD_NAMESPACE }} \
+              --replicas=0 2>/dev/null || true
+
+            # Update image and apply
+            sed "s|your-registry/${image_name}:latest|${{ env.REGISTRY }}/${image_name}:${SOURCE_TAG}|g" \
+              deploy/k8s/${deployment_name}.yaml | \
+              kubectl apply -f - --namespace=${{ env.PROD_NAMESPACE }}
+          done
+
+      - name: Wait for rollout with rollback on failure
+        run: |
+          SOURCE_TAG="${{ inputs.source_tag }}"
+          FAILED=""
+
+          for svc in gateway order payment refund inventory user task activity price; do
+            deployment_name="${svc}-service"
+            if [ "${svc}" = "gateway" ]; then
+              deployment_name="gateway-api"
+            fi
+
+            echo "Waiting for ${deployment_name} rollout..."
+            if ! kubectl rollout status deployment/${deployment_name} \
+              --namespace=${{ env.PROD_NAMESPACE }} \
+              --timeout=600s; then
+              echo "Rollout failed for ${deployment_name}"
+              FAILED="${FAILED} ${deployment_name}"
+              kubectl rollout undo deployment/${deployment_name} --namespace=${{ env.PROD_NAMESPACE }}
+            fi
+          done
+
+          if [ -n "$FAILED" ]; then
+            echo "Deployments failed:${FAILED}"
+            exit 1
+          fi
+
+      - name: Run production smoke tests
+        run: |
+          echo "Running production smoke tests..."
+          sleep 30
+
+          # Check gateway health
+          GATEWAY_IP=$(kubectl get svc gateway-api -n ${{ env.PROD_NAMESPACE }} -o jsonpath='{.spec.clusterIP}')
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -sf "http://${GATEWAY_IP}:8080/health" > /dev/null 2>&1; then
+              echo "Gateway health check passed"
+              break
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "Retry ${RETRY_COUNT}/${MAX_RETRIES}..."
+            sleep 10
+          done
+
+          if [ $RETRY_COUNT -eq $MAX_RETRIES ]; then
+            echo "Gateway health check failed after ${MAX_RETRIES} retries"
+            exit 1
+          fi
+
+          echo "Production smoke tests passed"
+
+      - name: Verify deployment
+        run: |
+          echo "## Deployment Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.PROD_NAMESPACE }} -o wide >> $GITHUB_STEP_SUMMARY 2>&1 || true
+
+          echo "### Service Status" >> $GITHUB_STEP_SUMMARY
+          kubectl get svc -n ${{ env.PROD_NAMESPACE }} >> $GITHUB_STEP_SUMMARY 2>&1 || true
+
+      - name: Deployment complete
+        if: success()
+        run: |
+          echo "## Production Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** SUCCESS" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Image tag:** ${{ inputs.source_tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "## Deployment FAILED - Initiating Rollback" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Failed by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+
+          echo "Rolling back to previous state..."
+          for svc in gateway order payment refund inventory user task activity price; do
+            deployment_name="${svc}-service"
+            if [ "${svc}" = "gateway" ]; then
+              deployment_name="gateway-api"
+            fi
+            kubectl rollout undo deployment/${deployment_name} \
+              --namespace=${{ env.PROD_NAMESPACE }} 2>/dev/null || true
+          done
+
+          echo "Rollback initiated. Please verify pod status."

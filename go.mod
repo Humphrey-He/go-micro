@@ -37,6 +37,8 @@ require (
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
 	github.com/gin-contrib/sse v1.1.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
+	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/spec v0.20.4 // indirect
@@ -63,6 +65,12 @@ require (
 	github.com/ugorji/go/codec v1.3.1 // indirect
 	github.com/yuin/gopher-lua v1.1.1 // indirect
 	go.mongodb.org/mongo-driver/v2 v2.5.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.49.0 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.24.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.22.0 // indirect

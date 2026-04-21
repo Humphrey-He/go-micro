@@ -22,7 +22,9 @@ import (
 	"go-micro/pkg/config"
 	"go-micro/pkg/db"
 	"go-micro/pkg/logx"
+	"go-micro/pkg/metrics"
 	"go-micro/pkg/middleware"
+	"go-micro/pkg/tracing"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -47,6 +49,8 @@ func Run() error {
 	r.Use(middleware.RequestID())
 	r.Use(middleware.Logger(logger))
 	r.Use(middleware.RateLimit())
+	r.Use(metrics.HTTPMiddleware())
+	r.Use(tracing.Middleware("gateway-api"))
 	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})

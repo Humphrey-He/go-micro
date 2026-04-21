@@ -1694,8 +1694,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Go-Micro 网关服务 API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
-	LeftDelim:        "{{",
-	RightDelim:       "}}",
+	
+	
 }
 
 func init() {

@@ -147,3 +147,201 @@ func TestGetOrder_NotFound(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestGetByBizNo_Success(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{"id", "order_id", "biz_no", "user_id", "status", "total_amount", "idempotent_key", "reserved_id", "version", "created_at", "updated_at"}).
+		AddRow(1, "O-1", "BIZ-1", "U-1", statusReserved, int64(1000), "REQ-1", "RESV-1", int64(1), now, now)
+	mock.ExpectQuery(`SELECT \* FROM orders WHERE biz_no`).
+		WithArgs("BIZ-1").
+		WillReturnRows(rows)
+
+	items := sqlmock.NewRows([]string{"sku_id", "quantity", "price"}).AddRow("SKU-1", 2, int64(500))
+	mock.ExpectQuery(`SELECT sku_id,quantity,price FROM order_items WHERE order_id`).
+		WithArgs("O-1").
+		WillReturnRows(items)
+
+	order, err := svc.GetByBizNo("BIZ-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if order.BizNo != "BIZ-1" {
+		t.Fatalf("expected biz_no BIZ-1, got %s", order.BizNo)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestGetByBizNo_NotFound(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT \* FROM orders WHERE biz_no`).
+		WithArgs("BIZ-404").
+		WillReturnError(sql.ErrNoRows)
+
+	_, err := svc.GetByBizNo("BIZ-404")
+	if err != ErrNotFound {
+		t.Fatalf("expected ErrNotFound, got %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCancel_Success(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT status,version FROM orders WHERE order_id = \?`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"status", "version"}).AddRow(statusReserved, int64(1)))
+
+	mock.ExpectExec(`UPDATE orders SET status=\?, reserved_id=\?, version=version\+1, updated_at=NOW\(\) WHERE order_id=\? AND status=\? AND version=\?`).
+		WithArgs(statusCanceled, "", "O-1", statusReserved, int64(1)).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := svc.Cancel("O-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestCancel_AlreadyCanceled(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT status,version FROM orders WHERE order_id = \?`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"status", "version"}).AddRow(statusCanceled, int64(1)))
+
+	err := svc.Cancel("O-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestUpdateStatus_Success(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT status,version FROM orders WHERE order_id = \?`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"status", "version"}).AddRow(statusProcessing, int64(1)))
+
+	mock.ExpectExec(`UPDATE orders SET status=\?, reserved_id=\?, version=version\+1, updated_at=NOW\(\) WHERE order_id=\? AND status=\? AND version=\?`).
+		WithArgs(statusSuccess, "", "O-1", statusProcessing, int64(1)).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	err := svc.UpdateStatus("O-1", statusProcessing, statusSuccess)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestUpdateStatus_InvalidTransition(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	mock.ExpectQuery(`SELECT status,version FROM orders WHERE order_id = \?`).
+		WithArgs("O-1").
+		WillReturnRows(sqlmock.NewRows([]string{"status", "version"}).AddRow(statusCanceled, int64(1)))
+
+	err := svc.UpdateStatus("O-1", statusReserved, statusSuccess)
+	if err == nil {
+		t.Fatalf("expected error for invalid transition")
+	}
+}
+
+func TestCanTransition(t *testing.T) {
+	cases := []struct {
+		from, to string
+		valid    bool
+	}{
+		{statusCreated, statusReserved, true},
+		{statusCreated, statusCanceled, true},
+		{statusReserved, statusProcessing, true},
+		{statusReserved, statusFailed, true},
+		{statusReserved, statusCanceled, true},
+		{statusReserved, statusSuccess, false},
+		{statusProcessing, statusSuccess, true},
+		{statusCanceled, statusSuccess, false},
+		{statusSuccess, statusCanceled, false},
+	}
+
+	for _, c := range cases {
+		t.Run(c.from+"_"+c.to, func(t *testing.T) {
+			got := canTransition(c.from, c.to)
+			if got != c.valid {
+				t.Fatalf("canTransition(%s, %s): got %v, want %v", c.from, c.to, got, c.valid)
+			}
+		})
+	}
+}
+
+func TestGetOrder_Success(t *testing.T) {
+	svc, mock, mr := newTestService(t)
+	defer mr.Close()
+
+	now := time.Now()
+	rows := sqlmock.NewRows([]string{"id", "order_id", "biz_no", "user_id", "status", "total_amount", "idempotent_key", "reserved_id", "version", "created_at", "updated_at"}).
+		AddRow(1, "O-1", "BIZ-1", "U-1", statusReserved, int64(1000), "REQ-1", "RESV-1", int64(1), now, now)
+	mock.ExpectQuery(`SELECT \* FROM orders WHERE order_id`).
+		WithArgs("O-1").
+		WillReturnRows(rows)
+
+	items := sqlmock.NewRows([]string{"sku_id", "quantity", "price"}).AddRow("SKU-1", 2, int64(500))
+	mock.ExpectQuery(`SELECT sku_id,quantity,price FROM order_items WHERE order_id`).
+		WithArgs("O-1").
+		WillReturnRows(items)
+
+	order, err := svc.Get("O-1")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if order.OrderID != "O-1" {
+		t.Fatalf("expected order_id O-1, got %s", order.OrderID)
+	}
+	if len(order.Items) != 1 {
+		t.Fatalf("expected 1 item, got %d", len(order.Items))
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestIsDuplicate(t *testing.T) {
+	err := &mysql.MySQLError{Number: 1062}
+	if !isDuplicate(err) {
+		t.Fatal("expected true for MySQL error 1062")
+	}
+
+	err2 := &mysql.MySQLError{Number: 1045}
+	if isDuplicate(err2) {
+		t.Fatal("expected false for MySQL error 1045")
+	}
+}
+
+func TestReserveInventory(t *testing.T) {
+	svc, _, mr := newTestService(t)
+	defer mr.Close()
+
+	// reserveInventory calls invClient.Reserve which is mocked via fakeInventory
+	id, err := svc.reserveInventory("O-1", []Item{{SkuID: "SKU-1", Quantity: 2}})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if id != "RESV-1" {
+		t.Fatalf("expected RESV-1, got %s", id)
+	}
+}

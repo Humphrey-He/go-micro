@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-micro-config
+data:
+  APP_ENV: "production"
+
+  REDIS_ADDR: "redis:6379"
+  REDIS_DB: "0"
+  REDIS_POOL_SIZE: "20"
+  REDIS_MIN_IDLE_CONNS: "5"
+
+  MYSQL_MAX_OPEN_CONNS: "50"
+  MYSQL_MAX_IDLE_CONNS: "10"
+  MYSQL_CONN_MAX_LIFETIME_SECONDS: "300"
+
+  MQ_EXCHANGE: "order.events"
+  MQ_QUEUE: "order_reserved"
+  MQ_ROUTING_KEY: "order_reserved"
+  MQ_DLX: "order.events.dlx"
+  MQ_DLQ: "order_reserved.dlq"
+
+  REFUND_MQ_EXCHANGE: "refund.events"
+  REFUND_MQ_QUEUE: "refund.process"
+  REFUND_MQ_ROUTING_KEY: "refund.initiated"
+  REFUND_MQ_DLX: "refund.events.dlx"
+  REFUND_MQ_DLQ: "refund.process.dlq"
+
+  ORDER_GRPC_TARGET: "order-service:9081"
+  USER_GRPC_TARGET: "user-service:9083"
+  INVENTORY_GRPC_TARGET: "inventory-service:9082"
+  TASK_GRPC_TARGET: "task-service:9084"
+  REFUND_GRPC_TARGET: "refund-service:9086"
+  ACTIVITY_GRPC_TARGET: "activity-service:9087"
+  PRICE_GRPC_TARGET: "price-service:9088"
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: go-micro-secret
+type: Opaque
+stringData:
+  MYSQL_DSN: "replace-me-app-user:replace-me-password@tcp(mysql:3306)/go_micro?parseTime=true&charset=utf8mb4&loc=Local"
+  REDIS_PASSWORD: ""
+  MQ_URL: "amqp://replace-me-user:replace-me-password@rabbitmq:5672/"
+  JWT_SECRET: "replace-me-with-random-32-plus-character-secret"

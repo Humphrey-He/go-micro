@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: task-service
+  name: activity-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: task-service
+      app: activity-service
   template:
     metadata:
       labels:
-        app: task-service
+        app: activity-service
     spec:
       securityContext:
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - name: task-service
-          image: your-registry/task-service:latest
+        - name: activity-service
+          image: your-registry/activity-service:latest
           securityContext:
             allowPrivilegeEscalation: false
             capabilities:
@@ -28,8 +28,8 @@ spec:
             runAsGroup: 10001
             runAsUser: 10001
           ports:
-            - containerPort: 8084
-            - containerPort: 9084
+            - containerPort: 8087
+            - containerPort: 9087
           envFrom:
             - configMapRef:
                 name: go-micro-config
@@ -45,13 +45,13 @@ spec:
           startupProbe:
             httpGet:
               path: /healthz
-              port: 8084
+              port: 8087
             failureThreshold: 30
             periodSeconds: 2
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8084
+              port: 8087
             initialDelaySeconds: 5
             failureThreshold: 3
             periodSeconds: 10
@@ -59,7 +59,7 @@ spec:
           readinessProbe:
             httpGet:
               path: /readyz
-              port: 8084
+              port: 8087
             initialDelaySeconds: 5
             failureThreshold: 3
             periodSeconds: 10
@@ -68,15 +68,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: task-service
+  name: activity-service
 spec:
   selector:
-    app: task-service
+    app: activity-service
   ports:
     - name: http
-      port: 8084
-      targetPort: 8084
+      port: 8087
+      targetPort: 8087
     - name: grpc
-      port: 9084
-      targetPort: 9084
+      port: 9087
+      targetPort: 9087
   type: ClusterIP

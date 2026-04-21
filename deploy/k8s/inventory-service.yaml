@@ -12,29 +12,58 @@ spec:
       labels:
         app: inventory-service
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: inventory-service
           image: your-registry/inventory-service:latest
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 10001
+            runAsUser: 10001
           ports:
             - containerPort: 8082
             - containerPort: 9082
-          env:
-            - name: MYSQL_DSN
-              value: "root:root@tcp(mysql:3306)/go_micro?parseTime=true&charset=utf8mb4&loc=Local"
-            - name: REDIS_ADDR
-              value: "redis:6379"
+          envFrom:
+            - configMapRef:
+                name: go-micro-config
+            - secretRef:
+                name: go-micro-secret
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+            failureThreshold: 30
+            periodSeconds: 2
           livenessProbe:
             httpGet:
               path: /healthz
               port: 8082
             initialDelaySeconds: 5
+            failureThreshold: 3
             periodSeconds: 10
+            timeoutSeconds: 2
           readinessProbe:
             httpGet:
               path: /readyz
               port: 8082
             initialDelaySeconds: 5
+            failureThreshold: 3
             periodSeconds: 10
+            timeoutSeconds: 2
 ---
 apiVersion: v1
 kind: Service

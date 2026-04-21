@@ -10,6 +10,7 @@
 
 GOCTL ?= goctl
 SWAG ?= swag
+MIGRATE ?= migrate
 
 GO_MODULE ?= go-micro
 STYLE ?= gozero
@@ -30,11 +31,14 @@ SWAGGER_OUT ?= ./docs/swagger
 SWAGGER_NAME ?= swagger.json
 SWAGGER_MAIN ?= ./cmd/gateway-api/main.go
 
+MIGRATIONS_DIR ?= ./deploy/migrations
+MIGRATE_DATABASE ?= $(DATABASE_URL)
+
 define RPC_CMD
 $(GOCTL) rpc protoc $(1) --go_out=$(RPC_OUT) --go_opt=module=$(GO_MODULE) --go-grpc_out=$(RPC_OUT) --go-grpc_opt=module=$(GO_MODULE) --zrpc_out=$(RPC_ZRPC_OUT)/$(basename $(notdir $(1))) --style=$(STYLE)
 endef
 
-.PHONY: api rpc rpc-all rpc-one $(PROTO_TARGETS) swagger swagger-goctl swagger-swag gen gen-goctl help
+.PHONY: api rpc rpc-all rpc-one $(PROTO_TARGETS) swagger swagger-goctl swagger-swag gen gen-goctl migrate-up migrate-down migrate-version migrate-force help
 
 api:
 	$(if $(wildcard $(API_FILE)),,$(error API file not found: $(API_FILE). Create it or pass API_FILE=path/to/file.api))
@@ -73,6 +77,23 @@ gen-goctl: api rpc swagger-goctl
 # Practical flow for the current repository layout.
 gen: rpc swagger-swag
 
+migrate-up:
+	$(if $(strip $(MIGRATE_DATABASE)),,$(error MIGRATE_DATABASE or DATABASE_URL is required))
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DATABASE)" up
+
+migrate-down:
+	$(if $(strip $(MIGRATE_DATABASE)),,$(error MIGRATE_DATABASE or DATABASE_URL is required))
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DATABASE)" down 1
+
+migrate-version:
+	$(if $(strip $(MIGRATE_DATABASE)),,$(error MIGRATE_DATABASE or DATABASE_URL is required))
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DATABASE)" version
+
+migrate-force:
+	$(if $(strip $(VERSION)),,$(error VERSION is required, e.g. make migrate-force VERSION=1))
+	$(if $(strip $(MIGRATE_DATABASE)),,$(error MIGRATE_DATABASE or DATABASE_URL is required))
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "$(MIGRATE_DATABASE)" force $(VERSION)
+
 help:
 	@echo "make api        Generate go-zero API code from API_FILE (default: ./api/gateway.api)"
 	@echo "make rpc        Generate all proto/*.proto with goctl rpc protoc"
@@ -81,4 +102,8 @@ help:
 	@echo "make swagger-swag Generate Swagger from Gin annotations with swag"
 	@echo "make gen        Generate RPC code and current-project Swagger docs"
 	@echo "make gen-goctl  Generate API, RPC, and Swagger through goctl"
-	@echo "Override: API_FILE API_OUT PROTO_DIR RPC_PROTO RPC_OUT RPC_ZRPC_OUT SWAGGER_OUT SWAGGER_NAME STYLE"
+	@echo "make migrate-up      Apply all database migrations"
+	@echo "make migrate-down    Roll back one database migration"
+	@echo "make migrate-version Show current database migration version"
+	@echo "make migrate-force VERSION=1 Force migration version after manual repair"
+	@echo "Override: API_FILE API_OUT PROTO_DIR RPC_PROTO RPC_OUT RPC_ZRPC_OUT SWAGGER_OUT SWAGGER_NAME STYLE MIGRATE_DATABASE"

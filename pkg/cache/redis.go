@@ -3,7 +3,6 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -44,9 +43,16 @@ func init() {
 func NewRedis() *redis.Client {
 	addr := config.GetEnv("REDIS_ADDR", "127.0.0.1:6379")
 	password := config.GetEnv("REDIS_PASSWORD", "")
-	dbStr := config.GetEnv("REDIS_DB", "0")
-	db, _ := strconv.Atoi(dbStr)
-	return redis.NewClient(&redis.Options{Addr: addr, Password: password, DB: db})
+	db := config.GetInt("REDIS_DB", 0)
+	poolSize := config.GetInt("REDIS_POOL_SIZE", 20)
+	minIdleConns := config.GetInt("REDIS_MIN_IDLE_CONNS", 5)
+	return redis.NewClient(&redis.Options{
+		Addr:         addr,
+		Password:     password,
+		DB:           db,
+		PoolSize:     poolSize,
+		MinIdleConns: minIdleConns,
+	})
 }
 
 func GetJSON(ctx context.Context, rdb *redis.Client, key string, out interface{}) (hit bool, isNil bool, err error) {

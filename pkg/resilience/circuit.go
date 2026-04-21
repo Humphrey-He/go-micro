@@ -15,14 +15,14 @@ const (
 )
 
 type CircuitBreaker struct {
-	mu                 sync.Mutex
-	state              string
-	failures           int
-	successes          int
-	failureThreshold   int
-	halfOpenSuccesses  int
-	resetTimeout       time.Duration
-	lastFailure        time.Time
+	mu                sync.Mutex
+	state             string
+	failures          int
+	successes         int
+	failureThreshold  int
+	halfOpenSuccesses int
+	resetTimeout      time.Duration
+	lastFailure       time.Time
 }
 
 func NewCircuitBreaker(failureThreshold int, resetTimeout time.Duration, halfOpenSuccesses int) *CircuitBreaker {

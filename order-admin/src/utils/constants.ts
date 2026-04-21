@@ -21,6 +21,7 @@ export const VIEW_STATUS_MAP: Record<string, { label: string; color: string; bg:
 export const PAYMENT_STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
   PENDING: { label: '待支付', color: '#d97706', bg: '#fffbeb' },
   PAID: { label: '已支付', color: '#16a34a', bg: '#f0fdf4' },
+  SUCCESS: { label: '已支付', color: '#16a34a', bg: '#f0fdf4' },
   FAILED: { label: '支付失败', color: '#dc2626', bg: '#fef2f2' },
   REFUNDED: { label: '已退款', color: '#7c3aed', bg: '#f5f3ff' },
 }

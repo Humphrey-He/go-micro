@@ -1,6 +1,6 @@
 basePath: /
 definitions:
-  activity.CouponRequest:
+  go-micro_internal_activity.CouponRequest:
     properties:
       amount:
         type: number
@@ -9,7 +9,7 @@ definitions:
       user_id:
         type: string
     type: object
-  activity.SeckillRequest:
+  go-micro_internal_activity.SeckillRequest:
     properties:
       quantity:
         type: integer
@@ -18,97 +18,7 @@ definitions:
       user_id:
         type: string
     type: object
-  gateway.CreateOrderRequest:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/gateway.Item'
-        type: array
-      remark:
-        type: string
-      request_id:
-        type: string
-      user_id:
-        type: string
-    type: object
-  gateway.Item:
-    properties:
-      price:
-        type: integer
-      quantity:
-        type: integer
-      sku_id:
-        type: string
-    type: object
-  gateway.LoginRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    type: object
-  httpx.Response:
-    properties:
-      code:
-        type: integer
-      data: {}
-      message:
-        type: string
-    type: object
-  inventory.ConfirmRequest:
-    properties:
-      reserved_id:
-        type: string
-    type: object
-  inventory.Item:
-    properties:
-      quantity:
-        type: integer
-      sku_id:
-        type: string
-    type: object
-  inventory.ReleaseByOrderRequest:
-    properties:
-      order_id:
-        type: string
-    type: object
-  inventory.ReleaseRequest:
-    properties:
-      reserved_id:
-        type: string
-    type: object
-  inventory.ReserveRequest:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/inventory.Item'
-        type: array
-      order_id:
-        type: string
-    type: object
-  order.CreateOrderRequest:
-    properties:
-      items:
-        items:
-          $ref: '#/definitions/order.Item'
-        type: array
-      remark:
-        type: string
-      request_id:
-        type: string
-      user_id:
-        type: string
-    type: object
-  order.Item:
-    properties:
-      price:
-        type: integer
-      quantity:
-        type: integer
-      sku_id:
-        type: string
-    type: object
-  payment.CreatePaymentRequest:
+  go-micro_internal_payment.CreatePaymentRequest:
     properties:
       amount:
         type: integer
@@ -117,7 +27,7 @@ definitions:
       request_id:
         type: string
     type: object
-  price.CalculateRequest:
+  go-micro_internal_price.CalculateRequest:
     properties:
       base_price:
         type: number
@@ -128,7 +38,7 @@ definitions:
       user_level:
         type: integer
     type: object
-  refund.InitiateRequest:
+  go-micro_internal_refund.InitiateRequest:
     properties:
       order_id:
         type: string
@@ -139,7 +49,7 @@ definitions:
       refund_type:
         type: string
     type: object
-  refund.RollbackRequest:
+  go-micro_internal_refund.RollbackRequest:
     properties:
       order_id:
         type: string
@@ -148,12 +58,165 @@ definitions:
       refund_id:
         type: string
     type: object
-  refund.StatusRequest:
+  go-micro_internal_refund.StatusRequest:
     properties:
       refund_id:
         type: string
     type: object
-  task.CreateTaskRequest:
+  go-micro_pkg_httpx.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      message:
+        type: string
+    type: object
+  internal_activity.CouponRequest:
+    properties:
+      amount:
+        type: number
+      coupon_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_activity.SeckillRequest:
+    properties:
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_gateway.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_gateway.Item'
+        type: array
+      remark:
+        type: string
+      request_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_gateway.Item:
+    properties:
+      price:
+        type: integer
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  internal_gateway.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  internal_inventory.ConfirmRequest:
+    properties:
+      reserved_id:
+        type: string
+    type: object
+  internal_inventory.Item:
+    properties:
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  internal_inventory.ReleaseByOrderRequest:
+    properties:
+      order_id:
+        type: string
+    type: object
+  internal_inventory.ReleaseRequest:
+    properties:
+      reserved_id:
+        type: string
+    type: object
+  internal_inventory.ReserveRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_inventory.Item'
+        type: array
+      order_id:
+        type: string
+    type: object
+  internal_order.CreateOrderRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/internal_order.Item'
+        type: array
+      remark:
+        type: string
+      request_id:
+        type: string
+      user_id:
+        type: string
+    type: object
+  internal_order.Item:
+    properties:
+      price:
+        type: integer
+      quantity:
+        type: integer
+      sku_id:
+        type: string
+    type: object
+  internal_payment.CreatePaymentRequest:
+    properties:
+      amount:
+        type: integer
+      order_id:
+        type: string
+      request_id:
+        type: string
+    type: object
+  internal_price.CalculateRequest:
+    properties:
+      base_price:
+        type: number
+      coupon_amount:
+        type: number
+      sku_id:
+        type: string
+      user_level:
+        type: integer
+    type: object
+  internal_refund.InitiateRequest:
+    properties:
+      order_id:
+        type: string
+      reason:
+        type: string
+      refund_id:
+        type: string
+      refund_type:
+        type: string
+    type: object
+  internal_refund.RollbackRequest:
+    properties:
+      order_id:
+        type: string
+      reason:
+        type: string
+      refund_id:
+        type: string
+    type: object
+  internal_refund.StatusRequest:
+    properties:
+      refund_id:
+        type: string
+    type: object
+  internal_task.CreateTaskRequest:
     properties:
       biz_no:
         type: string
@@ -162,7 +225,7 @@ definitions:
       type:
         type: string
     type: object
-  user.CreateUserRequest:
+  internal_user.CreateUserRequest:
     properties:
       password:
         type: string
@@ -195,14 +258,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/activity.CouponRequest'
+          $ref: '#/definitions/go-micro_internal_activity.CouponRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Issue coupon
       tags:
       - Activity
@@ -221,14 +284,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/activity.SeckillRequest'
+          $ref: '#/definitions/go-micro_internal_activity.SeckillRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Seckill request
       tags:
       - Activity
@@ -254,7 +317,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Activity status
       tags:
       - Activity
@@ -268,14 +331,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gateway.LoginRequest'
+          $ref: '#/definitions/internal_gateway.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 用户登录
       tags:
       - Auth
@@ -301,7 +364,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 订单聚合视图
       tags:
       - Order
@@ -320,14 +383,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/gateway.CreateOrderRequest'
+          $ref: '#/definitions/internal_gateway.CreateOrderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建订单
       tags:
       - Order
@@ -350,7 +413,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询订单
       tags:
       - Order
@@ -369,14 +432,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/payment.CreatePaymentRequest'
+          $ref: '#/definitions/go-micro_internal_payment.CreatePaymentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建支付
       tags:
       - Payment
@@ -399,7 +462,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询支付
       tags:
       - Payment
@@ -422,7 +485,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付失败
       tags:
       - Payment
@@ -445,7 +508,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付成功
       tags:
       - Payment
@@ -468,7 +531,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付超时
       tags:
       - Payment
@@ -482,14 +545,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/price.CalculateRequest'
+          $ref: '#/definitions/internal_price.CalculateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Calculate price
       tags:
       - Price
@@ -511,7 +574,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Price history
       tags:
       - Price
@@ -525,14 +588,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/refund.InitiateRequest'
+          $ref: '#/definitions/internal_refund.InitiateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Initiate refund
       tags:
       - Refund
@@ -546,14 +609,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/refund.RollbackRequest'
+          $ref: '#/definitions/internal_refund.RollbackRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Rollback on cancel
       tags:
       - Refund
@@ -567,14 +630,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/refund.StatusRequest'
+          $ref: '#/definitions/internal_refund.StatusRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: Refund status
       tags:
       - Refund
@@ -592,7 +655,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 获取当前用户信息
       tags:
       - User
@@ -610,7 +673,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询库存
       tags:
       - Inventory
@@ -624,14 +687,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/inventory.ConfirmRequest'
+          $ref: '#/definitions/internal_inventory.ConfirmRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 确认扣减
       tags:
       - Inventory
@@ -646,14 +709,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/inventory.ReleaseRequest'
+          $ref: '#/definitions/internal_inventory.ReleaseRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 释放库存
       tags:
       - Inventory
@@ -668,14 +731,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/inventory.ReleaseByOrderRequest'
+          $ref: '#/definitions/internal_inventory.ReleaseByOrderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 按订单号释放
       tags:
       - Inventory
@@ -693,7 +756,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询预占记录
       tags:
       - Inventory
@@ -707,14 +770,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/inventory.ReserveRequest'
+          $ref: '#/definitions/internal_inventory.ReserveRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 预占库存
       tags:
       - Inventory
@@ -728,14 +791,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/order.CreateOrderRequest'
+          $ref: '#/definitions/internal_order.CreateOrderRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建订单
       tags:
       - Order
@@ -753,7 +816,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询订单
       tags:
       - Order
@@ -772,7 +835,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 取消订单
       tags:
       - Order
@@ -790,7 +853,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 按业务单号查询
       tags:
       - Order
@@ -804,14 +867,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/payment.CreatePaymentRequest'
+          $ref: '#/definitions/internal_payment.CreatePaymentRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建支付
       tags:
       - Payment
@@ -829,7 +892,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询支付
       tags:
       - Payment
@@ -847,7 +910,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付失败
       tags:
       - Payment
@@ -865,7 +928,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 退款
       tags:
       - Payment
@@ -883,7 +946,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付成功
       tags:
       - Payment
@@ -901,7 +964,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 支付超时
       tags:
       - Payment
@@ -915,14 +978,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/task.CreateTaskRequest'
+          $ref: '#/definitions/internal_task.CreateTaskRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建任务
       tags:
       - Task
@@ -940,7 +1003,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询任务
       tags:
       - Task
@@ -958,7 +1021,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 手动重试任务
       tags:
       - Task
@@ -976,7 +1039,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 按订单查询任务
       tags:
       - Task
@@ -990,14 +1053,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/user.CreateUserRequest'
+          $ref: '#/definitions/internal_user.CreateUserRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 创建用户
       tags:
       - User
@@ -1015,7 +1078,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/httpx.Response'
+            $ref: '#/definitions/go-micro_pkg_httpx.Response'
       summary: 查询用户
       tags:
       - User

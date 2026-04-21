@@ -40,7 +40,7 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	user, err := h.svc.Create(req)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeInternalError, "create user failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgUserCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -58,7 +58,7 @@ func (h *Handler) get(c *gin.Context) {
 	id := c.Param("id")
 	user, err := h.svc.Get(id)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "user not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgUserNotFound)
 		c.JSON(code, body)
 		return
 	}

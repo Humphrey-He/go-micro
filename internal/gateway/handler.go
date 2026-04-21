@@ -66,7 +66,7 @@ func (h *Handler) login(c *gin.Context) {
 	}
 	resp, err := h.svc.Login(req.Username, req.Password)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid username or password")
+		code, body := httpx.Fail(errx.CodeUnauthorized, errx.MsgInvalidCredentials)
 		c.JSON(code, body)
 		return
 	}
@@ -368,7 +368,7 @@ func (h *Handler) activityStatus(c *gin.Context) {
 	skuID := c.Query("sku_id")
 	resp, err := h.svc.GetActivityStatus(couponID, skuID)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeInvalidRequest, err.Error())
+		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
 		c.JSON(code, body)
 		return
 	}

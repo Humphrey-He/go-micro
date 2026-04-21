@@ -37,7 +37,7 @@ func (h *Handler) initiate(c *gin.Context) {
 	}
 	ref, err := h.svc.Initiate(req)
 	if err != nil && err != ErrIdempotentHit {
-		code, body := httpx.Fail(errx.CodeInternalError, err.Error())
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgRefundCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -61,7 +61,7 @@ func (h *Handler) status(c *gin.Context) {
 	}
 	ref, err := h.svc.Get(req.RefundID)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgNotFound)
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgRefundNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -85,7 +85,7 @@ func (h *Handler) rollback(c *gin.Context) {
 	}
 	ref, err := h.svc.Rollback(req)
 	if err != nil && err != ErrIdempotentHit {
-		code, body := httpx.Fail(errx.CodeInternalError, err.Error())
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgRefundCreateFailed)
 		c.JSON(code, body)
 		return
 	}

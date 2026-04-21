@@ -42,7 +42,7 @@ func (h *Handler) create(c *gin.Context) {
 	}
 	t, err := h.svc.Create(req)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeInternalError, "create task failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgTaskCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -60,7 +60,7 @@ func (h *Handler) get(c *gin.Context) {
 	id := c.Param("id")
 	t, err := h.svc.Get(id)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "task not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgTaskNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -78,7 +78,7 @@ func (h *Handler) retry(c *gin.Context) {
 	id := c.Param("id")
 	t, err := h.svc.Retry(id)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "task not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgTaskNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -96,7 +96,7 @@ func (h *Handler) getByOrder(c *gin.Context) {
 	orderID := c.Param("order_id")
 	t, err := h.svc.GetByOrder(orderID)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "task not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgTaskNotFound)
 		c.JSON(code, body)
 		return
 	}

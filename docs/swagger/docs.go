@@ -41,7 +41,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/activity.CouponRequest"
+                            "$ref": "#/definitions/go-micro_internal_activity.CouponRequest"
                         }
                     }
                 ],
@@ -49,7 +49,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -81,7 +81,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/activity.SeckillRequest"
+                            "$ref": "#/definitions/go-micro_internal_activity.SeckillRequest"
                         }
                     }
                 ],
@@ -89,7 +89,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -129,7 +129,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -154,7 +154,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gateway.LoginRequest"
+                            "$ref": "#/definitions/internal_gateway.LoginRequest"
                         }
                     }
                 ],
@@ -162,7 +162,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -198,7 +198,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -230,7 +230,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/gateway.CreateOrderRequest"
+                            "$ref": "#/definitions/internal_gateway.CreateOrderRequest"
                         }
                     }
                 ],
@@ -238,7 +238,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -273,7 +273,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -305,7 +305,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.CreatePaymentRequest"
+                            "$ref": "#/definitions/go-micro_internal_payment.CreatePaymentRequest"
                         }
                     }
                 ],
@@ -313,7 +313,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -348,7 +348,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -383,7 +383,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -418,7 +418,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -453,7 +453,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -478,7 +478,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/price.CalculateRequest"
+                            "$ref": "#/definitions/internal_price.CalculateRequest"
                         }
                     }
                 ],
@@ -486,7 +486,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -520,7 +520,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -545,7 +545,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/refund.InitiateRequest"
+                            "$ref": "#/definitions/internal_refund.InitiateRequest"
                         }
                     }
                 ],
@@ -553,7 +553,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -578,7 +578,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/refund.RollbackRequest"
+                            "$ref": "#/definitions/internal_refund.RollbackRequest"
                         }
                     }
                 ],
@@ -586,7 +586,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -611,7 +611,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/refund.StatusRequest"
+                            "$ref": "#/definitions/internal_refund.StatusRequest"
                         }
                     }
                 ],
@@ -619,7 +619,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -647,7 +647,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -672,7 +672,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/inventory.ConfirmRequest"
+                            "$ref": "#/definitions/internal_inventory.ConfirmRequest"
                         }
                     }
                 ],
@@ -680,7 +680,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -706,7 +706,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/inventory.ReleaseRequest"
+                            "$ref": "#/definitions/internal_inventory.ReleaseRequest"
                         }
                     }
                 ],
@@ -714,7 +714,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -740,7 +740,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/inventory.ReleaseByOrderRequest"
+                            "$ref": "#/definitions/internal_inventory.ReleaseByOrderRequest"
                         }
                     }
                 ],
@@ -748,7 +748,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -776,7 +776,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -801,7 +801,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/inventory.ReserveRequest"
+                            "$ref": "#/definitions/internal_inventory.ReserveRequest"
                         }
                     }
                 ],
@@ -809,7 +809,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -837,7 +837,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -862,7 +862,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/order.CreateOrderRequest"
+                            "$ref": "#/definitions/internal_order.CreateOrderRequest"
                         }
                     }
                 ],
@@ -870,7 +870,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -898,7 +898,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -926,7 +926,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -955,7 +955,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -980,7 +980,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/payment.CreatePaymentRequest"
+                            "$ref": "#/definitions/internal_payment.CreatePaymentRequest"
                         }
                     }
                 ],
@@ -988,7 +988,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1016,7 +1016,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1044,7 +1044,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1072,7 +1072,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1100,7 +1100,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1128,7 +1128,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1153,7 +1153,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/task.CreateTaskRequest"
+                            "$ref": "#/definitions/internal_task.CreateTaskRequest"
                         }
                     }
                 ],
@@ -1161,7 +1161,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1189,7 +1189,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1217,7 +1217,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1245,7 +1245,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1270,7 +1270,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/user.CreateUserRequest"
+                            "$ref": "#/definitions/internal_user.CreateUserRequest"
                         }
                     }
                 ],
@@ -1278,7 +1278,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1306,7 +1306,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/httpx.Response"
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
                         }
                     }
                 }
@@ -1314,7 +1314,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "activity.CouponRequest": {
+        "go-micro_internal_activity.CouponRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -1328,7 +1328,7 @@ const docTemplate = `{
                 }
             }
         },
-        "activity.SeckillRequest": {
+        "go-micro_internal_activity.SeckillRequest": {
             "type": "object",
             "properties": {
                 "quantity": {
@@ -1342,147 +1342,7 @@ const docTemplate = `{
                 }
             }
         },
-        "gateway.CreateOrderRequest": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/gateway.Item"
-                    }
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "request_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "gateway.Item": {
-            "type": "object",
-            "properties": {
-                "price": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "sku_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "gateway.LoginRequest": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "httpx.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "integer"
-                },
-                "data": {},
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "inventory.ConfirmRequest": {
-            "type": "object",
-            "properties": {
-                "reserved_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "inventory.Item": {
-            "type": "object",
-            "properties": {
-                "quantity": {
-                    "type": "integer"
-                },
-                "sku_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "inventory.ReleaseByOrderRequest": {
-            "type": "object",
-            "properties": {
-                "order_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "inventory.ReleaseRequest": {
-            "type": "object",
-            "properties": {
-                "reserved_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "inventory.ReserveRequest": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/inventory.Item"
-                    }
-                },
-                "order_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "order.CreateOrderRequest": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/order.Item"
-                    }
-                },
-                "remark": {
-                    "type": "string"
-                },
-                "request_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "order.Item": {
-            "type": "object",
-            "properties": {
-                "price": {
-                    "type": "integer"
-                },
-                "quantity": {
-                    "type": "integer"
-                },
-                "sku_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "payment.CreatePaymentRequest": {
+        "go-micro_internal_payment.CreatePaymentRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -1496,7 +1356,7 @@ const docTemplate = `{
                 }
             }
         },
-        "price.CalculateRequest": {
+        "go-micro_internal_price.CalculateRequest": {
             "type": "object",
             "properties": {
                 "base_price": {
@@ -1513,7 +1373,7 @@ const docTemplate = `{
                 }
             }
         },
-        "refund.InitiateRequest": {
+        "go-micro_internal_refund.InitiateRequest": {
             "type": "object",
             "properties": {
                 "order_id": {
@@ -1530,7 +1390,7 @@ const docTemplate = `{
                 }
             }
         },
-        "refund.RollbackRequest": {
+        "go-micro_internal_refund.RollbackRequest": {
             "type": "object",
             "properties": {
                 "order_id": {
@@ -1544,7 +1404,7 @@ const docTemplate = `{
                 }
             }
         },
-        "refund.StatusRequest": {
+        "go-micro_internal_refund.StatusRequest": {
             "type": "object",
             "properties": {
                 "refund_id": {
@@ -1552,7 +1412,245 @@ const docTemplate = `{
                 }
             }
         },
-        "task.CreateTaskRequest": {
+        "go-micro_pkg_httpx.Response": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "data": {},
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_activity.CouponRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "coupon_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_activity.SeckillRequest": {
+            "type": "object",
+            "properties": {
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_gateway.CreateOrderRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_gateway.Item"
+                    }
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_gateway.Item": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_gateway.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_inventory.ConfirmRequest": {
+            "type": "object",
+            "properties": {
+                "reserved_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_inventory.Item": {
+            "type": "object",
+            "properties": {
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_inventory.ReleaseByOrderRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_inventory.ReleaseRequest": {
+            "type": "object",
+            "properties": {
+                "reserved_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_inventory.ReserveRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_inventory.Item"
+                    }
+                },
+                "order_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_order.CreateOrderRequest": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_order.Item"
+                    }
+                },
+                "remark": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_order.Item": {
+            "type": "object",
+            "properties": {
+                "price": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "integer"
+                },
+                "sku_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_payment.CreatePaymentRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "order_id": {
+                    "type": "string"
+                },
+                "request_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_price.CalculateRequest": {
+            "type": "object",
+            "properties": {
+                "base_price": {
+                    "type": "number"
+                },
+                "coupon_amount": {
+                    "type": "number"
+                },
+                "sku_id": {
+                    "type": "string"
+                },
+                "user_level": {
+                    "type": "integer"
+                }
+            }
+        },
+        "internal_refund.InitiateRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "refund_id": {
+                    "type": "string"
+                },
+                "refund_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_refund.RollbackRequest": {
+            "type": "object",
+            "properties": {
+                "order_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "refund_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_refund.StatusRequest": {
+            "type": "object",
+            "properties": {
+                "refund_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_task.CreateTaskRequest": {
             "type": "object",
             "properties": {
                 "biz_no": {
@@ -1566,7 +1664,7 @@ const docTemplate = `{
                 }
             }
         },
-        "user.CreateUserRequest": {
+        "internal_user.CreateUserRequest": {
             "type": "object",
             "properties": {
                 "password": {
@@ -1596,6 +1694,8 @@ var SwaggerInfo = &swag.Spec{
 	Description:      "Go-Micro 网关服务 API",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
+	LeftDelim:        "{{",
+	RightDelim:       "}}",
 }
 
 func init() {

@@ -37,7 +37,7 @@ func (h *Handler) issueCoupon(c *gin.Context) {
 	}
 	cp, err := h.svc.IssueCoupon(req)
 	if err != nil && err != ErrIdempotentHit {
-		code, body := httpx.Fail(errx.CodeInternalError, err.Error())
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgActivityCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -61,7 +61,7 @@ func (h *Handler) seckill(c *gin.Context) {
 	}
 	order, err := h.svc.Seckill(req)
 	if err != nil && err != ErrIdempotentHit {
-		code, body := httpx.Fail(errx.CodeInternalError, err.Error())
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgActivityCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -82,7 +82,7 @@ func (h *Handler) status(c *gin.Context) {
 	if couponID != "" {
 		cp, err := h.svc.GetCoupon(couponID)
 		if err != nil {
-			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgNotFound)
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgCouponNotFound)
 			c.JSON(code, body)
 			return
 		}
@@ -93,7 +93,7 @@ func (h *Handler) status(c *gin.Context) {
 	if skuID != "" {
 		sk, err := h.svc.GetSeckill(skuID)
 		if err != nil {
-			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgNotFound)
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgActivityNotFound)
 			c.JSON(code, body)
 			return
 		}
@@ -101,6 +101,6 @@ func (h *Handler) status(c *gin.Context) {
 		c.JSON(code, body)
 		return
 	}
-	code, body := httpx.Fail(errx.CodeInvalidRequest, "coupon_id or sku_id required")
+	code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
 	c.JSON(code, body)
 }

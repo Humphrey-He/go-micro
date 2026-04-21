@@ -50,7 +50,7 @@ func (h *Handler) create(c *gin.Context) {
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInternalError, "create payment failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgPaymentCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -68,7 +68,7 @@ func (h *Handler) get(c *gin.Context) {
 	id := c.Param("id")
 	p, err := h.svc.Get(id)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "payment not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgPaymentNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -85,7 +85,7 @@ func (h *Handler) get(c *gin.Context) {
 func (h *Handler) markSuccess(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.MarkSuccess(id); err != nil {
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid payment state")
+		code, body := httpx.Fail(errx.CodeInvalidPaymentState, errx.MsgInvalidPaymentState)
 		c.JSON(code, body)
 		return
 	}
@@ -102,7 +102,7 @@ func (h *Handler) markSuccess(c *gin.Context) {
 func (h *Handler) markFailed(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.MarkFailed(id); err != nil {
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid payment state")
+		code, body := httpx.Fail(errx.CodeInvalidPaymentState, errx.MsgInvalidPaymentState)
 		c.JSON(code, body)
 		return
 	}
@@ -119,7 +119,7 @@ func (h *Handler) markFailed(c *gin.Context) {
 func (h *Handler) markTimeout(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.MarkTimeout(id); err != nil {
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid payment state")
+		code, body := httpx.Fail(errx.CodeInvalidPaymentState, errx.MsgInvalidPaymentState)
 		c.JSON(code, body)
 		return
 	}
@@ -136,7 +136,7 @@ func (h *Handler) markTimeout(c *gin.Context) {
 func (h *Handler) refund(c *gin.Context) {
 	id := c.Param("id")
 	if err := h.svc.Refund(id); err != nil {
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid payment state")
+		code, body := httpx.Fail(errx.CodeInvalidPaymentState, errx.MsgInvalidPaymentState)
 		c.JSON(code, body)
 		return
 	}

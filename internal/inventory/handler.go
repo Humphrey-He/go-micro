@@ -38,7 +38,7 @@ func (h *Handler) getInventory(c *gin.Context) {
 	skuID := c.Param("sku_id")
 	inv, err := h.svc.GetInventory(skuID)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "sku not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgSkuNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -64,11 +64,11 @@ func (h *Handler) reserve(c *gin.Context) {
 	resp, err := h.svc.Reserve(req)
 	if err != nil {
 		if err == ErrInsufficient {
-			code, body := httpx.Fail(errx.CodeConflict, "insufficient inventory")
+			code, body := httpx.Fail(errx.CodeInventoryInsufficient, errx.MsgInventoryInsufficient)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInternalError, "reserve failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgInventoryReserveFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -94,11 +94,11 @@ func (h *Handler) release(c *gin.Context) {
 
 	if err := h.svc.Release(req.ReservedID); err != nil {
 		if err == ErrNotFound {
-			code, body := httpx.Fail(errx.CodeNotFound, "reservation not found")
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgReservationNotFound)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid reservation state")
+		code, body := httpx.Fail(errx.CodeInvalidReservationState, errx.MsgInvalidReservationState)
 		c.JSON(code, body)
 		return
 	}
@@ -123,11 +123,11 @@ func (h *Handler) confirm(c *gin.Context) {
 
 	if err := h.svc.Confirm(req.ReservedID); err != nil {
 		if err == ErrNotFound {
-			code, body := httpx.Fail(errx.CodeNotFound, "reservation not found")
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgReservationNotFound)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid reservation state")
+		code, body := httpx.Fail(errx.CodeInvalidReservationState, errx.MsgInvalidReservationState)
 		c.JSON(code, body)
 		return
 	}
@@ -152,11 +152,11 @@ func (h *Handler) releaseByOrder(c *gin.Context) {
 	}
 	if err := h.svc.ReleaseByOrder(req.OrderID); err != nil {
 		if err == ErrNotFound {
-			code, body := httpx.Fail(errx.CodeNotFound, "reservation not found")
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgReservationNotFound)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInvalidState, "invalid reservation state")
+		code, body := httpx.Fail(errx.CodeInvalidReservationState, errx.MsgInvalidReservationState)
 		c.JSON(code, body)
 		return
 	}
@@ -174,7 +174,7 @@ func (h *Handler) getReservation(c *gin.Context) {
 	orderID := c.Param("order_id")
 	resv, err := h.svc.GetReservation(orderID)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "reservation not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgReservationNotFound)
 		c.JSON(code, body)
 		return
 	}

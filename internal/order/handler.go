@@ -50,16 +50,16 @@ func (h *Handler) create(c *gin.Context) {
 			return
 		}
 		if err == ErrInventoryFail {
-			code, body := httpx.Fail(errx.CodeConflict, "insufficient inventory")
+			code, body := httpx.Fail(errx.CodeInsufficientInventory, errx.MsgInsufficientInventory)
 			c.JSON(code, body)
 			return
 		}
 		if err == ErrInvalidState {
-			code, body := httpx.Fail(errx.CodeInvalidState, "invalid order state")
+			code, body := httpx.Fail(errx.CodeInvalidOrderState, errx.MsgInvalidOrderState)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInternalError, "create order failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgOrderCreateFailed)
 		c.JSON(code, body)
 		return
 	}
@@ -78,7 +78,7 @@ func (h *Handler) get(c *gin.Context) {
 	id := c.Param("id")
 	ord, err := h.svc.Get(id)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "order not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgOrderNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -96,7 +96,7 @@ func (h *Handler) getByBizNo(c *gin.Context) {
 	bizNo := c.Param("biz_no")
 	ord, err := h.svc.GetByBizNo(bizNo)
 	if err != nil {
-		code, body := httpx.Fail(errx.CodeNotFound, "order not found")
+		code, body := httpx.Fail(errx.CodeNotFound, errx.MsgOrderNotFound)
 		c.JSON(code, body)
 		return
 	}
@@ -116,16 +116,16 @@ func (h *Handler) cancel(c *gin.Context) {
 	err := h.svc.Cancel(id)
 	if err != nil {
 		if err == ErrNotCancelable {
-			code, body := httpx.Fail(errx.CodeInvalidState, "order not cancelable")
+			code, body := httpx.Fail(errx.CodeOrderNotCancelable, errx.MsgOrderNotCancelable)
 			c.JSON(code, body)
 			return
 		}
 		if err == ErrNotFound {
-			code, body := httpx.Fail(errx.CodeNotFound, "order not found")
+			code, body := httpx.Fail(errx.CodeNotFound, errx.MsgOrderNotFound)
 			c.JSON(code, body)
 			return
 		}
-		code, body := httpx.Fail(errx.CodeInternalError, "cancel order failed")
+		code, body := httpx.Fail(errx.CodeInternalError, errx.MsgOrderCancelFailed)
 		c.JSON(code, body)
 		return
 	}

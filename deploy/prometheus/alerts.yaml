@@ -1,0 +1,237 @@
+groups:
+  - name: go-micro-alerts
+    rules:
+      # HTTP 5xx Error Rate
+      - alert: HighHTTPErrorRate
+        expr: |
+          sum(rate(gomicro_http_requests_total{status=~"5.."}[5m])) by (service)
+          / sum(rate(gomicro_http_requests_total[5m])) by (service) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP 5xx error rate"
+          description: "{{ $labels.service }} has HTTP 5xx error rate of {{ $value | humanizePercentage }} (> 5%)"
+
+      # Service Down
+      - alert: ServiceDown
+        expr: up{job="go-micro"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service is down"
+          description: "{{ $labels.instance }} is down"
+
+      # High Latency
+      - alert: HighHTTPLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(gomicro_http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High HTTP latency"
+          description: "{{ $labels.service }} p99 latency is {{ $value | humanizeDuration }}"
+
+      # gRPC Error Rate
+      - alert: HighGRPCErrorRate
+        expr: |
+          sum(rate(gomicro_grpc_requests_total{status!="OK"}[5m])) by (service)
+          / sum(rate(gomicro_grpc_requests_total[5m])) by (service) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High gRPC error rate"
+          description: "{{ $labels.service }} has gRPC error rate of {{ $value | humanizePercentage }}"
+
+  - name: order-alerts
+    rules:
+      # Order Creation Failures
+      - alert: HighOrderCreationFailureRate
+        expr: |
+          sum(rate(gomicro_order_create_failed_total[5m])) by (reason)
+          / sum(rate(gomicro_order_created_total[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High order creation failure rate"
+          description: "Order creation failure rate due to {{ $labels.reason }} is {{ $value | humanizePercentage }}"
+
+      # Order Service Unavailable
+      - alert: OrderServiceUnavailable
+        expr: |
+          sum(rate(gomicro_grpc_requests_total{service="/order.OrderService"}[5m])) by (service) == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Order service unavailable"
+          description: "Order service is not handling requests"
+
+  - name: payment-alerts
+    rules:
+      # Payment Failures
+      - alert: HighPaymentFailureRate
+        expr: |
+          sum(rate(gomicro_payment_failed_total[5m])) by (reason)
+          / sum(rate(gomicro_payment_created_total[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High payment failure rate"
+          description: "Payment failure rate due to {{ $labels.reason }} is {{ $value | humanizePercentage }}"
+
+      # Payment Timeouts
+      - alert: HighPaymentTimeoutRate
+        expr: |
+          sum(rate(gomicro_payment_timeout_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High payment timeout rate"
+          description: "Payment timeout rate is {{ $value }} per 5 minutes"
+
+  - name: inventory-alerts
+    rules:
+      # Inventory Insufficient
+      - alert: HighInventoryInsufficientRate
+        expr: |
+          sum(rate(gomicro_inventory_insufficient_total[5m])) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inventory insufficient rate"
+          description: "Inventory insufficient events are occurring at {{ $value }} per 5 minutes"
+
+      # Inventory Reserve Failures
+      - alert: HighInventoryReserveFailureRate
+        expr: |
+          sum(rate(gomicro_inventory_reserve_failed_total[5m])) by (reason)
+          / sum(rate(gomicro_inventory_reserved_total[5m])) > 0.1
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High inventory reserve failure rate"
+          description: "Inventory reserve failure rate due to {{ $labels.reason }} is {{ $value | humanizePercentage }}"
+
+  - name: outbox-alerts
+    rules:
+      # Outbox Pending Messages
+      - alert: OutboxPendingHigh
+        expr: gomicro_outbox_pending_count > 1000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Outbox pending messages high"
+          description: "Outbox has {{ $value }} pending messages (> 1000)"
+
+      # Outbox Publish Failures
+      - alert: OutboxPublishFailures
+        expr: |
+          sum(rate(gomicro_outbox_publish_failed_total[5m])) by (reason) > 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Outbox publish failures"
+          description: "Outbox publish failures due to {{ $labels.reason }} detected"
+
+  - name: mq-alerts
+    rules:
+      # MQ Dead Letter Queue
+      - alert: DeadLetterQueueHigh
+        expr: |
+          sum(rate(gomicro_mq_dead_letter_total[5m])) by (queue) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dead letter queue messages high"
+          description: "DLQ {{ $labels.queue }} has {{ $value }} messages per 5 minutes"
+
+      # MQ Consumer Errors
+      - alert: MQConsumerErrorsHigh
+        expr: |
+          sum(rate(gomicro_mq_consumer_errors_total[5m])) by (queue, error_type) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "MQ consumer errors high"
+          description: "Queue {{ $labels.queue }} has {{ $value }} {{ $labels.error_type }} errors per 5 minutes"
+
+  - name: task-alerts
+    rules:
+      # Task Failures
+      - alert: HighTaskFailureRate
+        expr: |
+          sum(rate(gomicro_task_failed_total[5m])) by (reason)
+          / sum(rate(gomicro_task_created_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High task failure rate"
+          description: "Task failure rate due to {{ $labels.reason }} is {{ $value | humanizePercentage }}"
+
+      # Task Retries High
+      - alert: TaskRetriesHigh
+        expr: |
+          sum(rate(gomicro_task_retry_total[5m])) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High task retry rate"
+          description: "Task retry rate is {{ $value }} per 5 minutes"
+
+  - name: refund-alerts
+    rules:
+      # Refund Failures
+      - alert: HighRefundFailureRate
+        expr: |
+          sum(rate(gomicro_refund_failed_total[5m])) by (reason)
+          / sum(rate(gomicro_refund_initiated_total[5m])) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High refund failure rate"
+          description: "Refund failure rate due to {{ $labels.reason }} is {{ $value | humanizePercentage }}"
+
+  - name: database-alerts
+    rules:
+      # Database Connection Pool Exhausted
+      - alert: DatabaseConnectionPoolExhausted
+        expr: |
+          gomicro_db_connection_pool_size{state="in_use"}
+          / gomicro_db_connection_pool_size{state="total"} > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection pool usage is {{ $value | humanizePercentage }}"
+
+      # High Database Latency
+      - alert: HighDatabaseLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum(rate(gomicro_db_query_duration_seconds_bucket[5m])) by (le, operation)
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High database latency"
+          description: "Database operation {{ $labels.operation }} p99 latency is {{ $value | humanizeDuration }}"

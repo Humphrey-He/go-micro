@@ -29,6 +29,11 @@ func Run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	if err := config.ValidateService("price-service"); err != nil {
+		logger.Error("config validation failed", zap.Error(err))
+		return err
+	}
+
 	dbx, err := db.NewMySQL()
 	if err != nil {
 		logger.Error("mysql connect failed", zap.Error(err))

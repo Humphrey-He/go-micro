@@ -37,6 +37,11 @@ func Run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	if err := config.ValidateService("gateway-api"); err != nil {
+		logger.Error("config validation failed", zap.Error(err))
+		return err
+	}
+
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.RequestID())

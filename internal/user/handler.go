@@ -24,11 +24,11 @@ func (h *Handler) Register(r *gin.Engine) {
 	r.GET("/users/:id", h.get)
 }
 
-// @Summary ????
+// @Summary 创建用户
 // @Tags User
 // @Accept json
 // @Produce json
-// @Param body body CreateUserRequest true "????"
+// @Param body body CreateUserRequest true "用户创建请求"
 // @Success 200 {object} httpx.Response
 // @Router /users [post]
 func (h *Handler) create(c *gin.Context) {
@@ -48,10 +48,10 @@ func (h *Handler) create(c *gin.Context) {
 	c.JSON(code, body)
 }
 
-// @Summary ????
+// @Summary 查询用户
 // @Tags User
 // @Produce json
-// @Param id path string true "??ID"
+// @Param id path string true "用户ID"
 // @Success 200 {object} httpx.Response
 // @Router /users/{id} [get]
 func (h *Handler) get(c *gin.Context) {

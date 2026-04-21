@@ -50,11 +50,11 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.GET("/users/me", h.me)
 }
 
-// @Summary ??
+// @Summary 用户登录
 // @Tags Auth
 // @Accept json
 // @Produce json
-// @Param body body LoginRequest true "??"
+// @Param body body LoginRequest true "登录请求"
 // @Success 200 {object} httpx.Response
 // @Router /api/v1/auth/login [post]
 func (h *Handler) login(c *gin.Context) {
@@ -74,12 +74,12 @@ func (h *Handler) login(c *gin.Context) {
 	c.JSON(code, body)
 }
 
-// @Summary ????
+// @Summary 创建订单
 // @Tags Order
 // @Accept json
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param body body CreateOrderRequest true "????"
+// @Param body body CreateOrderRequest true "订单创建请求"
 // @Success 200 {object} httpx.Response
 // @Router /api/v1/orders [post]
 func (h *Handler) createOrder(c *gin.Context) {
@@ -100,11 +100,11 @@ func (h *Handler) createOrder(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// @Summary ????
+// @Summary 查询订单
 // @Tags Order
 // @Produce json
 // @Param Authorization header string true "Bearer token"
-// @Param id path string true "??ID"
+// @Param id path string true "订单ID"
 // @Success 200 {object} httpx.Response
 // @Router /api/v1/orders/{id} [get]
 func (h *Handler) getOrder(c *gin.Context) {
@@ -424,7 +424,7 @@ func (h *Handler) priceHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// @Summary ??????
+// @Summary 获取当前用户信息
 // @Tags User
 // @Produce json
 // @Param Authorization header string true "Bearer token"

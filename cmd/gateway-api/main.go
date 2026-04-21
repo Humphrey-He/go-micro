@@ -10,7 +10,7 @@ import (
 
 // @title Go-Micro Gateway API
 // @version 1.0
-// @description ???? API ??
+// @description Go-Micro 网关服务 API
 // @host localhost:8080
 // @BasePath /
 func main() {

@@ -20,11 +20,8 @@ export const useOrderDetail = (): UseOrderDetailResult => {
     setError(null)
     try {
       const res = await getOrderDetail(orderNo)
-      console.log('[useOrderDetail] raw response:', JSON.stringify(res))
-      // API returns {code, message, data: {...}}, data is nested
-      const orderData = (res as unknown as { data: OrderDetailResponse }).data
-      console.log('[useOrderDetail] order data:', JSON.stringify(orderData))
-      setData(orderData)
+      console.log('[useOrderDetail] response:', JSON.stringify(res))
+      setData(res)
     } catch (err) {
       console.error('[useOrderDetail] error:', err)
       setError('获取订单详情失败')

@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { getOrderList, cancelOrder } from '../ordersApi'
-import type { OrderListItem, OrderListParams, OrderListResponse } from '../types/order'
+import type { OrderListItem, OrderListParams } from '../types/order'
 
 interface UseOrderListResult {
   loading: boolean
@@ -19,10 +19,8 @@ export const useOrderList = (): UseOrderListResult => {
     setLoading(true)
     try {
       const res = await getOrderList(params)
-      // API returns {code, message, data: {orders, total}}, data is nested
-      const resData = (res as unknown as { data: OrderListResponse }).data
-      setData(resData?.orders || [])
-      setTotal(resData?.total || 0)
+      setData(res.orders || [])
+      setTotal(res.total || 0)
     } finally {
       setLoading(false)
     }

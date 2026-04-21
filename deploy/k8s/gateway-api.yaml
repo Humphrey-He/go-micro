@@ -12,6 +12,7 @@ spec:
       labels:
         app: gateway-api
     spec:
+      serviceAccountName: go-micro-sa
       securityContext:
         runAsNonRoot: true
         seccompProfile:

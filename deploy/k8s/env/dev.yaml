@@ -1,0 +1,57 @@
+# Dev Environment ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-micro-config
+  namespace: go-micro-dev
+data:
+  APP_ENV: "development"
+
+  # Redis
+  REDIS_ADDR: "redis-dev:6379"
+  REDIS_DB: "0"
+  REDIS_POOL_SIZE: "10"
+  REDIS_MIN_IDLE_CONNS: "2"
+
+  # MySQL
+  MYSQL_MAX_OPEN_CONNS: "20"
+  MYSQL_MAX_IDLE_CONNS: "5"
+  MYSQL_CONN_MAX_LIFETIME_SECONDS: "300"
+
+  # RabbitMQ
+  MQ_EXCHANGE: "order.events.dev"
+  MQ_QUEUE: "order_reserved_dev"
+  MQ_ROUTING_KEY: "order_reserved"
+  MQ_DLX: "order.events.dlx.dev"
+  MQ_DLQ: "order_reserved.dlq.dev"
+
+  REFUND_MQ_EXCHANGE: "refund.events.dev"
+  REFUND_MQ_QUEUE: "refund.process_dev"
+  REFUND_MQ_ROUTING_KEY: "refund.initiated"
+  REFUND_MQ_DLX: "refund.events.dlx.dev"
+  REFUND_MQ_DLQ: "refund.process.dlq.dev"
+
+  # gRPC Targets
+  ORDER_GRPC_TARGET: "order-service-dev:9081"
+  USER_GRPC_TARGET: "user-service-dev:9083"
+  INVENTORY_GRPC_TARGET: "inventory-service-dev:9082"
+  TASK_GRPC_TARGET: "task-service-dev:9084"
+  REFUND_GRPC_TARGET: "refund-service-dev:9086"
+  ACTIVITY_GRPC_TARGET: "activity-service-dev:9087"
+  PRICE_GRPC_TARGET: "price-service-dev:9088"
+
+  # Rate Limit
+  RATE_LIMIT_QPS: "100"
+  RATE_LIMIT_BURST: "200"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: go-micro-secret
+  namespace: go-micro-dev
+type: Opaque
+stringData:
+  MYSQL_DSN: "dev_user:dev_password@tcp(mysql-dev:3306)/go_micro_dev?parseTime=true&charset=utf8mb4&loc=Local"
+  REDIS_PASSWORD: "dev_redis_password"
+  MQ_URL: "amqp://dev_user:dev_password@rabbitmq-dev:5672/"
+  JWT_SECRET: "dev-secret-key-do-not-use-in-production-min-32-chars"

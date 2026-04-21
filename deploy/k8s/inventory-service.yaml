@@ -12,6 +12,7 @@ spec:
       labels:
         app: inventory-service
     spec:
+      serviceAccountName: go-micro-sa
       securityContext:
         runAsNonRoot: true
         seccompProfile:

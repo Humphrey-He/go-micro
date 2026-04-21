@@ -12,6 +12,7 @@ spec:
       labels:
         app: user-service
     spec:
+      serviceAccountName: go-micro-sa
       securityContext:
         runAsNonRoot: true
         seccompProfile:

@@ -1,0 +1,57 @@
+# Staging Environment ConfigMap
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: go-micro-config
+  namespace: go-micro-staging
+data:
+  APP_ENV: "staging"
+
+  # Redis
+  REDIS_ADDR: "redis-staging:6379"
+  REDIS_DB: "0"
+  REDIS_POOL_SIZE: "20"
+  REDIS_MIN_IDLE_CONNS: "5"
+
+  # MySQL
+  MYSQL_MAX_OPEN_CONNS: "50"
+  MYSQL_MAX_IDLE_CONNS: "10"
+  MYSQL_CONN_MAX_LIFETIME_SECONDS: "300"
+
+  # RabbitMQ
+  MQ_EXCHANGE: "order.events.staging"
+  MQ_QUEUE: "order_reserved_staging"
+  MQ_ROUTING_KEY: "order_reserved"
+  MQ_DLX: "order.events.dlx.staging"
+  MQ_DLQ: "order_reserved.dlq.staging"
+
+  REFUND_MQ_EXCHANGE: "refund.events.staging"
+  REFUND_MQ_QUEUE: "refund.process_staging"
+  REFUND_MQ_ROUTING_KEY: "refund.initiated"
+  REFUND_MQ_DLX: "refund.events.dlx.staging"
+  REFUND_MQ_DLQ: "refund.process.dlq.staging"
+
+  # gRPC Targets
+  ORDER_GRPC_TARGET: "order-service-staging:9081"
+  USER_GRPC_TARGET: "user-service-staging:9083"
+  INVENTORY_GRPC_TARGET: "inventory-service-staging:9082"
+  TASK_GRPC_TARGET: "task-service-staging:9084"
+  REFUND_GRPC_TARGET: "refund-service-staging:9086"
+  ACTIVITY_GRPC_TARGET: "activity-service-staging:9087"
+  PRICE_GRPC_TARGET: "price-service-staging:9088"
+
+  # Rate Limit
+  RATE_LIMIT_QPS: "200"
+  RATE_LIMIT_BURST: "400"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: go-micro-secret
+  namespace: go-micro-staging
+type: Opaque
+stringData:
+  MYSQL_DSN: "staging_user:CHANGE_ME_STAGING_PASSWORD@tcp(mysql-staging:3306)/go_micro_staging?parseTime=true&charset=utf8mb4&loc=Local"
+  REDIS_PASSWORD: "CHANGE_ME_STAGING_REDIS_PASSWORD"
+  MQ_URL: "amqp://staging_user:CHANGE_ME_STAGING_PASSWORD@rabbitmq-staging:5672/"
+  JWT_SECRET: "CHANGE_ME_STAGING_JWT_SECRET_32_PLUS_CHARS"

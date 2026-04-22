@@ -1,0 +1,18 @@
+version: v2
+name: buf.build/go-micro/go-micro
+deps:
+  - buf.build/googleapis/googleapis
+  - buf.build/grpc/grpc
+lint:
+  use:
+    - DEFAULT
+  except:
+    - PACKAGE_VERSION_SUFFIX
+  rpc_allow_google_protobuf_empty_requests: true
+  rpc_allow_google_protobuf_empty_responses: true
+  allow_comment_ignores: true
+breaking:
+  use:
+    - FILE
+  except:
+    - EXT

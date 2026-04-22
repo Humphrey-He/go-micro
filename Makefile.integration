@@ -1,0 +1,28 @@
+.PHONY: integration-test integration-setup integration-clean
+
+# Integration test commands
+# Requires docker-compose up for test infrastructure
+
+integration-setup:
+	docker-compose up -d mysql-integration redis-integration rabbitmq-integration
+	@echo "Waiting for services to be ready..."
+	@sleep 10
+
+integration-test:
+	go test -v -tags=integration ./integration/tests/...
+
+integration-test-coverage:
+	go test -v -tags=integration -coverprofile=integration.out ./integration/tests/...
+	go tool cover -html=integration.out -o integration_coverage.html
+
+integration-clean:
+	docker-compose down -v mysql-integration redis-integration rabbitmq-integration
+	rm -f integration.out integration_coverage.html
+
+# Run with custom DSN
+integration-test-dsn:
+	MYSQL_DSN=$(MYSQL_DSN) go test -v -tags=integration ./integration/tests/...
+
+# Run specific test
+integration-test-run:
+	go test -v -tags=integration -run $(TEST_NAME) ./integration/tests/...

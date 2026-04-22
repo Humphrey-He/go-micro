@@ -1,0 +1,67 @@
+.PHONY: proto proto-lint proto-breaking proto-gen proto-check
+
+# Proto generation and validation commands
+# Requires: goctl, buf
+
+PROTO_DIR := ./proto
+PROTO_FILES := $(wildcard $(PROTO_DIR)/*.proto)
+GENERATED_DIR := ./internal/generated
+
+# Install tools
+proto-install:
+	@echo "Installing proto tools..."
+	go install github.com/bufbuild/buf/cmd/buf@latest
+	go install github.com/bufbuild/buf/cmd/buf-breaking@latest
+	go install goctl@latest
+
+# Lint proto files
+proto-lint:
+	@echo "Running proto lint..."
+	buf lint $(PROTO_DIR)
+
+# Check for breaking changes
+proto-breaking:
+	@echo "Checking for breaking changes..."
+	buf breaking $(PROTO_DIR) --against $(PROTO_DIR)
+
+# Generate code from proto
+proto-gen:
+	@echo "Generating code from proto files..."
+	@for proto in $(PROTO_FILES); do \
+		filename=$$(basename $$proto .proto); \
+		echo "Generating $$filename..."; \
+		goctl rpc protoc $$proto \
+			--go_out=$(GENERATED_DIR)/rpc \
+			--go_opt=module=go-micro \
+			--go-grpc_out=$(GENERATED_DIR)/rpc \
+			--go-grpc_opt=module=go-micro \
+			--zrpc_out=$(GENERATED_DIR)/rpc/$$filename \
+			--style=gozero; \
+	done
+
+# Check if generated code is up to date
+proto-check: proto-gen
+	@echo "Checking if generated code is up to date..."
+	@git diff --quiet || { \
+		echo "ERROR: Generated code is not up to date. Run 'make proto-gen' and commit the changes."; \
+		git diff --stat; \
+		exit 1; \
+	}
+	@echo "Generated code is up to date."
+
+# Format proto files
+proto-fmt:
+	@echo "Formatting proto files..."
+	buf format -w $(PROTO_DIR)
+
+# Update dependencies
+proto-deps-update:
+	@echo "Updating proto dependencies..."
+	buf mod update
+
+# List proto files
+proto-list:
+	@echo "Proto files:"
+	@for proto in $(PROTO_FILES); do \
+		echo "  $$proto"; \
+	done

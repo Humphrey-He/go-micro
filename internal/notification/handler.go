@@ -18,6 +18,9 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) Register(r *gin.Engine) {
+    // WebSocket 路由 - 不需要 JWT 认证
+    r.GET("/ws/notifications", HandleWebSocket)
+
     api := r.Group("/api/v1")
     api.Use(middleware.JWTAuth())
     api.GET("/notifications", h.listNotifications)

@@ -45,3 +45,17 @@ func (c *GRPCClient) Cancel(ctx context.Context, orderID string) error {
 	_, err := c.client.CancelOrder(ctx, &orderpb.CancelOrderRequest{OrderId: orderID})
 	return err
 }
+
+func (c *GRPCClient) List(ctx context.Context, req ListOrdersRequest) (*orderpb.ListOrdersResponse, error) {
+	return c.client.ListOrders(ctx, &orderpb.ListOrdersRequest{
+		Page:      req.Page,
+		PageSize:  req.PageSize,
+		OrderNo:   req.OrderNo,
+		UserId:    req.UserID,
+		Status:    req.Status,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		SortBy:    req.SortBy,
+		SortOrder: req.SortOrder,
+	})
+}

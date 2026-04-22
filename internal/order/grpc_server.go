@@ -65,3 +65,40 @@ func (s *GRPCServer) CancelOrder(ctx context.Context, req *orderpb.CancelOrderRe
 	}
 	return &orderpb.SimpleResponse{Success: true}, nil
 }
+
+func (s *GRPCServer) ListOrders(ctx context.Context, req *orderpb.ListOrdersRequest) (*orderpb.ListOrdersResponse, error) {
+	resp, err := s.svc.ListOrders(ListOrdersRequest{
+		Page:      req.Page,
+		PageSize:  req.PageSize,
+		OrderNo:   req.OrderNo,
+		UserID:    req.UserId,
+		Status:    req.Status,
+		StartTime: req.StartTime,
+		EndTime:   req.EndTime,
+		SortBy:    req.SortBy,
+		SortOrder: req.SortOrder,
+	})
+	if err != nil {
+		return nil, err
+	}
+	result := &orderpb.ListOrdersResponse{
+		Orders:   make([]*orderpb.OrderListItem, 0, len(resp.Orders)),
+		Total:    resp.Total,
+		Page:     resp.Page,
+		PageSize: resp.PageSize,
+	}
+	for _, o := range resp.Orders {
+		result.Orders = append(result.Orders, &orderpb.OrderListItem{
+			OrderId:       o.OrderID,
+			BizNo:         o.BizNo,
+			UserId:        o.UserID,
+			Status:        o.Status,
+			TotalAmount:   o.TotalAmount,
+			ItemCount:     int32(o.ItemCount),
+			PaymentStatus: o.PaymentStatus,
+			CreatedAt:     o.CreatedAt,
+			UpdatedAt:     o.UpdatedAt,
+		})
+	}
+	return result, nil
+}

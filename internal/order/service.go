@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -516,6 +517,128 @@ func (c *cacheClient) setOrderByBizNo(ctx context.Context, bizNo string, ord *Or
 func (c *cacheClient) setNilByBizNo(ctx context.Context, bizNo string) error {
 	key := "order:biz:" + bizNo
 	return cache.SetNil(ctx, c.rdb, key, ttlWithJitter(30*time.Second, 10*time.Second))
+}
+
+func (s *Service) ListOrders(req ListOrdersRequest) (*ListOrdersResponse, error) {
+	if req.Page <= 0 {
+		req.Page = 1
+	}
+	if req.PageSize <= 0 {
+		req.PageSize = 20
+	}
+	if req.PageSize > 100 {
+		req.PageSize = 100
+	}
+
+	offset := (req.Page - 1) * req.PageSize
+
+	where, args := buildWhereClause(req)
+
+	orderBy := "o.created_at DESC"
+	if req.SortBy == "total_amount" {
+		orderBy = "o.total_amount"
+		if req.SortOrder == "asc" {
+			orderBy = "o.total_amount ASC"
+		}
+	} else if req.SortBy == "created_at" && req.SortOrder == "asc" {
+		orderBy = "o.created_at ASC"
+	}
+
+	countSQL := "SELECT COUNT(1) FROM orders o " + where
+	var total int
+	if err := s.db.Get(&total, countSQL, args...); err != nil {
+		return nil, err
+	}
+
+	query := fmt.Sprintf(`
+		SELECT o.order_id, o.biz_no, o.user_id, o.status, o.total_amount,
+		       o.created_at, o.updated_at,
+		       (SELECT COUNT(1) FROM order_items WHERE order_id = o.order_id) as item_count,
+		       COALESCE((SELECT status FROM payments WHERE order_id = o.order_id LIMIT 1), '') as payment_status
+		FROM orders o
+		%s
+		ORDER BY %s
+		LIMIT ? OFFSET ?
+	`, where, orderBy)
+
+	args = append(args, req.PageSize, offset)
+
+	rows := []struct {
+		OrderID       string    `db:"order_id"`
+		BizNo         string    `db:"biz_no"`
+		UserID        string    `db:"user_id"`
+		Status        string    `db:"status"`
+		TotalAmount   int64     `db:"total_amount"`
+		ItemCount     int       `db:"item_count"`
+		PaymentStatus string    `db:"payment_status"`
+		CreatedAt     time.Time `db:"created_at"`
+		UpdatedAt     time.Time `db:"updated_at"`
+	}{}
+
+	if err := s.db.Select(&rows, query, args...); err != nil {
+		return nil, err
+	}
+
+	orders := make([]OrderListItem, 0, len(rows))
+	for _, r := range rows {
+		orders = append(orders, OrderListItem{
+			OrderID:       r.OrderID,
+			BizNo:         r.BizNo,
+			UserID:        r.UserID,
+			Status:        r.Status,
+			TotalAmount:   r.TotalAmount,
+			ItemCount:     r.ItemCount,
+			PaymentStatus: r.PaymentStatus,
+			CreatedAt:     r.CreatedAt.Unix(),
+			UpdatedAt:     r.UpdatedAt.Unix(),
+		})
+	}
+
+	return &ListOrdersResponse{
+		Orders:   orders,
+		Total:    int32(total),
+		Page:     req.Page,
+		PageSize: req.PageSize,
+	}, nil
+}
+
+func buildWhereClause(req ListOrdersRequest) (string, []interface{}) {
+	var conditions []string
+	var args []interface{}
+
+	if req.OrderNo != "" {
+		conditions = append(conditions, "o.biz_no LIKE ?")
+		args = append(args, "%"+req.OrderNo+"%")
+	}
+	if req.UserID != "" {
+		conditions = append(conditions, "o.user_id = ?")
+		args = append(args, req.UserID)
+	}
+	if req.Status != "" {
+		conditions = append(conditions, "o.status = ?")
+		args = append(args, req.Status)
+	}
+	if req.StartTime > 0 {
+		conditions = append(conditions, "o.created_at >= FROM_UNIXTIME(?)")
+		args = append(args, req.StartTime)
+	}
+	if req.EndTime > 0 {
+		conditions = append(conditions, "o.created_at <= FROM_UNIXTIME(?)")
+		args = append(args, req.EndTime)
+	}
+
+	if len(conditions) == 0 {
+		return "", nil
+	}
+
+	where := "WHERE "
+	for i, c := range conditions {
+		if i > 0 {
+			where += " AND "
+		}
+		where += c
+	}
+	return where, args
 }
 
 func ttlWithJitter(base, jitter time.Duration) time.Duration {

@@ -54,10 +54,56 @@ message CancelOrderRequest {
   string order_id = 1;
 }
 
+message ListOrdersRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string order_no = 3;
+  string user_id = 4;
+  string status = 5;
+  int64 start_time = 6;
+  int64 end_time = 7;
+  string sort_by = 8;
+  string sort_order = 9;
+}
+
+message ListOrdersResponse {
+  repeated OrderListItem orders = 1;
+  int32 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
+message OrderListItem {
+  string order_id = 1;
+  string biz_no = 2;
+  string user_id = 3;
+  string status = 4;
+  int64 total_amount = 5;
+  int32 item_count = 6;
+  string payment_status = 7;
+  int64 created_at = 8;
+  int64 updated_at = 9;
+}
+
+message GetStatsRequest {
+  int64 start_time = 1;
+  int64 end_time = 2;
+}
+
+message GetStatsResponse {
+  int64 today_order_count = 1;
+  int64 today_order_amount = 2;
+  int64 pending_refund_count = 3;
+  double payment_success_rate = 4;
+  int64 low_stock_sku_count = 5;
+}
+
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (CreateOrderResponse);
   rpc GetOrder(GetOrderRequest) returns (Order);
   rpc GetOrderByBizNo(GetOrderByBizNoRequest) returns (Order);
   rpc UpdateOrderStatus(UpdateOrderStatusRequest) returns (SimpleResponse);
   rpc CancelOrder(CancelOrderRequest) returns (SimpleResponse);
+  rpc ListOrders(ListOrdersRequest) returns (ListOrdersResponse);
+  rpc GetStats(GetStatsRequest) returns (GetStatsResponse);
 }

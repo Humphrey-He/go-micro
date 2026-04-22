@@ -61,5 +61,8 @@ const unwrapResponse = <T>(res: ApiResponse<T>): T => {
 export const get = <T>(url: string, config?: InternalAxiosRequestConfig): Promise<T> =>
   request.get<unknown, ApiResponse<T>>(url, config).then(unwrapResponse)
 
+export const put = <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<T> =>
+  request.put<unknown, ApiResponse<T>>(url, data, config).then(unwrapResponse)
+
 export const post = <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<T> =>
   request.post<unknown, ApiResponse<T>>(url, data, config).then(unwrapResponse)

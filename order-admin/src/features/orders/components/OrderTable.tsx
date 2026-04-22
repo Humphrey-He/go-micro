@@ -55,8 +55,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
   const columns: ColumnsType<OrderListItem> = [
     {
       title: '订单号',
-      dataIndex: 'bizNo',
-      key: 'bizNo',
+      dataIndex: 'biz_no',
+      key: 'biz_no',
       width: 160,
       fixed: 'left',
       render: (bizNo: string) => (
@@ -74,8 +74,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     },
     {
       title: '用户ID',
-      dataIndex: 'userId',
-      key: 'userId',
+      dataIndex: 'user_id',
+      key: 'user_id',
       width: 110,
       render: (userId: string) => (
         <span style={{ color: '#4b5563', fontSize: 13 }}>{userId}</span>
@@ -90,15 +90,15 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     },
     {
       title: '支付状态',
-      dataIndex: 'paymentStatus',
-      key: 'paymentStatus',
+      dataIndex: 'payment_status',
+      key: 'payment_status',
       width: 100,
       render: (status) => <StatusTag status={status} statusMap={PAYMENT_STATUS_MAP} />,
     },
     {
       title: '商品数',
-      dataIndex: 'itemCount',
-      key: 'itemCount',
+      dataIndex: 'item_count',
+      key: 'item_count',
       width: 80,
       align: 'center',
       render: (count: number) => (
@@ -118,8 +118,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     },
     {
       title: '订单金额',
-      dataIndex: 'totalAmount',
-      key: 'totalAmount',
+      dataIndex: 'total_amount',
+      key: 'total_amount',
       width: 120,
       align: 'right',
       render: (amount: number) => (
@@ -136,8 +136,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     },
     {
       title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 170,
       render: (timestamp: number) => (
         <span style={{ color: '#6b7280', fontSize: 12 }}>{formatDateTime(timestamp)}</span>
@@ -145,8 +145,8 @@ export const OrderTable: React.FC<OrderTableProps> = ({
     },
     {
       title: '更新时间',
-      dataIndex: 'updatedAt',
-      key: 'updatedAt',
+      dataIndex: 'updated_at',
+      key: 'updated_at',
       width: 170,
       render: (timestamp: number) => (
         <span style={{ color: '#9ca3af', fontSize: 12 }}>{formatDateTime(timestamp)}</span>
@@ -185,7 +185,7 @@ export const OrderTable: React.FC<OrderTableProps> = ({
       loading={loading}
       columns={columns}
       dataSource={data}
-      rowKey="orderId"
+      rowKey="order_id"
       scroll={{ x: 1200 }}
       pagination={{
         current: page,

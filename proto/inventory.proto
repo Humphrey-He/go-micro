@@ -44,10 +44,23 @@ message Reservation {
   string status = 3;
 }
 
+message ListInventoryRequest {}
+
+message ListInventoryResponse {
+  repeated InventoryItem items = 1;
+}
+
+message InventoryItem {
+  string sku_id = 1;
+  int32 available = 2;
+  int32 reserved = 3;
+}
+
 service InventoryService {
   rpc Reserve(ReserveRequest) returns (ReserveResponse);
   rpc Release(ReleaseRequest) returns (SimpleResponse);
   rpc ReleaseByOrder(ReleaseByOrderRequest) returns (SimpleResponse);
   rpc Confirm(ConfirmRequest) returns (SimpleResponse);
   rpc GetReservation(GetReservationRequest) returns (Reservation);
+  rpc ListInventory(ListInventoryRequest) returns (ListInventoryResponse);
 }

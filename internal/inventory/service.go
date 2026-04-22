@@ -234,6 +234,14 @@ func (s *Service) GetInventory(skuID string) (*Inventory, error) {
 	return &inv, nil
 }
 
+func (s *Service) ListInventory() ([]Inventory, error) {
+	var rows []Inventory
+	if err := s.db.Select(&rows, `SELECT * FROM inventory ORDER BY sku_id`); err != nil {
+		return nil, err
+	}
+	return rows, nil
+}
+
 func (s *Service) GetReservation(orderID string) (*Reservation, error) {
 	if orderID == "" {
 		return nil, ErrResvNotFound

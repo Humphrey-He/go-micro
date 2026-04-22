@@ -21,6 +21,7 @@ func (h *Handler) Register(r *gin.Engine) {
 	})
 
 	r.GET("/inventory/:sku_id", h.getInventory)
+	r.GET("/inventory", h.listInventory)
 	r.POST("/inventory/reserve", h.reserve)
 	r.POST("/inventory/release", h.release)
 	r.POST("/inventory/release-by-order", h.releaseByOrder)
@@ -43,6 +44,22 @@ func (h *Handler) getInventory(c *gin.Context) {
 		return
 	}
 	code, body := httpx.OK(inv)
+	c.JSON(code, body)
+}
+
+// @Summary 查询所有库存
+// @Tags Inventory
+// @Produce json
+// @Success 200 {object} httpx.Response
+// @Router /inventory [get]
+func (h *Handler) listInventory(c *gin.Context) {
+	items, err := h.svc.ListInventory()
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "failed to list inventory")
+		c.JSON(code, body)
+		return
+	}
+	code, body := httpx.OK(items)
 	c.JSON(code, body)
 }
 

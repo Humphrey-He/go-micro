@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { getDashboardStats } from '../dashboardApi'
 import type { DashboardStats } from '../types/stats'
+import type { DashboardStatsParams } from '../dashboardApi'
 
 interface UseDashboardStatsResult {
   loading: boolean
@@ -9,7 +10,7 @@ interface UseDashboardStatsResult {
   refresh: () => Promise<void>
 }
 
-export const useDashboardStats = (): UseDashboardStatsResult => {
+export const useDashboardStats = (params?: DashboardStatsParams): UseDashboardStatsResult => {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState<DashboardStats | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -18,14 +19,14 @@ export const useDashboardStats = (): UseDashboardStatsResult => {
     setLoading(true)
     setError(null)
     try {
-      const res = await getDashboardStats()
+      const res = await getDashboardStats(params)
       setData(res)
     } catch {
       setError('获取统计数据失败')
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [params])
 
   useEffect(() => {
     fetchStats()

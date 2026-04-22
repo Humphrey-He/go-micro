@@ -5,8 +5,18 @@ import type {
   OrderDetailResponse,
 } from '@/features/orders/types/order'
 
+const buildQueryString = (params: OrderListParams): string => {
+  const filtered: Record<string, string> = {}
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== '' && value !== null) {
+      filtered[key] = String(value)
+    }
+  }
+  return new URLSearchParams(filtered).toString()
+}
+
 export const getOrderList = (params: OrderListParams) =>
-  get<OrderListResponse>(`/admin/orders?${new URLSearchParams(params as Record<string, string>)}`)
+  get<OrderListResponse>(`/admin/orders?${buildQueryString(params)}`)
 
 export const getOrderDetail = (orderNo: string) =>
   get<OrderDetailResponse>(`/order-views/${orderNo}`)

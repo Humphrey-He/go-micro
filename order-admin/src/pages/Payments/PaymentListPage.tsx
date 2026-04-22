@@ -38,7 +38,8 @@ export const PaymentListPage: React.FC = () => {
 
   const loadData = useCallback(
     (values?: Record<string, unknown>) => {
-      const { orderId, status, ...rest } = values as Record<string, unknown>
+      const vals = values || {}
+      const { orderId, status, ...rest } = vals as Record<string, unknown>
       const params: PaymentListParams = {
         page,
         page_size: pageSize,
@@ -92,8 +93,8 @@ export const PaymentListPage: React.FC = () => {
   const columns = [
     {
       title: '支付单号',
-      dataIndex: 'paymentId',
-      key: 'paymentId',
+      dataIndex: 'payment_id',
+      key: 'payment_id',
       width: 200,
       ellipsis: true,
       render: (text: string) => <Text copyable={{ text }}>{text}</Text>,
@@ -236,7 +237,7 @@ export const PaymentListPage: React.FC = () => {
           columns={columns}
           dataSource={data}
           loading={loading}
-          rowKey="paymentId"
+          rowKey="payment_id"
           pagination={{
             current: page,
             pageSize,

@@ -1,12 +1,12 @@
 export interface InventoryItem {
-  skuId: string
+  sku_id: string
   available: number
   reserved: number
-  updatedAt?: string
+  updated_at?: string
 }
 
 export const getInventoryList = async (): Promise<InventoryItem[]> => {
-  const res = await fetch('http://localhost:8082/inventory')
+  const res = await fetch('/api/v1/admin/inventory')
   const json = await res.json()
   if (json.code !== 0) {
     throw new Error(json.message || '获取库存列表失败')

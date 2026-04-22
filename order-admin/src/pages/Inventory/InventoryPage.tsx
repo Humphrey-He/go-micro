@@ -54,8 +54,8 @@ export const InventoryPage: React.FC = () => {
   const columns = [
     {
       title: 'SKU ID',
-      dataIndex: 'skuId',
-      key: 'skuId',
+      dataIndex: 'sku_id',
+      key: 'sku_id',
       width: 120,
       render: (text: string) => (
         <Text strong copyable={{ text }}>
@@ -179,7 +179,7 @@ export const InventoryPage: React.FC = () => {
           columns={columns}
           dataSource={data}
           loading={loading}
-          rowKey="skuId"
+          rowKey="sku_id"
           pagination={false}
           size="middle"
         />

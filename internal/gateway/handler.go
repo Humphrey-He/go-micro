@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"go-micro/internal/activity"
 	"go-micro/internal/payment"
 	"go-micro/internal/price"
@@ -36,7 +37,9 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.GET("/order-views/:order_no", h.getOrderView)
 	api.GET("/admin/orders", h.listOrders)
 	api.GET("/admin/payments", h.listPayments)
+	api.GET("/admin/refunds", h.listRefunds)
 	api.GET("/admin/dashboard/stats", h.dashboardStats)
+	api.GET("/admin/inventory", h.listInventory)
 	api.POST("/payments", h.createPayment)
 	api.GET("/payments/:id", h.getPayment)
 	api.POST("/payments/:id/success", h.markPaymentSuccess)
@@ -388,7 +391,7 @@ func (h *Handler) activityStatus(c *gin.Context) {
 // @Router /api/v1/price/calculate [post]
 func (h *Handler) calculatePrice(c *gin.Context) {
 	var req price.CalculateRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.BasePrice <= 0 {
+	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.BasePrice.LessThanOrEqual(decimal.Zero) {
 		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
 		c.JSON(code, body)
 		return
@@ -496,16 +499,52 @@ func (h *Handler) listPayments(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (h *Handler) listRefunds(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	resp, err := h.svc.ListRefunds(page, pageSize, c.Query("order_id"), c.Query("status"))
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "refund service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 // @Summary 运营看板统计
 // @Tags Admin
 // @Produce json
 // @Param Authorization header string true "Bearer token"
+// @Param start_time query int64 false "开始时间戳"
+// @Param end_time query int64 false "结束时间戳"
+// @Param period query string false "统计周期 day/week/month" default(day)
 // @Success 200 {object} httpx.Response
 // @Router /api/v1/admin/dashboard/stats [get]
 func (h *Handler) dashboardStats(c *gin.Context) {
-	resp, err := h.svc.GetDashboardStats()
+	startTime, _ := strconv.ParseInt(c.Query("start_time"), 10, 64)
+	endTime, _ := strconv.ParseInt(c.Query("end_time"), 10, 64)
+	period := c.DefaultQuery("period", "day")
+
+	resp, err := h.svc.GetDashboardStats(startTime, endTime, period)
 	if err != nil {
 		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 库存列表（管理后台）
+// @Tags Admin
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/admin/inventory [get]
+func (h *Handler) listInventory(c *gin.Context) {
+	resp, err := h.svc.ListInventory()
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "inventory service unavailable")
 		c.JSON(code, body)
 		return
 	}

@@ -134,12 +134,23 @@ type DashboardStats struct {
 	PendingRefundCount  int64   `json:"pending_refund_count"`
 	PaymentSuccessRate  float64 `json:"payment_success_rate"`
 	LowStockSkuCount    int64   `json:"low_stock_sku_count"`
+	Period              string  `json:"period"`
+	StartTime           int64   `json:"start_time"`
+	EndTime             int64   `json:"end_time"`
 }
 
-func (s *Service) GetDashboardStats() (httpx.Response, error) {
+func (s *Service) GetDashboardStats(startTime, endTime int64, period string) (httpx.Response, error) {
+	// 如果未提供时间参数，使用默认值（今日0点 ~ 现在）
 	now := time.Now()
-	startOfDay := now.Truncate(24 * time.Hour)
-	endOfDay := startOfDay.Add(24 * time.Hour)
+	if startTime == 0 {
+		startTime = now.Truncate(24 * time.Hour).Unix()
+	}
+	if endTime == 0 {
+		endTime = now.Unix()
+	}
+	if period == "" {
+		period = "day"
+	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -150,9 +161,9 @@ func (s *Service) GetDashboardStats() (httpx.Response, error) {
 	_ = s.cbOrder.Execute(func() error {
 		orders, err := s.order.List(ctx, order.ListOrdersRequest{
 			Page:      1,
-			PageSize:  1000,
-			StartTime: startOfDay.Unix(),
-			EndTime:   endOfDay.Unix(),
+			PageSize:  10000,
+			StartTime: startTime,
+			EndTime:   endTime,
 		})
 		if err != nil {
 			return err
@@ -178,6 +189,9 @@ func (s *Service) GetDashboardStats() (httpx.Response, error) {
 		PendingRefundCount: 0,
 		PaymentSuccessRate: paymentSuccessRate,
 		LowStockSkuCount:   0,
+		Period:             period,
+		StartTime:          startTime,
+		EndTime:            endTime,
 	}
 
 	return httpx.Response{Code: 0, Message: "OK", Data: stats}, nil
@@ -366,6 +380,31 @@ func (s *Service) RefundRollback(req refund.RollbackRequest) (httpx.Response, er
 	return httpx.Response{Code: 0, Message: "OK", Data: resp}, nil
 }
 
+func (s *Service) ListRefunds(page, pageSize int, orderID, status string) (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var resp *refund.ListResponse
+	err := s.cbRefund.Execute(func() error {
+		var callErr error
+		resp, callErr = s.refund.List(ctx, refund.ListRequest{
+			Page:     int32(page),
+			PageSize: int32(pageSize),
+			OrderID:  orderID,
+			Status:   status,
+		})
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: map[string]interface{}{
+		"refunds":  resp.Refunds,
+		"total":    resp.Total,
+		"page":     resp.Page,
+		"page_size": resp.PageSize,
+	}}, nil
+}
+
 func (s *Service) IssueCoupon(req activity.CouponRequest) (httpx.Response, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -457,6 +496,21 @@ func (s *Service) GetPriceHistory(skuID string, limit int) (httpx.Response, erro
 }
 
 var errPaymentNotInit = errors.New("payment service not initialized")
+
+func (s *Service) ListInventory() (httpx.Response, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	var items []inventory.InventoryItem
+	err := s.cbInv.Execute(func() error {
+		var callErr error
+		items, callErr = s.inventory.ListInventory(ctx)
+		return callErr
+	})
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: items}, nil
+}
 
 func computeViewStatus(orderStatus, taskStatus, taskType, resvStatus string) (string, string) {
 	if orderStatus == "CANCELED" {

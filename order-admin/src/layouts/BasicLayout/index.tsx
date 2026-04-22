@@ -4,6 +4,8 @@ import { Layout, Menu, Avatar, Dropdown, Space, Badge } from 'antd'
 import {
   DashboardOutlined,
   ShoppingOutlined,
+  CreditCardOutlined,
+  AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
   BellOutlined,
@@ -22,6 +24,16 @@ const menuItems = [
     key: '/orders',
     icon: <ShoppingOutlined />,
     label: '订单管理',
+  },
+  {
+    key: '/payments',
+    icon: <CreditCardOutlined />,
+    label: '支付管理',
+  },
+  {
+    key: '/inventory',
+    icon: <AppstoreOutlined />,
+    label: '库存管理',
   },
 ]
 

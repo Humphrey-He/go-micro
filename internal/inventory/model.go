@@ -36,6 +36,12 @@ type Inventory struct {
 	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
 }
 
+type InventoryItem struct {
+	SkuID     string `json:"sku_id"`
+	Available int    `json:"available"`
+	Reserved  int    `json:"reserved"`
+}
+
 type Reservation struct {
 	ID         int64     `db:"id" json:"-"`
 	ReservedID string    `db:"reserved_id" json:"reserved_id"`

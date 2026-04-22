@@ -647,6 +647,177 @@
                 }
             }
         },
+        "/api/v1/admin/orders": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "订单列表（管理后台）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码（默认1）",
+                        "name": "page",
+                        "in": "query",
+                        "default": 1
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数（默认20）",
+                        "name": "page_size",
+                        "in": "query",
+                        "default": 20
+                    },
+                    {
+                        "type": "string",
+                        "description": "订单号",
+                        "name": "order_no",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "user_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "订单状态枚举",
+                        "name": "status",
+                        "in": "query",
+                        "enum": ["PENDING", "RESERVED", "PAID", "SHIPPED", "COMPLETED", "CANCELED", "EXPIRED", "FAILED"]
+                    },
+                    {
+                        "type": "integer",
+                        "description": "开始时间戳（秒）",
+                        "name": "start_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "结束时间戳（秒）",
+                        "name": "end_time",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序字段",
+                        "name": "sort_by",
+                        "in": "query",
+                        "default": "created_at"
+                    },
+                    {
+                        "type": "string",
+                        "description": "排序方向",
+                        "name": "sort_order",
+                        "in": "query",
+                        "enum": ["asc", "desc"],
+                        "default": "desc"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/payments": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "支付列表（管理后台）",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码（默认1）",
+                        "name": "page",
+                        "in": "query",
+                        "default": 1
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页条数（默认20）",
+                        "name": "page_size",
+                        "in": "query",
+                        "default": 20
+                    },
+                    {
+                        "type": "string",
+                        "description": "订单ID",
+                        "name": "order_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "支付状态枚举",
+                        "name": "status",
+                        "in": "query",
+                        "enum": ["PENDING", "SUCCESS", "FAILED", "TIMEOUT", "CANCELED", "REFUNDED"]
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/dashboard/stats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "运营看板统计",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Bearer token",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/go-micro_pkg_httpx.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/inventory/confirm": {
             "post": {
                 "consumes": [
@@ -1312,13 +1483,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "优惠券金额（分）"
                 },
                 "coupon_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "优惠券ID"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1326,13 +1500,16 @@
             "type": "object",
             "properties": {
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "秒杀数量"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1340,13 +1517,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "支付金额（分）"
                 },
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "request_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "请求唯一ID（用于幂等）"
                 }
             }
         },
@@ -1354,16 +1534,20 @@
             "type": "object",
             "properties": {
                 "base_price": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "基础价格（分）"
                 },
                 "coupon_amount": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "优惠券抵扣金额（分）"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 },
                 "user_level": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "用户等级（1=普通用户, 2=VIP, 3=SVIP）"
                 }
             }
         },
@@ -1371,16 +1555,21 @@
             "type": "object",
             "properties": {
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款原因"
                 },
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 },
                 "refund_type": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款类型枚举",
+                    "enum": ["FULL_REFUND", "PARTIAL_REFUND"]
                 }
             }
         },
@@ -1388,13 +1577,16 @@
             "type": "object",
             "properties": {
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "回滚原因"
                 },
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 }
             }
         },
@@ -1402,7 +1594,8 @@
             "type": "object",
             "properties": {
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 }
             }
         },
@@ -1422,13 +1615,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "优惠券金额（分）"
                 },
                 "coupon_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "优惠券ID"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1436,13 +1632,16 @@
             "type": "object",
             "properties": {
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "秒杀数量"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1451,18 +1650,22 @@
             "properties": {
                 "items": {
                     "type": "array",
+                    "description": "订单商品列表",
                     "items": {
                         "$ref": "#/definitions/internal_gateway.Item"
                     }
                 },
                 "remark": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单备注"
                 },
                 "request_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "请求唯一ID（用于幂等）"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1470,13 +1673,16 @@
             "type": "object",
             "properties": {
                 "price": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "商品单价（分）"
                 },
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "购买数量"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 }
             }
         },
@@ -1484,10 +1690,12 @@
             "type": "object",
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "密码"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户名"
                 }
             }
         },
@@ -1495,7 +1703,8 @@
             "type": "object",
             "properties": {
                 "reserved_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "预占记录ID"
                 }
             }
         },
@@ -1503,10 +1712,12 @@
             "type": "object",
             "properties": {
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "预占数量"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 }
             }
         },
@@ -1514,7 +1725,8 @@
             "type": "object",
             "properties": {
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 }
             }
         },
@@ -1522,7 +1734,8 @@
             "type": "object",
             "properties": {
                 "reserved_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "预占记录ID"
                 }
             }
         },
@@ -1531,12 +1744,14 @@
             "properties": {
                 "items": {
                     "type": "array",
+                    "description": "预占商品列表",
                     "items": {
                         "$ref": "#/definitions/internal_inventory.Item"
                     }
                 },
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 }
             }
         },
@@ -1545,18 +1760,22 @@
             "properties": {
                 "items": {
                     "type": "array",
+                    "description": "订单商品列表",
                     "items": {
                         "$ref": "#/definitions/internal_order.Item"
                     }
                 },
                 "remark": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单备注"
                 },
                 "request_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "请求唯一ID（用于幂等）"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 }
             }
         },
@@ -1564,13 +1783,16 @@
             "type": "object",
             "properties": {
                 "price": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "商品单价（分）"
                 },
                 "quantity": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "购买数量"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 }
             }
         },
@@ -1578,13 +1800,16 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "支付金额（分）"
                 },
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "request_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "请求唯一ID（用于幂等）"
                 }
             }
         },
@@ -1592,16 +1817,20 @@
             "type": "object",
             "properties": {
                 "base_price": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "基础价格（分）"
                 },
                 "coupon_amount": {
-                    "type": "number"
+                    "type": "number",
+                    "description": "优惠券抵扣金额（分）"
                 },
                 "sku_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "商品SKU ID"
                 },
                 "user_level": {
-                    "type": "integer"
+                    "type": "integer",
+                    "description": "用户等级（1=普通用户, 2=VIP, 3=SVIP）"
                 }
             }
         },
@@ -1609,16 +1838,21 @@
             "type": "object",
             "properties": {
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款原因"
                 },
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 },
                 "refund_type": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款类型枚举",
+                    "enum": ["FULL_REFUND", "PARTIAL_REFUND"]
                 }
             }
         },
@@ -1626,13 +1860,16 @@
             "type": "object",
             "properties": {
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "回滚原因"
                 },
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 }
             }
         },
@@ -1640,7 +1877,8 @@
             "type": "object",
             "properties": {
                 "refund_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "退款单ID"
                 }
             }
         },
@@ -1648,13 +1886,17 @@
             "type": "object",
             "properties": {
                 "biz_no": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "业务单号"
                 },
                 "order_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "订单ID"
                 },
                 "type": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "任务类型枚举",
+                    "enum": ["ORDER_CREATE", "PAYMENT_CONFIRM", "INVENTORY_RESERVE", "INVENTORY_DEDUCT", "REFUND_PROCESS", "DELIVERY_NOTIFY"]
                 }
             }
         },
@@ -1662,18 +1904,73 @@
             "type": "object",
             "properties": {
                 "password": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "密码"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户角色枚举",
+                    "enum": ["ADMIN", "USER", "OPERATOR"]
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户ID"
                 },
                 "username": {
-                    "type": "string"
+                    "type": "string",
+                    "description": "用户名"
                 }
             }
+        },
+        "OrderStatus": {
+            "type": "string",
+            "description": "订单状态枚举",
+            "enum": ["PENDING", "RESERVED", "PAID", "SHIPPED", "COMPLETED", "CANCELED", "EXPIRED", "FAILED"]
+        },
+        "PaymentStatus": {
+            "type": "string",
+            "description": "支付状态枚举",
+            "enum": ["PENDING", "SUCCESS", "FAILED", "TIMEOUT", "CANCELED", "REFUNDED"]
+        },
+        "InventoryStatus": {
+            "type": "string",
+            "description": "库存状态枚举",
+            "enum": ["AVAILABLE", "RESERVED", "LOCKED", "DEPLETED"]
+        },
+        "ReservationStatus": {
+            "type": "string",
+            "description": "预占状态枚举",
+            "enum": ["PENDING", "RESERVED", "CONFIRMED", "RELEASED", "EXPIRED"]
+        },
+        "RefundStatus": {
+            "type": "string",
+            "description": "退款状态枚举",
+            "enum": ["PENDING", "PROCESSING", "SUCCESS", "FAILED"]
+        },
+        "TaskStatus": {
+            "type": "string",
+            "description": "任务状态枚举",
+            "enum": ["PENDING", "RUNNING", "SUCCESS", "FAILED", "RETRY", "DEAD"]
+        },
+        "RefundType": {
+            "type": "string",
+            "description": "退款类型枚举",
+            "enum": ["FULL_REFUND", "PARTIAL_REFUND"]
+        },
+        "TaskType": {
+            "type": "string",
+            "description": "任务类型枚举",
+            "enum": ["ORDER_CREATE", "PAYMENT_CONFIRM", "INVENTORY_RESERVE", "INVENTORY_DEDUCT", "REFUND_PROCESS", "DELIVERY_NOTIFY"]
+        },
+        "UserRole": {
+            "type": "string",
+            "description": "用户角色枚举",
+            "enum": ["ADMIN", "USER", "OPERATOR"]
+        },
+        "ViewStatus": {
+            "type": "string",
+            "description": "聚合层统一展示状态枚举",
+            "enum": ["PENDING", "PROCESSING", "SUCCESS", "FAILED", "DEAD", "CANCELED", "TIMEOUT"]
         }
     }
 }

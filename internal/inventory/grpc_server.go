@@ -57,3 +57,19 @@ func (s *GRPCServer) GetReservation(ctx context.Context, req *inventorypb.GetRes
 	}
 	return &inventorypb.Reservation{ReservedId: resv.ReservedID, OrderId: resv.OrderID, Status: resv.Status}, nil
 }
+
+func (s *GRPCServer) ListInventory(ctx context.Context, req *inventorypb.ListInventoryRequest) (*inventorypb.ListInventoryResponse, error) {
+	items, err := s.svc.ListInventory()
+	if err != nil {
+		return nil, err
+	}
+	pbItems := make([]*inventorypb.InventoryItem, 0, len(items))
+	for _, it := range items {
+		pbItems = append(pbItems, &inventorypb.InventoryItem{
+			SkuId:     it.SkuID,
+			Available: int32(it.Available),
+			Reserved:  int32(it.Reserved),
+		})
+	}
+	return &inventorypb.ListInventoryResponse{Items: pbItems}, nil
+}

@@ -50,3 +50,19 @@ func (c *GRPCClient) Confirm(ctx context.Context, reservedID string) error {
 func (c *GRPCClient) GetReservation(ctx context.Context, orderID string) (*inventorypb.Reservation, error) {
 	return c.client.GetReservation(ctx, &inventorypb.GetReservationRequest{OrderId: orderID})
 }
+
+func (c *GRPCClient) ListInventory(ctx context.Context) ([]InventoryItem, error) {
+	resp, err := c.client.ListInventory(ctx, &inventorypb.ListInventoryRequest{})
+	if err != nil {
+		return nil, err
+	}
+	items := make([]InventoryItem, 0, len(resp.Items))
+	for _, it := range resp.Items {
+		items = append(items, InventoryItem{
+			SkuID:     it.SkuId,
+			Available: int(it.Available),
+			Reserved:  int(it.Reserved),
+		})
+	}
+	return items, nil
+}

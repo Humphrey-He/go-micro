@@ -88,21 +88,10 @@ func (s *Service) GetByUsername(username string) (*User, error) {
 	if username == "" {
 		return nil, ErrNotFound
 	}
-	if u, ok := s.cache.getUserByName(s.ctx, username); ok {
-		return u, nil
-	}
-	lockKey := "lock:user:uname:" + username
-	locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
-	if locked {
-		defer func() { _ = cache.Unlock(s.ctx, s.cache.rdb, lockKey) }()
-		if u, ok := s.cache.getUserByName(s.ctx, username); ok {
-			return u, nil
-		}
-	}
+	// Skip username cache for auth - we need PasswordHash from DB
 	user := User{}
 	if err := s.db.Get(&user, `SELECT * FROM users WHERE username = ?`, username); err != nil {
 		if err == sql.ErrNoRows {
-			_ = s.cache.setNilByName(s.ctx, username)
 			return nil, ErrNotFound
 		}
 		return nil, err
@@ -145,9 +134,9 @@ func (c *cacheClient) setNil(ctx context.Context, userID string) error {
 	return cache.SetNil(ctx, c.rdb, key, ttlWithJitter(30*time.Second, 10*time.Second))
 }
 
-func (c *cacheClient) getUserByName(ctx context.Context, username string) (*User, bool) {
+func (c *cacheClient) getUserByName(ctx context.Context, username string) (*CachedUser, bool) {
 	key := "user:uname:" + username
-	var u User
+	var u CachedUser
 	hit, isNil, err := cache.GetJSON(ctx, c.rdb, key, &u)
 	if err != nil || isNil || !hit {
 		return nil, false
@@ -160,7 +149,8 @@ func (c *cacheClient) getUserByName(ctx context.Context, username string) (*User
 
 func (c *cacheClient) setUserByName(ctx context.Context, username string, u *User) error {
 	key := "user:uname:" + username
-	return cache.SetJSON(ctx, c.rdb, key, u, ttlWithJitter(5*time.Minute, 30*time.Second))
+	cached := CachedUser{UserID: u.UserID, Username: u.Username, Role: u.Role, Status: u.Status}
+	return cache.SetJSON(ctx, c.rdb, key, cached, ttlWithJitter(5*time.Minute, 30*time.Second))
 }
 
 func (c *cacheClient) setNilByName(ctx context.Context, username string) error {

@@ -1,16 +1,17 @@
 import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Space, Badge } from 'antd'
+import { Layout, Menu, Avatar, Dropdown, Space } from 'antd'
 import {
   DashboardOutlined,
   ShoppingOutlined,
   CreditCardOutlined,
+  RollbackOutlined,
   AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
-  BellOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/stores/authStore'
+import { NotificationBell } from '@/features/notification/components/NotificationBell'
 
 const { Header, Sider, Content } = Layout
 
@@ -29,6 +30,11 @@ const menuItems = [
     key: '/payments',
     icon: <CreditCardOutlined />,
     label: '支付管理',
+  },
+  {
+    key: '/refunds',
+    icon: <RollbackOutlined />,
+    label: '退款管理',
   },
   {
     key: '/inventory',
@@ -123,9 +129,7 @@ export const BasicLayout: React.FC = () => {
           }}
         >
           <Space size={16}>
-            <Badge count={3} size="small">
-              <BellOutlined style={{ fontSize: 18, color: '#6b7280', cursor: 'pointer' }} />
-            </Badge>
+            <NotificationBell />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
               <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: 8, transition: 'background 0.2s' }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}

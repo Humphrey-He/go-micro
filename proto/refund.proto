@@ -8,6 +8,7 @@ service RefundService {
   rpc Initiate (InitiateRequest) returns (Refund);
   rpc Status (StatusRequest) returns (Refund);
   rpc Rollback (RollbackRequest) returns (Refund);
+  rpc List (ListRequest) returns (ListResponse);
 }
 
 message InitiateRequest {
@@ -27,6 +28,20 @@ message RollbackRequest {
   string reason = 3;
 }
 
+message ListRequest {
+  int32 page = 1;
+  int32 page_size = 2;
+  string order_id = 3;
+  string status = 4;
+}
+
+message ListResponse {
+  repeated Refund refunds = 1;
+  int64 total = 2;
+  int32 page = 3;
+  int32 page_size = 4;
+}
+
 message Refund {
   string refund_id = 1;
   string order_id = 2;
@@ -35,4 +50,6 @@ message Refund {
   int32 retry_count = 5;
   string last_error = 6;
   string reason = 7;
+  string created_at = 8;
+  string updated_at = 9;
 }

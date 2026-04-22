@@ -10,12 +10,14 @@ const (
 	RefundService_Initiate_FullMethodName = "/refund.RefundService/Initiate"
 	RefundService_Status_FullMethodName   = "/refund.RefundService/Status"
 	RefundService_Rollback_FullMethodName = "/refund.RefundService/Rollback"
+	RefundService_List_FullMethodName     = "/refund.RefundService/List"
 )
 
 type RefundServiceClient interface {
 	Initiate(ctx context.Context, in *InitiateRequest, opts ...grpc.CallOption) (*Refund, error)
 	Status(ctx context.Context, in *StatusRequest, opts ...grpc.CallOption) (*Refund, error)
 	Rollback(ctx context.Context, in *RollbackRequest, opts ...grpc.CallOption) (*Refund, error)
+	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error)
 }
 
 type refundServiceClient struct {
@@ -53,10 +55,20 @@ func (c *refundServiceClient) Rollback(ctx context.Context, in *RollbackRequest,
 	return out, nil
 }
 
+func (c *refundServiceClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, RefundService_List_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 type RefundServiceServer interface {
 	Initiate(context.Context, *InitiateRequest) (*Refund, error)
 	Status(context.Context, *StatusRequest) (*Refund, error)
 	Rollback(context.Context, *RollbackRequest) (*Refund, error)
+	List(context.Context, *ListRequest) (*ListResponse, error)
 }
 
 func RegisterRefundServiceServer(s grpc.ServiceRegistrar, srv RefundServiceServer) {
@@ -108,6 +120,21 @@ func _RefundService_Rollback_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RefundService_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RefundServiceServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{Server: srv, FullMethod: RefundService_List_FullMethodName}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RefundServiceServer).List(ctx, req.(*ListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var RefundService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "refund.RefundService",
 	HandlerType: (*RefundServiceServer)(nil),
@@ -115,6 +142,7 @@ var RefundService_ServiceDesc = grpc.ServiceDesc{
 		{MethodName: "Initiate", Handler: _RefundService_Initiate_Handler},
 		{MethodName: "Status", Handler: _RefundService_Status_Handler},
 		{MethodName: "Rollback", Handler: _RefundService_Rollback_Handler},
+		{MethodName: "List", Handler: _RefundService_List_Handler},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/refund.proto",
@@ -138,4 +166,16 @@ func (s *GRPCServer) Status(ctx context.Context, in *StatusRequest) (*Refund, er
 
 func (s *GRPCServer) Rollback(ctx context.Context, in *RollbackRequest) (*Refund, error) {
 	return s.svc.Rollback(*in)
+}
+
+func (s *GRPCServer) List(ctx context.Context, in *ListRequest) (*ListResponse, error) {
+	refunds, total, err := s.svc.List(int(in.Page), int(in.PageSize), in.OrderID, in.Status)
+	if err != nil {
+		return nil, err
+	}
+	refundPtrs := make([]*Refund, len(refunds))
+	for i := range refunds {
+		refundPtrs[i] = &refunds[i]
+	}
+	return &ListResponse{Refunds: refundPtrs, Total: total, Page: in.Page, PageSize: in.PageSize}, nil
 }

@@ -145,6 +145,42 @@ func (s *Service) ListRetryDue(limit int) ([]Refund, error) {
 	return rows, nil
 }
 
+func (s *Service) List(page, pageSize int, orderID, status string) ([]Refund, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	offset := (page - 1) * pageSize
+
+	where := "1=1"
+	args := []interface{}{}
+	if orderID != "" {
+		where += " AND order_id = ?"
+		args = append(args, orderID)
+	}
+	if status != "" {
+		where += " AND status = ?"
+		args = append(args, status)
+	}
+
+	var total int64
+	countSQL := "SELECT COUNT(*) FROM refunds WHERE " + where
+	if err := s.db.Get(&total, countSQL, args...); err != nil {
+		return nil, 0, err
+	}
+
+	query := "SELECT * FROM refunds WHERE " + where + " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+	args = append(args, pageSize, offset)
+
+	var rows []Refund
+	if err := s.db.Select(&rows, query, args...); err != nil {
+		return nil, 0, err
+	}
+	return rows, total, nil
+}
+
 func (s *Service) publish(ref *Refund) error {
 	if s.mq == nil || ref == nil {
 		return nil

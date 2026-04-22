@@ -38,3 +38,17 @@ type RollbackRequest struct {
 	OrderID  string `json:"order_id"`
 	Reason   string `json:"reason"`
 }
+
+type ListRequest struct {
+	Page     int32  `json:"page"`
+	PageSize int32  `json:"page_size"`
+	OrderID  string `json:"order_id"`
+	Status   string `json:"status"`
+}
+
+type ListResponse struct {
+	Refunds  []*Refund `json:"refunds"`
+	Total    int64     `json:"total"`
+	Page     int32     `json:"page"`
+	PageSize int32     `json:"page_size"`
+}

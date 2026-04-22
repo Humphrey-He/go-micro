@@ -34,3 +34,7 @@ func (c *GRPCClient) Status(ctx context.Context, req StatusRequest) (*Refund, er
 func (c *GRPCClient) Rollback(ctx context.Context, req RollbackRequest) (*Refund, error) {
 	return c.client.Rollback(ctx, &req)
 }
+
+func (c *GRPCClient) List(ctx context.Context, req ListRequest) (*ListResponse, error) {
+	return c.client.List(ctx, &req)
+}

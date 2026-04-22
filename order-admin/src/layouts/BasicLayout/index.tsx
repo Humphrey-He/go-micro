@@ -1,56 +1,25 @@
 import React from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { Layout, Menu, Avatar, Dropdown, Space } from 'antd'
+import { Layout, Avatar, Dropdown, Space, Button, Tooltip } from 'antd'
 import {
-  DashboardOutlined,
-  ShoppingOutlined,
-  CreditCardOutlined,
-  RollbackOutlined,
-  AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
 } from '@ant-design/icons'
 import { useAuthStore } from '@/stores/authStore'
 import { NotificationBell } from '@/features/notification/components/NotificationBell'
+import { SortableMenu } from '@/components/SortableMenu'
+import { FloatButton } from '@/components/FloatButton'
+import { useSidebarStore } from '@/stores/sidebarStore'
 
 const { Header, Sider, Content } = Layout
-
-const menuItems = [
-  {
-    key: '/dashboard',
-    icon: <DashboardOutlined />,
-    label: '运营看板',
-  },
-  {
-    key: '/orders',
-    icon: <ShoppingOutlined />,
-    label: '订单管理',
-  },
-  {
-    key: '/payments',
-    icon: <CreditCardOutlined />,
-    label: '支付管理',
-  },
-  {
-    key: '/refunds',
-    icon: <RollbackOutlined />,
-    label: '退款管理',
-  },
-  {
-    key: '/inventory',
-    icon: <AppstoreOutlined />,
-    label: '库存管理',
-  },
-]
 
 export const BasicLayout: React.FC = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const { userInfo, logout } = useAuthStore()
-
-  const handleMenuClick = ({ key }: { key: string }) => {
-    navigate(key)
-  }
+  const { collapsed, floatMode, toggleCollapse } = useSidebarStore()
 
   const handleLogout = () => {
     logout()
@@ -73,19 +42,24 @@ export const BasicLayout: React.FC = () => {
     },
   ]
 
+  const siderWidth = collapsed ? 64 : 220
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
+      {/* 悬浮模式下的侧边栏 */}
       <Sider
-        theme="light"
+        trigger={null}
         width={220}
         style={{
           borderRight: '1px solid #e5e7eb',
           background: '#fff',
           position: 'fixed',
-          left: 0,
+          left: floatMode ? 0 : -220,
           top: 0,
           bottom: 0,
           zIndex: 100,
+          transition: 'left 200ms ease-in-out',
+          overflow: 'auto',
         }}
       >
         <div
@@ -102,19 +76,76 @@ export const BasicLayout: React.FC = () => {
             订单管理系统
           </span>
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          items={menuItems}
-          onClick={handleMenuClick}
-          style={{
-            borderRight: 0,
-            marginTop: 8,
-            padding: '0 8px',
-          }}
-        />
+        <SortableMenu collapsed={false} />
       </Sider>
-      <Layout style={{ marginLeft: 220 }}>
+
+      {/* 折叠模式的侧边栏 */}
+      <Sider
+        trigger={null}
+        width={siderWidth}
+        collapsedWidth={64}
+        style={{
+          borderRight: '1px solid #e5e7eb',
+          background: '#fff',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+          zIndex: 100,
+          transition: 'width 200ms ease-in-out',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: 64,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderBottom: '1px solid #e5e7eb',
+            background: 'linear-gradient(135deg, #1677ff 0%, #0958d9 100%)',
+          }}
+        >
+          {!collapsed && (
+            <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>
+              订单管理系统
+            </span>
+          )}
+          {collapsed && (
+            <span style={{ fontSize: 17, fontWeight: 700, color: '#fff' }}>订</span>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
+          <div style={{ flex: 1, overflow: 'auto' }}>
+            <SortableMenu collapsed={collapsed} />
+          </div>
+
+          {/* 折叠/展开按钮 */}
+          <div
+            style={{
+              padding: collapsed ? '12px 0' : '12px 8px',
+              borderTop: '1px solid #e5e7eb',
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Tooltip title={collapsed ? '展开菜单' : '折叠菜单'} placement="right">
+              <Button
+                type="text"
+                icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                onClick={toggleCollapse}
+                style={{ color: '#666' }}
+              />
+            </Tooltip>
+          </div>
+        </div>
+      </Sider>
+
+      {/* 悬浮按钮 */}
+      <FloatButton />
+
+      <Layout style={{ marginLeft: collapsed ? 64 : 220, transition: 'margin-left 200ms ease-in-out' }}>
         <Header
           style={{
             background: '#fff',
@@ -131,7 +162,13 @@ export const BasicLayout: React.FC = () => {
           <Space size={16}>
             <NotificationBell />
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-              <Space style={{ cursor: 'pointer', padding: '4px 8px', borderRadius: 8, transition: 'background 0.2s' }}
+              <Space
+                style={{
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                  borderRadius: 8,
+                  transition: 'background 0.2s',
+                }}
                 onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
                 onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
               >

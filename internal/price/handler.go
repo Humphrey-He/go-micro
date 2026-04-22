@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 	"go-micro/pkg/errx"
 	"go-micro/pkg/httpx"
 )
@@ -31,7 +32,7 @@ func (h *Handler) Register(r *gin.Engine) {
 // @Router /api/v1/price/calculate [post]
 func (h *Handler) calculate(c *gin.Context) {
 	var req CalculateRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.BasePrice <= 0 {
+	if err := c.ShouldBindJSON(&req); err != nil || req.SkuID == "" || req.BasePrice.LessThanOrEqual(decimal.Zero) {
 		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
 		c.JSON(code, body)
 		return

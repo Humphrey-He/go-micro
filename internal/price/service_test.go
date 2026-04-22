@@ -8,6 +8,7 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jmoiron/sqlx"
+	"github.com/shopspring/decimal"
 )
 
 func newPriceService(t *testing.T) (*Service, sqlmock.Sqlmock) {
@@ -24,8 +25,8 @@ func TestCalculate_BasicPrice(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000, // 100.00 元
-		CouponAmount: 0,
+		BasePrice:    decimal.NewFromInt(10000), // 100.00 元
+		CouponAmount: decimal.Zero,
 		UserLevel:    1,
 	}
 
@@ -36,17 +37,17 @@ func TestCalculate_BasicPrice(t *testing.T) {
 	if resp.SkuID != req.SkuID {
 		t.Fatalf("expected sku_id %s, got %s", req.SkuID, resp.SkuID)
 	}
-	if resp.BasePrice != req.BasePrice {
-		t.Fatalf("expected base_price %f, got %f", req.BasePrice, resp.BasePrice)
+	if !resp.BasePrice.Equal(req.BasePrice) {
+		t.Fatalf("expected base_price %s, got %s", req.BasePrice, resp.BasePrice)
 	}
-	if resp.CouponAmount != req.CouponAmount {
-		t.Fatalf("expected coupon_amount %f, got %f", req.CouponAmount, resp.CouponAmount)
+	if !resp.CouponAmount.Equal(req.CouponAmount) {
+		t.Fatalf("expected coupon_amount %s, got %s", req.CouponAmount, resp.CouponAmount)
 	}
-	if resp.FinalPrice != 10000 {
-		t.Fatalf("expected final_price 10000, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(10000)) {
+		t.Fatalf("expected final_price 10000, got %s", resp.FinalPrice)
 	}
-	if resp.LevelDiscount != 1.0 {
-		t.Fatalf("expected level_discount 1.0, got %f", resp.LevelDiscount)
+	if !resp.LevelDiscount.Equal(decimal.NewFromFloat(1.0)) {
+		t.Fatalf("expected level_discount 1.0, got %s", resp.LevelDiscount)
 	}
 	if resp.DiscountReason != "none" {
 		t.Fatalf("expected discount_reason 'none', got %s", resp.DiscountReason)
@@ -58,8 +59,8 @@ func TestCalculate_WithCoupon(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 2000, // 20 元 coupon
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.NewFromInt(2000), // 20 元 coupon
 		UserLevel:    1,
 	}
 
@@ -67,8 +68,8 @@ func TestCalculate_WithCoupon(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.FinalPrice != 8000 {
-		t.Fatalf("expected final_price 8000, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(8000)) {
+		t.Fatalf("expected final_price 8000, got %s", resp.FinalPrice)
 	}
 }
 
@@ -77,8 +78,8 @@ func TestCalculate_CouponExceedsPrice(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    1000,
-		CouponAmount: 2000, // coupon > price
+		BasePrice:    decimal.NewFromInt(1000),
+		CouponAmount: decimal.NewFromInt(2000), // coupon > price
 		UserLevel:    1,
 	}
 
@@ -86,8 +87,8 @@ func TestCalculate_CouponExceedsPrice(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.FinalPrice != 0 {
-		t.Fatalf("expected final_price 0 (coupon exceeds), got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.Zero) {
+		t.Fatalf("expected final_price 0 (coupon exceeds), got %s", resp.FinalPrice)
 	}
 }
 
@@ -96,8 +97,8 @@ func TestCalculate_VIPLevel2(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 0,
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.Zero,
 		UserLevel:    2,
 	}
 
@@ -105,11 +106,11 @@ func TestCalculate_VIPLevel2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.LevelDiscount != 0.95 {
-		t.Fatalf("expected level_discount 0.95 for vip-2, got %f", resp.LevelDiscount)
+	if !resp.LevelDiscount.Equal(decimal.NewFromFloat(0.95)) {
+		t.Fatalf("expected level_discount 0.95 for vip-2, got %s", resp.LevelDiscount)
 	}
-	if resp.FinalPrice != 9500 {
-		t.Fatalf("expected final_price 9500, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(9500)) {
+		t.Fatalf("expected final_price 9500, got %s", resp.FinalPrice)
 	}
 	if resp.DiscountReason != "vip-level-2" {
 		t.Fatalf("expected discount_reason 'vip-level-2', got %s", resp.DiscountReason)
@@ -121,8 +122,8 @@ func TestCalculate_VIPLevel3(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 0,
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.Zero,
 		UserLevel:    3,
 	}
 
@@ -130,11 +131,11 @@ func TestCalculate_VIPLevel3(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.LevelDiscount != 0.9 {
-		t.Fatalf("expected level_discount 0.9 for vip-3, got %f", resp.LevelDiscount)
+	if !resp.LevelDiscount.Equal(decimal.NewFromFloat(0.9)) {
+		t.Fatalf("expected level_discount 0.9 for vip-3, got %s", resp.LevelDiscount)
 	}
-	if resp.FinalPrice != 9000 {
-		t.Fatalf("expected final_price 9000, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(9000)) {
+		t.Fatalf("expected final_price 9000, got %s", resp.FinalPrice)
 	}
 	if resp.DiscountReason != "vip-level-3" {
 		t.Fatalf("expected discount_reason 'vip-level-3', got %s", resp.DiscountReason)
@@ -146,8 +147,8 @@ func TestCalculate_VIPWithCoupon(t *testing.T) {
 
 	req := CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 1000,
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.NewFromInt(1000),
 		UserLevel:    3,
 	}
 
@@ -156,8 +157,8 @@ func TestCalculate_VIPWithCoupon(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	// (10000 - 1000) * 0.9 = 8100
-	if resp.FinalPrice != 8100 {
-		t.Fatalf("expected final_price 8100, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(8100)) {
+		t.Fatalf("expected final_price 8100, got %s", resp.FinalPrice)
 	}
 }
 
@@ -165,20 +166,20 @@ func TestCalculate_RecordsHistory(t *testing.T) {
 	svc, mock := newPriceService(t)
 
 	mock.ExpectExec(`INSERT INTO price_history`).
-		WithArgs("SKU-1", 10000.0, 8100.0, "coupon+vip-level-3", sqlmock.AnyArg()).
+		WithArgs("SKU-1", "10000", "8100", "coupon+vip-level-3", sqlmock.AnyArg()).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	resp, err := svc.Calculate(CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 1000,
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.NewFromInt(1000),
 		UserLevel:    3,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if resp.FinalPrice != 8100 {
-		t.Fatalf("expected final_price 8100, got %f", resp.FinalPrice)
+	if !resp.FinalPrice.Equal(decimal.NewFromInt(8100)) {
+		t.Fatalf("expected final_price 8100, got %s", resp.FinalPrice)
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatal(err)
@@ -189,13 +190,13 @@ func TestCalculate_RecordHistoryError(t *testing.T) {
 	svc, mock := newPriceService(t)
 
 	mock.ExpectExec(`INSERT INTO price_history`).
-		WithArgs("SKU-1", 10000.0, 10000.0, "none", sqlmock.AnyArg()).
+		WithArgs("SKU-1", "10000", "10000", "none", sqlmock.AnyArg()).
 		WillReturnError(errors.New("insert failed"))
 
 	_, err := svc.Calculate(CalculateRequest{
 		SkuID:        "SKU-1",
-		BasePrice:    10000,
-		CouponAmount: 0,
+		BasePrice:    decimal.NewFromInt(10000),
+		CouponAmount: decimal.Zero,
 		UserLevel:    1,
 	})
 	if err == nil {
@@ -213,9 +214,9 @@ func TestCalculate_InvalidRequest(t *testing.T) {
 		name string
 		req  CalculateRequest
 	}{
-		{"empty sku_id", CalculateRequest{SkuID: "", BasePrice: 1000}},
-		{"zero base_price", CalculateRequest{SkuID: "SKU-1", BasePrice: 0}},
-		{"negative base_price", CalculateRequest{SkuID: "SKU-1", BasePrice: -100}},
+		{"empty sku_id", CalculateRequest{SkuID: "", BasePrice: decimal.NewFromInt(1000)}},
+		{"zero base_price", CalculateRequest{SkuID: "SKU-1", BasePrice: decimal.Zero}},
+		{"negative base_price", CalculateRequest{SkuID: "SKU-1", BasePrice: decimal.NewFromInt(-100)}},
 	}
 
 	for _, c := range cases {
@@ -232,8 +233,8 @@ func TestHistory_Success(t *testing.T) {
 	svc, mock := newPriceService(t)
 
 	rows := sqlmock.NewRows([]string{"id", "sku_id", "old_price", "new_price", "reason", "created_at"}).
-		AddRow(1, "SKU-1", 10000, 10000, "original", time.Now()).
-		AddRow(2, "SKU-1", 10000, 9500, "discount", time.Now())
+		AddRow(1, "SKU-1", "10000", "10000", "original", time.Now()).
+		AddRow(2, "SKU-1", "10000", "9500", "discount", time.Now())
 	mock.ExpectQuery(`SELECT \* FROM price_history WHERE sku_id = \? ORDER BY created_at DESC LIMIT \?`).
 		WithArgs("SKU-1", 20).
 		WillReturnRows(rows)
@@ -245,8 +246,8 @@ func TestHistory_Success(t *testing.T) {
 	if len(history) != 2 {
 		t.Fatalf("expected 2 history records, got %d", len(history))
 	}
-	if history[0].OldPrice != 10000 {
-		t.Fatalf("expected first old_price 10000, got %f", history[0].OldPrice)
+	if !history[0].OldPrice.Equal(decimal.NewFromInt(10000)) {
+		t.Fatalf("expected first old_price 10000, got %s", history[0].OldPrice)
 	}
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatal(err)

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/shopspring/decimal"
 )
 
 var (
@@ -22,23 +23,26 @@ func NewService(dbx *sqlx.DB) *Service {
 }
 
 func (s *Service) Calculate(req CalculateRequest) (*CalculateResponse, error) {
-	if req.SkuID == "" || req.BasePrice <= 0 {
+	if req.SkuID == "" || req.BasePrice.LessThanOrEqual(decimal.Zero) {
 		return nil, ErrInvalid
 	}
-	price := req.BasePrice - req.CouponAmount
-	if price < 0 {
-		price = 0
+
+	price := req.BasePrice.Sub(req.CouponAmount)
+	if price.LessThan(decimal.Zero) {
+		price = decimal.Zero
 	}
-	discount := 1.0
+
+	discount := decimal.NewFromFloat(1.0)
 	reason := "none"
 	if req.UserLevel >= 3 {
-		discount = 0.9
+		discount = decimal.NewFromFloat(0.9)
 		reason = "vip-level-3"
 	} else if req.UserLevel >= 2 {
-		discount = 0.95
+		discount = decimal.NewFromFloat(0.95)
 		reason = "vip-level-2"
 	}
-	final := price * discount
+
+	final := price.Mul(discount)
 	resp := &CalculateResponse{
 		SkuID:          req.SkuID,
 		BasePrice:      req.BasePrice,
@@ -75,7 +79,7 @@ func (s *Service) recordHistory(req CalculateRequest, resp *CalculateResponse) e
 		return nil
 	}
 	reason := resp.DiscountReason
-	if req.CouponAmount > 0 {
+	if req.CouponAmount.GreaterThan(decimal.Zero) {
 		if reason == "none" {
 			reason = "coupon"
 		} else {
@@ -85,8 +89,8 @@ func (s *Service) recordHistory(req CalculateRequest, resp *CalculateResponse) e
 	_, err := s.db.Exec(
 		`INSERT INTO price_history(sku_id,old_price,new_price,reason,created_at) VALUES(?,?,?,?,?)`,
 		req.SkuID,
-		req.BasePrice,
-		resp.FinalPrice,
+		req.BasePrice.String(),
+		resp.FinalPrice.String(),
 		reason,
 		time.Now(),
 	)

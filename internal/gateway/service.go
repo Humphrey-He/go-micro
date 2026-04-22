@@ -275,6 +275,22 @@ func (s *Service) GetPayment(paymentID string) (httpx.Response, error) {
 	return httpx.Response{Code: 0, Message: "OK", Data: p}, nil
 }
 
+func (s *Service) ListPayments(page, pageSize int, orderID, status string) (httpx.Response, error) {
+	if s.payment == nil {
+		return httpx.Response{}, errPaymentNotInit
+	}
+	payments, total, err := s.payment.ListPayments(page, pageSize, orderID, status)
+	if err != nil {
+		return httpx.Response{}, err
+	}
+	return httpx.Response{Code: 0, Message: "OK", Data: map[string]interface{}{
+		"payments": payments,
+		"total":    total,
+		"page":     page,
+		"page_size": pageSize,
+	}}, nil
+}
+
 func (s *Service) MarkPaymentSuccess(paymentID string) (httpx.Response, error) {
 	if s.payment == nil {
 		return httpx.Response{}, errPaymentNotInit

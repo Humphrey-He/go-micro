@@ -175,6 +175,42 @@ func (s *Service) getByRequestID(requestID string) (*Payment, error) {
 	return &p, nil
 }
 
+func (s *Service) ListPayments(page, pageSize int, orderID, status string) ([]Payment, int64, error) {
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	offset := (page - 1) * pageSize
+
+	where := "1=1"
+	args := []interface{}{}
+	if orderID != "" {
+		where += " AND order_id = ?"
+		args = append(args, orderID)
+	}
+	if status != "" {
+		where += " AND status = ?"
+		args = append(args, status)
+	}
+
+	var total int64
+	countSQL := "SELECT COUNT(*) FROM payments WHERE " + where
+	if err := s.db.Get(&total, countSQL, args...); err != nil {
+		return nil, 0, err
+	}
+
+	query := "SELECT * FROM payments WHERE " + where + " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+	args = append(args, pageSize, offset)
+
+	var rows []Payment
+	if err := s.db.Select(&rows, query, args...); err != nil {
+		return nil, 0, err
+	}
+	return rows, total, nil
+}
+
 func isDuplicate(err error) bool {
 	var me *mysql.MySQLError
 	if errors.As(err, &me) {

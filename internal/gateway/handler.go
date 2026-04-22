@@ -34,6 +34,9 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.POST("/orders", h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
 	api.GET("/order-views/:order_no", h.getOrderView)
+	api.GET("/admin/orders", h.listOrders)
+	api.GET("/admin/payments", h.listPayments)
+	api.GET("/admin/dashboard/stats", h.dashboardStats)
 	api.POST("/payments", h.createPayment)
 	api.GET("/payments/:id", h.getPayment)
 	api.POST("/payments/:id/success", h.markPaymentSuccess)
@@ -436,6 +439,77 @@ func (h *Handler) me(c *gin.Context) {
 	role, _ := c.Get(middleware.CtxRole)
 	code, body := httpx.OK(gin.H{"user_id": userID, "username": username, "role": role})
 	c.JSON(code, body)
+}
+
+// @Summary 订单列表（管理后台）
+// @Tags Admin
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Param page query int false "页码" default(1)
+// @Param page_size query int false "每页条数" default(20)
+// @Param order_no query string false "订单号"
+// @Param user_id query string false "用户ID"
+// @Param status query string false "订单状态"
+// @Param start_time query int64 false "开始时间戳"
+// @Param end_time query int64 false "结束时间戳"
+// @Param sort_by query string false "排序字段" default(created_at)
+// @Param sort_order query string false "排序方向" default(desc)
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/admin/orders [get]
+func (h *Handler) listOrders(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	startTime, _ := strconv.ParseInt(c.Query("start_time"), 10, 64)
+	endTime, _ := strconv.ParseInt(c.Query("end_time"), 10, 64)
+
+	req := ListOrdersRequest{
+		Page:      int32(page),
+		PageSize:  int32(pageSize),
+		OrderNo:   c.Query("order_no"),
+		UserID:    c.Query("user_id"),
+		Status:    c.Query("status"),
+		StartTime: startTime,
+		EndTime:   endTime,
+		SortBy:    c.DefaultQuery("sort_by", "created_at"),
+		SortOrder: c.DefaultQuery("sort_order", "desc"),
+	}
+
+	resp, err := h.svc.ListOrders(req)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+func (h *Handler) listPayments(c *gin.Context) {
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+
+	resp, err := h.svc.ListPayments(page, pageSize, c.Query("order_id"), c.Query("status"))
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "payment service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
+// @Summary 运营看板统计
+// @Tags Admin
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/admin/dashboard/stats [get]
+func (h *Handler) dashboardStats(c *gin.Context) {
+	resp, err := h.svc.GetDashboardStats()
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "order service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
 }
 
 func toString(v interface{}) string {

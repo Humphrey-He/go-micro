@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react'
-import { Card, Row, Col, Spin, Progress, Table, Space, Typography } from 'antd'
+import React, { useMemo, useState } from 'react'
+import { Card, Row, Col, Spin, Progress, Table, Space, Typography, Segmented, Button } from 'antd'
 import {
   ShoppingOutlined,
   DollarOutlined,
@@ -10,6 +10,7 @@ import {
   ArrowDownOutlined,
   TeamOutlined,
   UnorderedListOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import dayjs from 'dayjs'
@@ -159,7 +160,53 @@ const MiniBarChart: React.FC<MiniChartProps> = ({ data, total }) => (
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate()
-  const { loading, data, error } = useDashboardStats()
+
+  const [selectedPeriod, setSelectedPeriod] = useState<'day' | 'week' | 'month'>('day')
+
+  const timeRanges = [
+    { label: '今日', value: 'today' },
+    { label: '本周', value: 'week' },
+    { label: '本月', value: 'month' },
+    { label: '本年', value: 'year' },
+  ]
+  const [selectedRange, setSelectedRange] = useState('today')
+
+  const getTimeRange = (range: string) => {
+    const now = dayjs()
+    switch (range) {
+      case 'today':
+        return {
+          start_time: now.startOf('day').unix(),
+          end_time: now.unix(),
+        }
+      case 'week':
+        return {
+          start_time: now.startOf('week').unix(),
+          end_time: now.unix(),
+        }
+      case 'month':
+        return {
+          start_time: now.startOf('month').unix(),
+          end_time: now.unix(),
+        }
+      case 'year':
+        return {
+          start_time: now.startOf('year').unix(),
+          end_time: now.unix(),
+        }
+      default:
+        return {
+          start_time: now.startOf('day').unix(),
+          end_time: now.unix(),
+        }
+    }
+  }
+
+  const timeRange = getTimeRange(selectedRange)
+  const { loading, data, error } = useDashboardStats({
+    ...timeRange,
+    period: selectedPeriod,
+  })
 
   const stats = useMemo(
     () => [
@@ -369,18 +416,44 @@ export const DashboardPage: React.FC = () => {
               运营看板
             </h1>
             <Text type="secondary">{dayjs().format('YYYY年MM月DD日 dddd')} · 数据实时更新</Text>
+            <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 16 }}>
+  <Space size={4}>
+    {timeRanges.map((range) => (
+      <Button
+        key={range.value}
+        type={selectedRange === range.value ? 'primary' : 'default'}
+        size="small"
+        onClick={() => setSelectedRange(range.value)}
+      >
+        {range.label}
+      </Button>
+    ))}
+  </Space>
+  <Segmented
+    value={selectedPeriod}
+    onChange={(value) => setSelectedPeriod(value as 'day' | 'week' | 'month')}
+    options={[
+      { label: '按天', value: 'day' },
+      { label: '按周', value: 'week' },
+      { label: '按月', value: 'month' },
+    ]}
+  />
+</div>
           </div>
-          <div
-            style={{
-              fontSize: 13,
-              color: '#6b7280',
-              background: '#f3f4f6',
-              padding: '6px 14px',
-              borderRadius: 20,
-            }}
-          >
-            数据统计周期：今日 00:00 - 现在
-          </div>
+          <div style={{
+  fontSize: 13,
+  color: '#6b7280',
+  background: '#f3f4f6',
+  padding: '6px 14px',
+  borderRadius: 20,
+}}>
+  <Space size={8}>
+    <CalendarOutlined />
+    <span>
+      数据统计周期：{dayjs.unix(timeRange.start_time).format('MM月DD日 HH:mm')} - {dayjs.unix(timeRange.end_time).format('MM月DD日 HH:mm')}
+    </span>
+  </Space>
+</div>
         </div>
 
         {/* Stats Cards */}

@@ -1,5 +1,5 @@
 import React from 'react'
-import { Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { Layout, Avatar, Dropdown, Space, Button, Tooltip } from 'antd'
 import {
   UserOutlined,
@@ -17,7 +17,6 @@ const { Header, Sider, Content } = Layout
 
 export const BasicLayout: React.FC = () => {
   const navigate = useNavigate()
-  const location = useLocation()
   const { userInfo, logout } = useAuthStore()
   const { collapsed, floatMode, toggleCollapse } = useSidebarStore()
 

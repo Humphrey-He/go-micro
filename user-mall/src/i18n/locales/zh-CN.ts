@@ -1,0 +1,68 @@
+export default {
+  common: {
+    search: '搜索',
+    cancel: '取消',
+    confirm: '确认',
+    loading: '加载中...',
+    noData: '暂无数据',
+    loadMore: '加载更多',
+    loadedAll: '已加载全部',
+    retry: '重试',
+  },
+  product: {
+    title: '商品列表',
+    searchPlaceholder: '搜索商品',
+    sort: {
+      comprehensive: '综合',
+      sales: '销量',
+      new: '新品',
+      priceAsc: '价格↑',
+      priceDesc: '价格↓',
+    },
+    viewMode: {
+      waterfall: '瀑布流',
+      grid: '网格',
+    },
+    tags: {
+      hot: '热',
+      new: '新',
+      discount: '限时特惠',
+    },
+    sales: '人买',
+    rating: '条评价',
+    shop: '店铺',
+    officialShop: '官方店铺',
+  },
+  cart: {
+    title: '购物车',
+    empty: '购物车是空的',
+    total: '合计',
+    checkout: '结算',
+    selectAll: '全选',
+    delete: '删除',
+  },
+  order: {
+    title: '我的订单',
+    status: {
+      all: '全部',
+      pending: '待支付',
+      paid: '已支付',
+      shipped: '待发货',
+      delivered: '待收货',
+      completed: '已完成',
+      cancelled: '已取消',
+    },
+  },
+  user: {
+    title: '我的',
+    login: '登录',
+    register: '注册',
+    logout: '退出登录',
+  },
+  tabs: {
+    home: '首页',
+    category: '分类',
+    cart: '购物车',
+    user: '我的',
+  },
+}

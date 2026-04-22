@@ -1,0 +1,68 @@
+export default {
+  common: {
+    search: 'Search',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    loading: 'Loading...',
+    noData: 'No Data',
+    loadMore: 'Load More',
+    loadedAll: 'All Loaded',
+    retry: 'Retry',
+  },
+  product: {
+    title: 'Products',
+    searchPlaceholder: 'Search products',
+    sort: {
+      comprehensive: 'Comprehensive',
+      sales: 'Sales',
+      new: 'New',
+      priceAsc: 'Price ↑',
+      priceDesc: 'Price ↓',
+    },
+    viewMode: {
+      waterfall: 'Waterfall',
+      grid: 'Grid',
+    },
+    tags: {
+      hot: 'Hot',
+      new: 'New',
+      discount: 'Limited Offer',
+    },
+    sales: 'sold',
+    rating: 'reviews',
+    shop: 'Shop',
+    officialShop: 'Official Shop',
+  },
+  cart: {
+    title: 'Shopping Cart',
+    empty: 'Your cart is empty',
+    total: 'Total',
+    checkout: 'Checkout',
+    selectAll: 'Select All',
+    delete: 'Delete',
+  },
+  order: {
+    title: 'My Orders',
+    status: {
+      all: 'All',
+      pending: 'Pending Payment',
+      paid: 'Paid',
+      shipped: 'To Ship',
+      delivered: 'To Receive',
+      completed: 'Completed',
+      cancelled: 'Cancelled',
+    },
+  },
+  user: {
+    title: 'Profile',
+    login: 'Login',
+    register: 'Register',
+    logout: 'Logout',
+  },
+  tabs: {
+    home: 'Home',
+    category: 'Category',
+    cart: 'Cart',
+    user: 'Profile',
+  },
+}

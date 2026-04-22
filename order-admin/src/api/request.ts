@@ -15,9 +15,7 @@ request.interceptors.request.use(
     }
     return config
   },
-  (error: AxiosError) => {
-    return Promise.reject(error)
-  }
+  (error: AxiosError) => Promise.reject(error)
 )
 
 request.interceptors.response.use(
@@ -53,18 +51,15 @@ export interface ApiResponse<T> {
   data?: T
 }
 
+const unwrapResponse = <T>(res: ApiResponse<T>): T => {
+  if (res.code !== 0) {
+    throw new Error(res.message)
+  }
+  return res.data as T
+}
+
 export const get = <T>(url: string, config?: InternalAxiosRequestConfig): Promise<T> =>
-  request.get<ApiResponse<T>>(url, config).then((res) => {
-    if (res.data.code !== 0) {
-      return Promise.reject(new Error(res.data.message))
-    }
-    return res.data.data as T
-  })
+  request.get<unknown, ApiResponse<T>>(url, config).then(unwrapResponse)
 
 export const post = <T>(url: string, data?: unknown, config?: InternalAxiosRequestConfig): Promise<T> =>
-  request.post<ApiResponse<T>>(url, data, config).then((res) => {
-    if (res.data.code !== 0) {
-      return Promise.reject(new Error(res.data.message))
-    }
-    return res.data.data as T
-  })
+  request.post<unknown, ApiResponse<T>>(url, data, config).then(unwrapResponse)

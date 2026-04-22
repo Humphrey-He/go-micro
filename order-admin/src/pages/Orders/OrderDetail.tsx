@@ -69,11 +69,11 @@ const getStepIcon = (status: string, index: number) => {
 }
 
 const OrderItemsTable: React.FC<{ items: OrderDetailResponse['items'] }> = ({ items }) => {
-  const columns: ColumnsType<{ skuId: string; quantity: number; price: number }> = [
+  const columns: ColumnsType<{ sku_id: string; quantity: number; price: number }> = [
     {
       title: '商品SKU',
-      dataIndex: 'skuId',
-      key: 'skuId',
+      dataIndex: 'sku_id',
+      key: 'sku_id',
       render: (skuId: string) => (
         <Space>
           <div
@@ -234,8 +234,8 @@ export const OrderDetailPage: React.FC = () => {
         {data && (
           <Space>
             <StatusTag status={data.status} statusMap={ORDER_STATUS_MAP} />
-            {data.paymentStatus && (
-              <StatusTag status={data.paymentStatus} statusMap={PAYMENT_STATUS_MAP} />
+            {data.payment_status && (
+              <StatusTag status={data.payment_status} statusMap={PAYMENT_STATUS_MAP} />
             )}
           </Space>
         )}
@@ -306,29 +306,29 @@ export const OrderDetailPage: React.FC = () => {
               >
                 <Descriptions column={1} size="small" labelStyle={{ width: 90, color: '#6b7280' }}>
                   <Descriptions.Item label="订单号">
-                    <Text strong style={{ fontFamily: 'monospace' }}>{data.bizNo}</Text>
+                    <Text strong style={{ fontFamily: 'monospace' }}>{data.biz_no}</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="订单ID">
-                    <Text type="secondary" style={{ fontSize: 12 }}>{data.orderId}</Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>{data.order_id}</Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="用户ID">
-                    <Text>{data.userId}</Text>
+                    <Text>{data.user_id}</Text>
                   </Descriptions.Item>
-                  {data.viewStatus && (
+                  {data.view_status && (
                     <Descriptions.Item label="聚合状态">
-                      <StatusTag status={data.viewStatus} statusMap={VIEW_STATUS_MAP} />
+                      <StatusTag status={data.view_status} statusMap={VIEW_STATUS_MAP} />
                     </Descriptions.Item>
                   )}
                   <Descriptions.Item label="订单金额">
                     <Text strong style={{ color: '#16a34a', fontSize: 16 }}>
-                      ¥{formatAmount(data.totalAmount)}
+                      ¥{formatAmount(data.total_amount)}
                     </Text>
                   </Descriptions.Item>
                   <Descriptions.Item label="创建时间">
-                    {data.createdAt ? formatDateTime(data.createdAt) : '-'}
+                    {data.created_at ? formatDateTime(data.created_at) : '-'}
                   </Descriptions.Item>
                   <Descriptions.Item label="更新时间">
-                    {data.updatedAt ? formatDateTime(data.updatedAt) : '-'}
+                    {data.updated_at ? formatDateTime(data.updated_at) : '-'}
                   </Descriptions.Item>
                 </Descriptions>
               </Card>
@@ -348,8 +348,8 @@ export const OrderDetailPage: React.FC = () => {
               >
                 <Descriptions column={1} size="small" labelStyle={{ width: 90, color: '#6b7280' }}>
                   <Descriptions.Item label="支付状态">
-                    {data.paymentStatus ? (
-                      <StatusTag status={data.paymentStatus} statusMap={PAYMENT_STATUS_MAP} />
+                    {data.payment_status ? (
+                      <StatusTag status={data.payment_status} statusMap={PAYMENT_STATUS_MAP} />
                     ) : (
                       <Text type="secondary">-</Text>
                     )}

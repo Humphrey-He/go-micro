@@ -66,20 +66,20 @@ export const OrderListPage: React.FC = () => {
   }, [searchParams])
 
   const buildQueryParams = useCallback(() => {
-    const orderNo = searchParams.get('orderNo') || undefined
-    const userId = searchParams.get('userId') || undefined
+    const order_no = searchParams.get('orderNo') || undefined
+    const user_id = searchParams.get('userId') || undefined
     const status = (searchParams.get('status') as OrderStatus) || undefined
     const startTimeStr = searchParams.get('startTime')
     const endTimeStr = searchParams.get('endTime')
 
     return {
       page,
-      pageSize,
-      orderNo,
-      userId,
+      page_size: pageSize,
+      order_no,
+      user_id,
       status: status || undefined,
-      startTime: startTimeStr ? parseInt(startTimeStr, 10) : undefined,
-      endTime: endTimeStr ? parseInt(endTimeStr, 10) : undefined,
+      start_time: startTimeStr ? parseInt(startTimeStr, 10) : undefined,
+      end_time: endTimeStr ? parseInt(endTimeStr, 10) : undefined,
     }
   }, [searchParams, page, pageSize])
 
@@ -140,7 +140,7 @@ export const OrderListPage: React.FC = () => {
 
   const handleViewDetail = useCallback(
     (order: OrderListItem) => {
-      navigate(`/orders/${order.bizNo}`)
+      navigate(`/orders/${order.biz_no}`)
     },
     [navigate]
   )
@@ -149,9 +149,9 @@ export const OrderListPage: React.FC = () => {
     (order: OrderListItem) => {
       confirm({
         title: '取消订单',
-        content: `确定要取消订单 ${order.bizNo} 吗？`,
+        content: `确定要取消订单 ${order.biz_no} 吗？`,
         onConfirm: async () => {
-          await cancelOrder(order.orderId)
+          await cancelOrder(order.order_id)
           setRefreshKey((k) => k + 1)
         },
       })

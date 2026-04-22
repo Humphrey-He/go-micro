@@ -227,59 +227,59 @@ export const DashboardPage: React.FC = () => {
 
   const mockRecentOrders: OrderListItem[] = [
     {
-      orderId: 'ord-1',
-      bizNo: 'ORD20260421001',
-      userId: 'user-001',
+      order_id: 'ord-1',
+      biz_no: 'ORD20260421001',
+      user_id: 'user-001',
       status: 'SUCCESS',
-      totalAmount: 29900,
-      itemCount: 2,
-      paymentStatus: 'PAID',
-      createdAt: Math.floor(Date.now() / 1000) - 3600,
-      updatedAt: Math.floor(Date.now() / 1000) - 1800,
+      total_amount: 29900,
+      item_count: 2,
+      payment_status: 'PAID',
+      created_at: Math.floor(Date.now() / 1000) - 3600,
+      updated_at: Math.floor(Date.now() / 1000) - 1800,
     },
     {
-      orderId: 'ord-2',
-      bizNo: 'ORD20260421002',
-      userId: 'user-005',
+      order_id: 'ord-2',
+      biz_no: 'ORD20260421002',
+      user_id: 'user-005',
       status: 'PROCESSING',
-      totalAmount: 159900,
-      itemCount: 1,
-      paymentStatus: 'PAID',
-      createdAt: Math.floor(Date.now() / 1000) - 7200,
-      updatedAt: Math.floor(Date.now() / 1000) - 3600,
+      total_amount: 159900,
+      item_count: 1,
+      payment_status: 'PAID',
+      created_at: Math.floor(Date.now() / 1000) - 7200,
+      updated_at: Math.floor(Date.now() / 1000) - 3600,
     },
     {
-      orderId: 'ord-3',
-      bizNo: 'ORD20260421003',
-      userId: 'user-012',
+      order_id: 'ord-3',
+      biz_no: 'ORD20260421003',
+      user_id: 'user-012',
       status: 'CREATED',
-      totalAmount: 8900,
-      itemCount: 3,
-      paymentStatus: 'PENDING',
-      createdAt: Math.floor(Date.now() / 1000) - 10800,
-      updatedAt: Math.floor(Date.now() / 1000) - 10800,
+      total_amount: 8900,
+      item_count: 3,
+      payment_status: 'PENDING',
+      created_at: Math.floor(Date.now() / 1000) - 10800,
+      updated_at: Math.floor(Date.now() / 1000) - 10800,
     },
     {
-      orderId: 'ord-4',
-      bizNo: 'ORD20260421004',
-      userId: 'user-008',
+      order_id: 'ord-4',
+      biz_no: 'ORD20260421004',
+      user_id: 'user-008',
       status: 'SUCCESS',
-      totalAmount: 45900,
-      itemCount: 1,
-      paymentStatus: 'PAID',
-      createdAt: Math.floor(Date.now() / 1000) - 14400,
-      updatedAt: Math.floor(Date.now() / 1000) - 10800,
+      total_amount: 45900,
+      item_count: 1,
+      payment_status: 'PAID',
+      created_at: Math.floor(Date.now() / 1000) - 14400,
+      updated_at: Math.floor(Date.now() / 1000) - 10800,
     },
     {
-      orderId: 'ord-5',
-      bizNo: 'ORD20260421005',
-      userId: 'user-023',
+      order_id: 'ord-5',
+      biz_no: 'ORD20260421005',
+      user_id: 'user-023',
       status: 'CANCELED',
-      totalAmount: 12900,
-      itemCount: 2,
-      paymentStatus: 'FAILED',
-      createdAt: Math.floor(Date.now() / 1000) - 18000,
-      updatedAt: Math.floor(Date.now() / 1000) - 14400,
+      total_amount: 12900,
+      item_count: 2,
+      payment_status: 'FAILED',
+      created_at: Math.floor(Date.now() / 1000) - 18000,
+      updated_at: Math.floor(Date.now() / 1000) - 14400,
     },
   ]
 
@@ -297,21 +297,21 @@ export const DashboardPage: React.FC = () => {
   const recentColumns = [
     {
       title: '订单号',
-      dataIndex: 'bizNo',
-      key: 'bizNo',
+      dataIndex: 'biz_no',
+      key: 'biz_no',
       width: 150,
-      render: (bizNo: string) => (
+      render: (biz_no: string) => (
         <Text strong style={{ fontFamily: 'monospace', fontSize: 13 }}>
-          {bizNo}
+          {biz_no}
         </Text>
       ),
     },
     {
       title: '用户',
-      dataIndex: 'userId',
-      key: 'userId',
+      dataIndex: 'user_id',
+      key: 'user_id',
       width: 100,
-      render: (userId: string) => <Text type="secondary">{userId}</Text>,
+      render: (user_id: string) => <Text type="secondary">{user_id}</Text>,
     },
     {
       title: '状态',
@@ -322,8 +322,8 @@ export const DashboardPage: React.FC = () => {
     },
     {
       title: '金额',
-      dataIndex: 'totalAmount',
-      key: 'totalAmount',
+      dataIndex: 'total_amount',
+      key: 'total_amount',
       width: 100,
       align: 'right' as const,
       render: (amount: number) => (
@@ -334,8 +334,8 @@ export const DashboardPage: React.FC = () => {
     },
     {
       title: '时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
+      dataIndex: 'created_at',
+      key: 'created_at',
       width: 150,
       render: (ts: number) => (
         <Text type="secondary" style={{ fontSize: 12 }}>
@@ -537,12 +537,12 @@ export const DashboardPage: React.FC = () => {
           <Table
             columns={recentColumns}
             dataSource={mockRecentOrders}
-            rowKey="orderId"
+            rowKey="order_id"
             pagination={false}
             size="middle"
             onRow={(record) => ({
               style: { cursor: 'pointer' },
-              onClick: () => navigate(`/orders/${record.bizNo}`),
+              onClick: () => navigate(`/orders/${record.biz_no}`),
             })}
           />
         </Card>

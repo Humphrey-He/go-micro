@@ -6,16 +6,15 @@ import { post } from '@/api/request'
 import { useAuthStore } from '@/stores/authStore'
 import { paths } from '@/routes/paths'
 
-interface LoginResponse {
-  code: number
-  message: string
-  data: {
-    token: string
-    user: {
-      userId: string
-      username: string
-      role: string
-    }
+interface LoginData {
+  token: string
+  user: {
+    user_id: string
+    username: string
+    role: string
+    status: number
+    created_at?: string
+    updated_at?: string
   }
 }
 
@@ -32,18 +31,18 @@ export const LoginPage: React.FC = () => {
   const handleSubmit = async (values: LoginFormValues) => {
     setLoading(true)
     try {
-      const res = await post<LoginResponse>('/auth/login', {
+      const data = await post<LoginData>('/auth/login', {
         username: values.username,
         password: values.password,
       })
 
-      if (res.code === 0 && res.data) {
-        setAuth(res.data.token, res.data.user)
-        message.success('登录成功')
-        navigate(paths.orders)
-      } else {
-        message.error(res.message || '登录失败')
-      }
+      setAuth(data.token, {
+        userId: data.user.user_id,
+        username: data.user.username,
+        role: data.user.role,
+      })
+      message.success('登录成功')
+      navigate(paths.orders)
     } catch {
       message.error('登录失败，请检查用户名和密码')
     } finally {
@@ -162,7 +161,7 @@ export const LoginPage: React.FC = () => {
                   boxShadow: '0 4px 14px rgba(102, 126, 234, 0.4)',
                 }}
               >
-                登 录
+                登录
               </Button>
             </Form.Item>
           </Form>
@@ -178,7 +177,7 @@ export const LoginPage: React.FC = () => {
           >
             <p style={{ fontSize: 12, color: '#9ca3af', marginBottom: 4 }}>测试账号</p>
             <p style={{ fontSize: 13, color: '#6b7280', margin: 0, fontFamily: 'monospace' }}>
-              admin / admin123
+              testuser / test123
             </p>
           </div>
         </Card>

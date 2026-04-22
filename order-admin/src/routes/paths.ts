@@ -5,5 +5,7 @@ export const paths = {
   orders: '/orders',
   orderDetail: '/orders/:orderNo',
   payments: '/payments',
+  refunds: '/refunds',
   inventory: '/inventory',
+  notifications: '/notifications',
 } as const

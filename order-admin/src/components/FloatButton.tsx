@@ -20,9 +20,11 @@ export const FloatButton: React.FC = () => {
         left: collapsed ? 16 : 224,
         top: 80,
         zIndex: 99,
-        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-        transition: 'left 200ms ease-in-out',
+        boxShadow: '0 4px 16px rgba(22, 119, 255, 0.3)',
+        transition: 'left 250ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 150ms ease, transform 150ms ease',
+        transform: 'scale(1)',
       }}
+      className="float-btn"
     />
   )
 }

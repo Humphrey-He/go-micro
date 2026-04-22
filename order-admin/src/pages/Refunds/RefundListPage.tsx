@@ -30,7 +30,6 @@ export const RefundListPage: React.FC = () => {
   const [form] = Form.useForm()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
-  const [refreshKey, setRefreshKey] = useState(0)
 
   const { loading, data, total, fetchData } = useRefundList()
 
@@ -48,6 +47,9 @@ export const RefundListPage: React.FC = () => {
     },
     [page, pageSize, fetchData]
   )
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const refresh = useCallback(() => loadData(), [loadData])
 
   const handleSearch = useCallback(
     (values: Record<string, unknown>) => {
@@ -75,14 +77,13 @@ export const RefundListPage: React.FC = () => {
   )
 
   const handleReload = useCallback(() => {
-    setRefreshKey((k) => k + 1)
-    const values = form.getFieldsValue()
-    loadData(values)
-  }, [form, loadData])
+    refresh()
+  }, [refresh])
 
   React.useEffect(() => {
     loadData()
-  }, [refreshKey])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, pageSize]) // loadData is stable via useCallback
 
   const columns = [
     {

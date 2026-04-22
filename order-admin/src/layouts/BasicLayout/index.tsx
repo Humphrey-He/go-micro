@@ -41,8 +41,6 @@ export const BasicLayout: React.FC = () => {
     },
   ]
 
-  const siderWidth = collapsed ? 64 : 220
-
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {/* 悬浮模式下的侧边栏 */}
@@ -57,8 +55,9 @@ export const BasicLayout: React.FC = () => {
           top: 0,
           bottom: 0,
           zIndex: 100,
-          transition: 'left 200ms ease-in-out',
+          transition: 'left 250ms cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'auto',
+          boxShadow: floatMode ? '2px 0 8px rgba(0,0,0,0.1)' : 'none',
         }}
       >
         <div
@@ -81,7 +80,7 @@ export const BasicLayout: React.FC = () => {
       {/* 折叠模式的侧边栏 */}
       <Sider
         trigger={null}
-        width={siderWidth}
+        width={220}
         collapsedWidth={64}
         style={{
           borderRight: '1px solid #e5e7eb',
@@ -91,7 +90,7 @@ export const BasicLayout: React.FC = () => {
           top: 0,
           bottom: 0,
           zIndex: 100,
-          transition: 'width 200ms ease-in-out',
+          transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden',
         }}
       >
@@ -120,31 +119,42 @@ export const BasicLayout: React.FC = () => {
             <SortableMenu collapsed={collapsed} />
           </div>
 
-          {/* 折叠/展开按钮 */}
+          {/* 折叠/展开按钮 - 优化样式 */}
           <div
             style={{
-              padding: collapsed ? '12px 0' : '12px 8px',
+              padding: '12px 8px',
               borderTop: '1px solid #e5e7eb',
               display: 'flex',
               justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
             <Tooltip title={collapsed ? '展开菜单' : '折叠菜单'} placement="right">
               <Button
                 type="text"
+                shape="circle"
+                size="large"
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={toggleCollapse}
-                style={{ color: '#666' }}
+                style={{
+                  color: '#1677ff',
+                  background: 'transparent',
+                  transition: 'all 150ms ease',
+                }}
+                className="collapse-btn"
               />
             </Tooltip>
           </div>
         </div>
       </Sider>
 
-      {/* 悬浮按钮 */}
+      {/* 悬浮按钮 - 优化样式 */}
       <FloatButton />
 
-      <Layout style={{ marginLeft: collapsed ? 64 : 220, transition: 'margin-left 200ms ease-in-out' }}>
+      <Layout style={{
+        marginLeft: collapsed ? 64 : 220,
+        transition: 'margin-left 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+      }}>
         <Header
           style={{
             background: '#fff',
@@ -181,6 +191,18 @@ export const BasicLayout: React.FC = () => {
           <Outlet />
         </Content>
       </Layout>
+
+      {/* 添加全局样式 */}
+      <style>{`
+        .collapse-btn:hover {
+          background: #e6f4ff !important;
+          color: #0958d9 !important;
+        }
+        .float-btn:hover {
+          transform: scale(1.05);
+          box-shadow: 0 6px 20px rgba(22, 119, 255, 0.4) !important;
+        }
+      `}</style>
     </Layout>
   )
 }

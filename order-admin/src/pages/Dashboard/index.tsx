@@ -177,36 +177,37 @@ export const DashboardPage: React.FC = () => {
       case 'today':
         return {
           start_time: now.startOf('day').unix(),
-          end_time: now.unix(),
+          end_time: now.endOf('day').unix(),
         }
       case 'week':
         return {
           start_time: now.startOf('week').unix(),
-          end_time: now.unix(),
+          end_time: now.endOf('week').unix(),
         }
       case 'month':
         return {
           start_time: now.startOf('month').unix(),
-          end_time: now.unix(),
+          end_time: now.endOf('month').unix(),
         }
       case 'year':
         return {
           start_time: now.startOf('year').unix(),
-          end_time: now.unix(),
+          end_time: now.endOf('year').unix(),
         }
       default:
         return {
           start_time: now.startOf('day').unix(),
-          end_time: now.unix(),
+          end_time: now.endOf('day').unix(),
         }
     }
   }
 
-  const timeRange = getTimeRange(selectedRange)
-  const { loading, data, error } = useDashboardStats({
-    ...timeRange,
-    period: selectedPeriod,
-  })
+  const timeRange = useMemo(() => getTimeRange(selectedRange), [selectedRange])
+  const statsParams = useMemo(
+    () => ({ ...timeRange, period: selectedPeriod }),
+    [timeRange, selectedPeriod]
+  )
+  const { loading, data, error } = useDashboardStats(statsParams)
 
   const stats = useMemo(
     () => [

@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { Checkbox, SwipeAction, Button, Empty } from 'antd-mobile'
 import { DeleteOutline } from 'antd-mobile-icons'
 import { useCartStore } from '@/stores/cartStore'
+import { getCartAddons } from '@/api/recommendation'
 
 export default function Cart() {
   const navigate = useNavigate()
@@ -20,6 +22,25 @@ export default function Cart() {
   const allSelected = items.filter((i) => i.is_valid).every((i) => i.is_selected)
   const validItems = items.filter((i) => i.is_valid)
   const invalidItems = items.filter((i) => !i.is_valid)
+
+  const [cartAddons, setCartAddons] = useState<any[]>([])
+
+  useEffect(() => {
+    const fetchAddons = async () => {
+      const selectedSkuIds = selectedItems.map(item => item.sku_id)
+      if (selectedSkuIds.length === 0) {
+        setCartAddons([])
+        return
+      }
+      try {
+        const res = await getCartAddons({ cart_sku_ids: selectedSkuIds })
+        setCartAddons(res.items || [])
+      } catch (err) {
+        console.error('Failed to load cart addons:', err)
+      }
+    }
+    fetchAddons()
+  }, [selectedItems])
 
   const handleCheckout = () => {
     if (selectedItems.length === 0) return
@@ -113,6 +134,37 @@ export default function Cart() {
               </div>
             )}
           </div>
+
+          {cartAddons.length > 0 && (
+            <div className="bg-white mt-2 p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-bold">加价购</span>
+                <span className="text-xs text-gray-400">换购更优惠</span>
+              </div>
+              <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                {cartAddons.map((item) => (
+                  <div
+                    key={item.sku_id}
+                    className="flex-shrink-0 w-24 text-center"
+                    onClick={() => navigate(`/product/${item.sku_id}`)}
+                  >
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="w-24 h-24 rounded object-cover"
+                    />
+                    <div className="text-xs line-clamp-1 mt-1">{item.title}</div>
+                    <div className="text-primary-500 font-bold text-sm">
+                      ¥{(item.addon_price / 100).toFixed(2)}
+                    </div>
+                    <div className="text-xs text-gray-400 line-through">
+                      ¥{(item.price / 100).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* 底部操作栏 */}
           <div className="fixed bottom-16 left-0 right-0 bg-white border-t p-3 flex items-center justify-between">

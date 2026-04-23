@@ -3,8 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { Swiper, Toast, Button, Tag } from 'antd-mobile'
 import { HeartOutlined, ShoppingCartOutlined, StarFilled } from '@ant-design/icons'
 import { getProductDetail, getProductReviews, addFavorite, removeFavorite } from '@/api/product'
+import { getSimilarRecommendations } from '@/api/recommendation'
 import { useCartStore } from '@/stores/cartStore'
 import type { ProductDetailResponse, Review } from '@/api/product'
+import type { RecommendationItem } from '@/api/recommendation'
 
 export default function ProductDetail() {
   const { skuId } = useParams<{ skuId: string }>()
@@ -15,6 +17,8 @@ export default function ProductDetail() {
   const [selectedSku, setSelectedSku] = useState<{ sku_id: string; attributes: Record<string, string> } | null>(null)
   const [quantity] = useState(1)
   const [activeTab, setActiveTab] = useState<'detail' | 'review'>('detail')
+  const [similarScene, setSimilarScene] = useState<'view' | 'purchase'>('view')
+  const [similarProducts, setSimilarProducts] = useState<RecommendationItem[]>([])
 
   const { addItem } = useCartStore()
 
@@ -23,6 +27,20 @@ export default function ProductDetail() {
       loadData()
     }
   }, [skuId])
+
+  useEffect(() => {
+    const fetchSimilar = async () => {
+      try {
+        const res = await getSimilarRecommendations(skuId!, { scene: similarScene, limit: 6 })
+        setSimilarProducts(res.items || [])
+      } catch (err) {
+        console.error('Failed to load similar products:', err)
+      }
+    }
+    if (skuId) {
+      fetchSimilar()
+    }
+  }, [skuId, similarScene])
 
   const loadData = async () => {
     if (!skuId) return
@@ -153,6 +171,60 @@ export default function ProductDetail() {
           ))}
         </div>
       )}
+
+      {/* 看了又看 / 买了还买 */}
+      <div className="mt-2 bg-white">
+        {/* Tab 切换 */}
+        <div className="flex border-b">
+          <div
+            className={`flex-1 py-3 text-center ${
+              similarScene === 'view'
+                ? 'text-primary-500 border-b-2 border-primary-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => setSimilarScene('view')}
+          >
+            看了又看
+          </div>
+          <div
+            className={`flex-1 py-3 text-center ${
+              similarScene === 'purchase'
+                ? 'text-primary-500 border-b-2 border-primary-500'
+                : 'text-gray-500'
+            }`}
+            onClick={() => setSimilarScene('purchase')}
+          >
+            买了还买
+          </div>
+        </div>
+
+        {/* 推荐列表 */}
+        {similarProducts.length > 0 ? (
+          <div className="p-3">
+            <div className="flex gap-3 overflow-x-auto hide-scrollbar">
+              {similarProducts.map((item) => (
+                <div
+                  key={item.sku_id}
+                  className="flex-shrink-0 w-32"
+                  onClick={() => navigate(`/product/${item.sku_id}`)}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-32 h-32 rounded object-cover"
+                  />
+                  <div className="mt-1 text-sm line-clamp-2">{item.title}</div>
+                  <div className="text-primary-500 font-bold">
+                    ¥{(item.price / 100).toFixed(2)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div className="p-4 text-center text-gray-400 text-sm">暂无推荐</div>
+        )}
+      </div>
 
       {/* 评价预览 */}
       <div

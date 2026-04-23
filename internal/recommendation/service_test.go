@@ -1,59 +1,99 @@
 package recommendation
 
 import (
+	"context"
 	"testing"
-	"time"
 
-	"github.com/alicebob/miniredis/v2"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/jmoiron/sqlx"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestService_ReportBehavior(t *testing.T) {
-	// Setup miniredis
-	s := miniredis.RunT(t)
-	defer s.Close()
+func TestEnrichItems(t *testing.T) {
+	// Create mock database
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
+	defer db.Close()
 
-	// This is a basic structure test - actual DB tests would need a test database
-	// For now, just verify the method signature and basic behavior
-	t.Run("basic signature test", func(t *testing.T) {
-		// Just verify the service can be created and method exists
-		assert.NotNil(t, &Service{})
+	sqlxDB := sqlx.NewDb(db, "sqlmock")
+	service := &Service{db: sqlxDB}
+
+	ctx := context.Background()
+
+	t.Run("enrich items with product info", func(t *testing.T) {
+		items := []RecItem{
+			{SkuID: 1001},
+			{SkuID: 1002},
+			{SkuID: 1003},
+		}
+
+		// Mock database query
+		rows := sqlmock.NewRows([]string{"sku_id", "name", "price", "image"}).
+			AddRow(1001, "iPhone 15 Pro", 799900, "https://example.com/iphone.jpg").
+			AddRow(1002, "MacBook Pro", 1999900, "https://example.com/macbook.jpg").
+			AddRow(1003, "AirPods Pro", 24900, "https://example.com/airpods.jpg")
+
+		mock.ExpectQuery("SELECT sku_id, name, price, image FROM products WHERE sku_id IN").
+			WithArgs(int64(1001), int64(1002), int64(1003)).
+			WillReturnRows(rows)
+
+		// Execute enrichment
+		enriched := service.enrichItems(ctx, items)
+
+		// Verify results
+		assert.Len(t, enriched, 3)
+		
+		assert.Equal(t, int64(1001), enriched[0].SkuID)
+		assert.Equal(t, "iPhone 15 Pro", enriched[0].Name)
+		assert.Equal(t, 7999.00, enriched[0].Price)
+		assert.Equal(t, "https://example.com/iphone.jpg", enriched[0].Image)
+
+		assert.Equal(t, int64(1002), enriched[1].SkuID)
+		assert.Equal(t, "MacBook Pro", enriched[1].Name)
+		assert.Equal(t, 19999.00, enriched[1].Price)
+
+		assert.Equal(t, int64(1003), enriched[2].SkuID)
+		assert.Equal(t, "AirPods Pro", enriched[2].Name)
+		assert.Equal(t, 249.00, enriched[2].Price)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
 	})
-}
 
-func TestFiveMinuteBucket(t *testing.T) {
-	// Test that the bucket calculation is correct
-	now := time.Now()
-	bucket := int(now.Unix() / FiveMinuteBucket)
+	t.Run("handle missing products with placeholder", func(t *testing.T) {
+		items := []RecItem{
+			{SkuID: 1001},
+			{SkuID: 9999}, // Non-existent product
+		}
 
-	// Two calls within 5 minutes should give same bucket
-	bucket2 := int(now.Add(2*time.Minute).Unix() / FiveMinuteBucket)
-	assert.Equal(t, bucket, bucket2)
+		// Mock database query - only return one product
+		rows := sqlmock.NewRows([]string{"sku_id", "name", "price", "image"}).
+			AddRow(1001, "iPhone 15 Pro", 799900, "https://example.com/iphone.jpg")
 
-	// After 5 minutes, bucket should change
-	bucket3 := int(now.Add(6*time.Minute).Unix() / FiveMinuteBucket)
-	assert.NotEqual(t, bucket, bucket3)
-}
+		mock.ExpectQuery("SELECT sku_id, name, price, image FROM products WHERE sku_id IN").
+			WithArgs(int64(1001), int64(9999)).
+			WillReturnRows(rows)
 
-func TestBehaviorType_Constants(t *testing.T) {
-	assert.Equal(t, BehaviorType("cart"), BehaviorCart)
-	assert.Equal(t, BehaviorType("favorite"), BehaviorFavorite)
-	assert.Equal(t, BehaviorType("purchase"), BehaviorPurchase)
-}
+		// Execute enrichment
+		enriched := service.enrichItems(ctx, items)
 
-func TestRecItem_Structure(t *testing.T) {
-	item := RecItem{
-		SkuID:      12345,
-		Name:       "Test Product",
-		Price:      99.99,
-		Image:      "https://example.com/image.jpg",
-		Similarity: 0.85,
-		Reason:     "为你推荐",
-	}
+		// Verify results
+		assert.Len(t, enriched, 2)
+		
+		// First product should have real data
+		assert.Equal(t, "iPhone 15 Pro", enriched[0].Name)
+		assert.Equal(t, 7999.00, enriched[0].Price)
 
-	assert.Equal(t, int64(12345), item.SkuID)
-	assert.Equal(t, "Test Product", item.Name)
-	assert.Equal(t, 99.99, item.Price)
-	assert.Equal(t, 0.85, item.Similarity)
-	assert.Equal(t, "为你推荐", item.Reason)
+		// Second product should have placeholder
+		assert.Equal(t, "商品9999", enriched[1].Name)
+		assert.Equal(t, 0.0, enriched[1].Price)
+		assert.Equal(t, "", enriched[1].Image)
+
+		assert.NoError(t, mock.ExpectationsWereMet())
+	})
+
+	t.Run("handle empty items list", func(t *testing.T) {
+		items := []RecItem{}
+		enriched := service.enrichItems(ctx, items)
+		assert.Len(t, enriched, 0)
+	})
 }

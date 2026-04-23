@@ -94,12 +94,8 @@ func (s *Service) GetSimilarProducts(ctx context.Context, skuID int64, scene str
 
 	items := []RecItem{} // Placeholder
 
-	// Enrich items (TODO: fetch real product info)
-	for i := range items {
-		if items[i].Name == "" {
-			items[i].Name = fmt.Sprintf("Product %d", items[i].SkuID)
-		}
-	}
+	// Enrich items with real product info
+	items = s.enrichItems(ctx, items)
 
 	// Update cache
 	if s.cache != nil && len(items) > 0 {
@@ -133,12 +129,8 @@ func (s *Service) GetHomeRecommendations(ctx context.Context, userID int64, page
 
 	items := []RecItem{} // TODO: Implement User-CF
 
-	// Enrich items
-	for i := range items {
-		if items[i].Name == "" {
-			items[i].Name = fmt.Sprintf("Product %d", items[i].SkuID)
-		}
-	}
+	// Enrich items with real product info
+	items = s.enrichItems(ctx, items)
 
 	resp := &HomeRecResponse{
 		Items:    items,
@@ -274,4 +266,62 @@ func (s *Service) GetPayCompleteRecommendations(ctx context.Context, purchasedSK
 	}
 
 	return &PayCompleteResponse{Items: items}, nil
+}
+
+// enrichItems - Enrich recommendation items with real product information
+func (s *Service) enrichItems(ctx context.Context, items []RecItem) []RecItem {
+	if len(items) == 0 {
+		return items
+	}
+
+	// Collect all SKU IDs
+	skuIDs := make([]int64, 0, len(items))
+	for _, item := range items {
+		skuIDs = append(skuIDs, item.SkuID)
+	}
+
+	// Batch query product information
+	type productInfo struct {
+		SkuID int64  `db:"sku_id"`
+		Name  string `db:"name"`
+		Price int64  `db:"price"`
+		Image string `db:"image"`
+	}
+
+	query, args, err := sqlx.In(`
+		SELECT sku_id, name, price, image
+		FROM products
+		WHERE sku_id IN (?)
+	`, skuIDs)
+	if err != nil {
+		return items
+	}
+
+	query = s.db.Rebind(query)
+	rows := []productInfo{}
+	if err := s.db.Select(&rows, query, args...); err != nil {
+		return items
+	}
+
+	// Build SKU ID -> product info mapping
+	productMap := make(map[int64]productInfo)
+	for _, p := range rows {
+		productMap[p.SkuID] = p
+	}
+
+	// Enrich product information
+	for i := range items {
+		if p, ok := productMap[items[i].SkuID]; ok {
+			items[i].Name = p.Name
+			items[i].Price = float64(p.Price) / 100.0 // Convert cents to yuan
+			items[i].Image = p.Image
+		} else {
+			// Product doesn't exist or is delisted, use placeholder
+			items[i].Name = fmt.Sprintf("商品%d", items[i].SkuID)
+			items[i].Price = 0
+			items[i].Image = ""
+		}
+	}
+
+	return items
 }

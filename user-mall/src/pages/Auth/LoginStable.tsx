@@ -8,6 +8,43 @@ import SocialLoginButtons from '@/components/SocialLoginButtons'
 
 const isDesktop = () => window.innerWidth >= 768
 
+// Background with animated gradient and floating shapes
+const StableBackground = () => (
+  <div className="fixed inset-0 -z-10 overflow-hidden">
+    {/* Base gradient */}
+    <div
+      className="absolute inset-0"
+      style={{
+        background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 25%, #f0fdf4 50%, #ecfeff 75%, #f0f9ff 100%)',
+        backgroundSize: '400% 400%',
+        animation: 'gradient-shift 15s ease infinite',
+      }}
+    />
+
+    {/* Floating geometric shapes */}
+    <div className="absolute top-20 left-[10%] w-64 h-64 rounded-full bg-teal-200/30 blur-3xl animate-float-slow" />
+    <div className="absolute top-[40%] right-[5%] w-96 h-96 rounded-full bg-cyan-200/20 blur-3xl animate-float-slower" />
+    <div className="absolute bottom-[20%] left-[20%] w-48 h-48 rounded-full bg-emerald-200/25 blur-3xl animate-float-medium" />
+    <div className="absolute top-[10%] right-[30%] w-32 h-32 rounded-full bg-sky-200/20 blur-2xl animate-float-fast" />
+
+    {/* Grid pattern overlay */}
+    <div
+      className="absolute inset-0 opacity-[0.03]"
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23007185' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+      }}
+    />
+
+    {/* Decorative lines */}
+    <svg className="absolute top-0 left-0 w-full h-full opacity-[0.02]" xmlns="http://www.w3.org/2000/svg">
+      <line x1="0" y1="20%" x2="100%" y2="20%" stroke="#007185" strokeWidth="1" />
+      <line x1="0" y1="40%" x2="100%" y2="40%" stroke="#007185" strokeWidth="1" />
+      <line x1="0" y1="60%" x2="100%" y2="60%" stroke="#007185" strokeWidth="1" />
+      <line x1="0" y1="80%" x2="100%" y2="80%" stroke="#007185" strokeWidth="1" />
+    </svg>
+  </div>
+)
+
 export default function LoginStable() {
   const navigate = useNavigate()
   const { login: setAuth } = useAuthStore()
@@ -102,9 +139,10 @@ export default function LoginStable() {
   // Desktop Layout
   if (isDesktopView) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="min-h-screen relative">
+        <StableBackground />
         {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
+        <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg">
               🏪
@@ -356,9 +394,10 @@ export default function LoginStable() {
 
   // Mobile Layout
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen relative">
+      <StableBackground />
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+      <div className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-4 py-3 flex justify-between items-center relative z-10">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold">
             🏪

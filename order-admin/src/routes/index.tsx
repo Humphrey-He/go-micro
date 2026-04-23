@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { Spin } from 'antd'
 import { BasicLayout, BlankLayout } from '@/layouts'
 import { ProtectedRoute } from './ProtectedRoute'
 import { paths } from './paths'
@@ -14,23 +13,10 @@ const RefundListPage = lazy(() => import('@/pages/Refunds/RefundListPage'))
 const InventoryPage = lazy(() => import('@/pages/Inventory/InventoryPage'))
 const NotificationsPage = lazy(() => import('@/pages/Notifications'))
 
-const LoadingFallback: React.FC = () => (
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh',
-    }}
-  >
-    <Spin size="large" />
-  </div>
-)
-
 export const AppRoutes: React.FC = () => {
   return (
     <BrowserRouter>
-      <Suspense fallback={<LoadingFallback />}>
+      <Suspense fallback={<div className="initial-loading" />}>
         <Routes>
           <Route element={<BlankLayout />}>
             <Route path={paths.login} element={<LoginPage />} />

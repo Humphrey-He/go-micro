@@ -1,5 +1,5 @@
-import React from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { Layout, Avatar, Dropdown, Space, Button, Tooltip } from 'antd'
 import {
   UserOutlined,
@@ -17,8 +17,16 @@ const { Header, Sider, Content } = Layout
 
 export const BasicLayout: React.FC = () => {
   const navigate = useNavigate()
+  const location = useLocation()
   const { userInfo, logout } = useAuthStore()
   const { collapsed, floatMode, toggleCollapse } = useSidebarStore()
+  const [isRouteChanging, setIsRouteChanging] = useState(false)
+
+  useEffect(() => {
+    setIsRouteChanging(true)
+    const timer = setTimeout(() => setIsRouteChanging(false), 150)
+    return () => clearTimeout(timer)
+  }, [location.pathname])
 
   const handleLogout = () => {
     logout()
@@ -187,8 +195,35 @@ export const BasicLayout: React.FC = () => {
             </Dropdown>
           </Space>
         </Header>
-        <Content style={{ background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
-          <Outlet />
+        <Content
+          style={{
+            background: '#f5f5f5',
+            minHeight: 'calc(100vh - 64px)',
+            position: 'relative',
+          }}
+        >
+          {isRouteChanging && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 3,
+                background: 'linear-gradient(90deg, #1677ff, #0958d9)',
+                zIndex: 100,
+                animation: 'routeLoading 1s ease-in-out infinite',
+              }}
+            />
+          )}
+          <div
+            style={{
+              opacity: isRouteChanging ? 0.8 : 1,
+              transition: 'opacity 150ms ease-out',
+            }}
+          >
+            <Outlet />
+          </div>
         </Content>
       </Layout>
 
@@ -201,6 +236,11 @@ export const BasicLayout: React.FC = () => {
         .float-btn:hover {
           transform: scale(1.05);
           box-shadow: 0 6px 20px rgba(22, 119, 255, 0.4) !important;
+        }
+        @keyframes routeLoading {
+          0% { width: 0%; opacity: 1; }
+          50% { width: 70%; opacity: 1; }
+          100% { width: 100%; opacity: 0; }
         }
       `}</style>
     </Layout>

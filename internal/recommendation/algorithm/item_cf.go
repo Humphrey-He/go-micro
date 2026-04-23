@@ -7,24 +7,32 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+const (
+	DefaultMinCoUsers    = 2
+	SimilarityThreshold  = 0.01
+	BatchSize            = 1000
+	DefaultLimit         = 10
+)
+
 type ItemCF struct {
-	db          *sqlx.DB
-	minCoUsers  int
-	topNSimilar int
+	db         *sqlx.DB
+	minCoUsers int
 }
 
 func NewItemCF(db *sqlx.DB) *ItemCF {
 	return &ItemCF{
-		db:          db,
-		minCoUsers:  2,
-		topNSimilar: 50,
+		db:         db,
+		minCoUsers: DefaultMinCoUsers,
 	}
 }
 
 // ComputeSimilarity computes item-item similarity based on co-occurrence
 func (ic *ItemCF) ComputeSimilarity() error {
 	// Step 1: Count users per item
-	itemUserCounts := ic.countItemUsers()
+	itemUserCounts, err := ic.countItemUsers()
+	if err != nil {
+		return err
+	}
 
 	// Step 2: Find co-occurring item pairs
 	pairs, err := ic.countCoOccurrences()
@@ -50,7 +58,7 @@ func (ic *ItemCF) ComputeSimilarity() error {
 		// Cosine similarity
 		sim := float64(pair.CoUsers) / math.Sqrt(float64(countA)*float64(countB))
 
-		if sim > 0.01 && pair.CoUsers >= ic.minCoUsers {
+		if sim > SimilarityThreshold && pair.CoUsers >= ic.minCoUsers {
 			batch = append(batch, struct {
 				SkuIDA     int64
 				SkuIDB     int64
@@ -66,8 +74,8 @@ func (ic *ItemCF) ComputeSimilarity() error {
 			})
 		}
 
-		// Batch insert when reaching 1000
-		if len(batch) >= 1000 {
+		// Batch insert when reaching BatchSize
+		if len(batch) >= BatchSize {
 			if err := ic.saveBatch(batch); err != nil {
 				return err
 			}
@@ -97,7 +105,7 @@ type coOccurrence struct {
 	CoUsers int
 }
 
-func (ic *ItemCF) countItemUsers() map[int64]int {
+func (ic *ItemCF) countItemUsers() (map[int64]int, error) {
 	counts := make(map[int64]int)
 	rows, err := ic.db.Query(`
 		SELECT sku_id, COUNT(DISTINCT user_id) as cnt
@@ -107,7 +115,7 @@ func (ic *ItemCF) countItemUsers() map[int64]int {
 		GROUP BY sku_id
 	`)
 	if err != nil {
-		return counts
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -117,7 +125,7 @@ func (ic *ItemCF) countItemUsers() map[int64]int {
 			counts[c.SkuID] = c.Count
 		}
 	}
-	return counts
+	return counts, nil
 }
 
 func (ic *ItemCF) countCoOccurrences() ([]coOccurrence, error) {
@@ -195,7 +203,7 @@ func (ic *ItemCF) saveBatch(batch []struct {
 // GetSimilarItems returns similar items for a given SKU
 func (ic *ItemCF) GetSimilarItems(skuID int64, scene string, limit int) ([]SimilarItem, error) {
 	if limit <= 0 {
-		limit = 10
+		limit = DefaultLimit
 	}
 
 	type result struct {

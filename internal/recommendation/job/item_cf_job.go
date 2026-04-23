@@ -12,11 +12,14 @@ type ItemCFJob struct {
 	itemCF *algorithm.ItemCF
 }
 
-func NewItemCFJob() *ItemCFJob {
-	dbx, _ := db.NewMySQL()
+func NewItemCFJob() (*ItemCFJob, error) {
+	dbx, err := db.NewMySQL()
+	if err != nil {
+		return nil, err
+	}
 	return &ItemCFJob{
 		itemCF: algorithm.NewItemCF(dbx),
-	}
+	}, nil
 }
 
 func (j *ItemCFJob) Run() error {

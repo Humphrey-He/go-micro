@@ -42,6 +42,12 @@ export const useAuthStore = create<AuthState>()(
       login: (token, userInfo) => set({ token, userInfo, isLoggedIn: true }),
 
       logout: async () => {
+        // Skip API call if not logged in
+        const isLoggedIn = useAuthStore.getState().isLoggedIn
+        if (!isLoggedIn) {
+          set({ token: null, userInfo: null, isLoggedIn: false })
+          return
+        }
         try {
           await logoutApi()
         } catch (error) {

@@ -23,11 +23,19 @@ request.interceptors.response.use(
   (error: AxiosError) => {
     const status = error.response?.status
     const data = error.response?.data as { message?: string; code?: number } | undefined
+    const isLoggedIn = useAuthStore.getState().isLoggedIn
 
     if (status === 401 || data?.code === 40101) {
-      useAuthStore.getState().logout()
-      message.error('登录已过期，请重新登录')
-      window.location.href = '/login'
+      // Only logout if user was actually logged in
+      if (isLoggedIn) {
+        useAuthStore.getState().logout()
+        message.error('登录已过期，请重新登录')
+      }
+      // Redirect to login if on a page that requires auth, otherwise just refresh
+      const isAuthPage = window.location.pathname === '/login' || window.location.pathname === '/register'
+      if (!isAuthPage) {
+        window.location.href = '/login'
+      }
       return Promise.reject(error)
     }
 

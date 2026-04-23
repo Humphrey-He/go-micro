@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v3.19.4
-// source: proto/user.proto
+// source: user.proto
 
 package userpb
 
@@ -19,9 +19,10 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_GetUser_FullMethodName       = "/userpb.UserService/GetUser"
-	UserService_GetUserByName_FullMethodName = "/userpb.UserService/GetUserByName"
-	UserService_Authenticate_FullMethodName  = "/userpb.UserService/Authenticate"
+	UserService_GetUser_FullMethodName        = "/userpb.UserService/GetUser"
+	UserService_GetUserByName_FullMethodName  = "/userpb.UserService/GetUserByName"
+	UserService_GetUserByPhone_FullMethodName = "/userpb.UserService/GetUserByPhone"
+	UserService_Authenticate_FullMethodName   = "/userpb.UserService/Authenticate"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -30,6 +31,7 @@ const (
 type UserServiceClient interface {
 	GetUser(ctx context.Context, in *GetUserRequest, opts ...grpc.CallOption) (*User, error)
 	GetUserByName(ctx context.Context, in *GetUserByNameRequest, opts ...grpc.CallOption) (*User, error)
+	GetUserByPhone(ctx context.Context, in *GetUserByPhoneRequest, opts ...grpc.CallOption) (*User, error)
 	Authenticate(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*User, error)
 }
 
@@ -61,6 +63,16 @@ func (c *userServiceClient) GetUserByName(ctx context.Context, in *GetUserByName
 	return out, nil
 }
 
+func (c *userServiceClient) GetUserByPhone(ctx context.Context, in *GetUserByPhoneRequest, opts ...grpc.CallOption) (*User, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(User)
+	err := c.cc.Invoke(ctx, UserService_GetUserByPhone_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) Authenticate(ctx context.Context, in *AuthRequest, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
@@ -77,6 +89,7 @@ func (c *userServiceClient) Authenticate(ctx context.Context, in *AuthRequest, o
 type UserServiceServer interface {
 	GetUser(context.Context, *GetUserRequest) (*User, error)
 	GetUserByName(context.Context, *GetUserByNameRequest) (*User, error)
+	GetUserByPhone(context.Context, *GetUserByPhoneRequest) (*User, error)
 	Authenticate(context.Context, *AuthRequest) (*User, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
@@ -93,6 +106,9 @@ func (UnimplementedUserServiceServer) GetUser(context.Context, *GetUserRequest) 
 }
 func (UnimplementedUserServiceServer) GetUserByName(context.Context, *GetUserByNameRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByName not implemented")
+}
+func (UnimplementedUserServiceServer) GetUserByPhone(context.Context, *GetUserByPhoneRequest) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByPhone not implemented")
 }
 func (UnimplementedUserServiceServer) Authenticate(context.Context, *AuthRequest) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Authenticate not implemented")
@@ -154,6 +170,24 @@ func _UserService_GetUserByName_Handler(srv interface{}, ctx context.Context, de
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetUserByPhone_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetUserByPhoneRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetUserByPhone(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetUserByPhone_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetUserByPhone(ctx, req.(*GetUserByPhoneRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_Authenticate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthRequest)
 	if err := dec(in); err != nil {
@@ -188,10 +222,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetUserByName_Handler,
 		},
 		{
+			MethodName: "GetUserByPhone",
+			Handler:    _UserService_GetUserByPhone_Handler,
+		},
+		{
 			MethodName: "Authenticate",
 			Handler:    _UserService_Authenticate_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/user.proto",
+	Metadata: "user.proto",
 }

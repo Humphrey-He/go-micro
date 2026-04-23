@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go-micro/proto/userpb"
+	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -28,6 +29,17 @@ func (c *GRPCClient) GetUserByName(ctx context.Context, username string) (*userp
 	return c.client.GetUserByName(ctx, &userpb.GetUserByNameRequest{Username: username})
 }
 
+func (c *GRPCClient) GetUserByPhone(ctx context.Context, phone string) (*userpb.User, error) {
+	return c.client.GetUserByPhone(ctx, &userpb.GetUserByPhoneRequest{Phone: phone})
+}
+
 func (c *GRPCClient) Authenticate(ctx context.Context, username, password string) (*userpb.User, error) {
 	return c.client.Authenticate(ctx, &userpb.AuthRequest{Username: username, Password: password})
+}
+
+func (c *GRPCClient) VerifyPassword(u *userpb.User, password string) bool {
+	if u == nil || u.PasswordHash == "" {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }

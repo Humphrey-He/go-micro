@@ -550,9 +550,9 @@ type LoginResponse struct {
 	User  *user.User `json:"user"`
 }
 
-func (s *Service) Login(username, password string) (*LoginResponse, error) {
-	// Development mode fallback - allow hardcoded admin credentials when user service is unavailable
-	if username == "admin" && password == "admin123" {
+func (s *Service) Login(account, password string) (*LoginResponse, error) {
+	// Development mode fallback - allow hardcoded admin credentials
+	if account == "admin" && password == "admin123" {
 		secret := []byte(config.GetEnv("JWT_SECRET", "dev-secret"))
 		claims := jwt.MapClaims{
 			"user_id":  "dev-admin-001",
@@ -570,10 +570,13 @@ func (s *Service) Login(username, password string) (*LoginResponse, error) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+
 	var u *user.User
-	err := s.cbUser.Execute(func() error {
-		var callErr error
-		upb, callErr := s.user.Authenticate(ctx, username, password)
+	var err error
+
+	// 优先按手机号查找用户
+	err = s.cbUser.Execute(func() error {
+		upb, callErr := s.user.GetUserByPhone(ctx, account)
 		if callErr == nil && upb != nil {
 			u = &user.User{
 				UserID:   upb.UserId,
@@ -584,9 +587,41 @@ func (s *Service) Login(username, password string) (*LoginResponse, error) {
 		}
 		return callErr
 	})
+
+	// 如果没找到手机号，按用户名查找
+	if u == nil || err != nil {
+		err = s.cbUser.Execute(func() error {
+			upb, callErr := s.user.GetUserByName(ctx, account)
+			if callErr == nil && upb != nil {
+				u = &user.User{
+					UserID:   upb.UserId,
+					Username: upb.Username,
+					Role:     upb.Role,
+					Status:   int(upb.Status),
+				}
+			}
+			return callErr
+		})
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
+	if u == nil {
+		return nil, errors.New("user not found")
+	}
+
+	// 验证密码 - 需要获取完整用户信息包含 password_hash
+	fullUser, err := s.user.GetUserByName(ctx, u.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	if !s.user.VerifyPassword(fullUser, password) {
+		return nil, errors.New("invalid credentials")
+	}
+
 	secret := []byte(config.GetEnv("JWT_SECRET", "dev-secret"))
 	claims := jwt.MapClaims{
 		"user_id":  u.UserID,

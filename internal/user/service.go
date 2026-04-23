@@ -100,6 +100,20 @@ func (s *Service) GetByUsername(username string) (*User, error) {
 	return &user, nil
 }
 
+func (s *Service) GetByPhone(phone string) (*User, error) {
+	if phone == "" {
+		return nil, ErrNotFound
+	}
+	user := User{}
+	if err := s.db.Get(&user, `SELECT * FROM users WHERE phone = ?`, phone); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (s *Service) VerifyPassword(user *User, password string) bool {
 	if user == nil {
 		return false

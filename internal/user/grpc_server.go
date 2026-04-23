@@ -20,7 +20,7 @@ func (s *GRPCServer) GetUser(ctx context.Context, req *userpb.GetUserRequest) (*
 	if err != nil {
 		return nil, err
 	}
-	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status)}, nil
+	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status), Phone: u.Phone, PasswordHash: u.PasswordHash}, nil
 }
 
 func (s *GRPCServer) GetUserByName(ctx context.Context, req *userpb.GetUserByNameRequest) (*userpb.User, error) {
@@ -28,7 +28,15 @@ func (s *GRPCServer) GetUserByName(ctx context.Context, req *userpb.GetUserByNam
 	if err != nil {
 		return nil, err
 	}
-	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status)}, nil
+	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status), Phone: u.Phone, PasswordHash: u.PasswordHash}, nil
+}
+
+func (s *GRPCServer) GetUserByPhone(ctx context.Context, req *userpb.GetUserByPhoneRequest) (*userpb.User, error) {
+	u, err := s.svc.GetByPhone(req.Phone)
+	if err != nil {
+		return nil, err
+	}
+	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status), Phone: u.Phone, PasswordHash: u.PasswordHash}, nil
 }
 
 func (s *GRPCServer) Authenticate(ctx context.Context, req *userpb.AuthRequest) (*userpb.User, error) {
@@ -39,5 +47,5 @@ func (s *GRPCServer) Authenticate(ctx context.Context, req *userpb.AuthRequest) 
 	if !s.svc.VerifyPassword(u, req.Password) {
 		return nil, ErrNotFound
 	}
-	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status)}, nil
+	return &userpb.User{UserId: u.UserID, Username: u.Username, Role: u.Role, Status: int32(u.Status), Phone: u.Phone, PasswordHash: u.PasswordHash}, nil
 }

@@ -9,15 +9,25 @@ interface UserInfo {
   level: number
   member_title: string
   points: number
+  phone_bound?: boolean
+  is_new_user?: boolean
+}
+
+interface SocialBinding {
+  platform: string
+  openid: string
+  bound_at: string
 }
 
 interface AuthState {
   token: string | null
   userInfo: UserInfo | null
   isLoggedIn: boolean
+  socialBindings: SocialBinding[]
   login: (token: string, userInfo: UserInfo) => void
   logout: () => void
   updateUserInfo: (info: Partial<UserInfo>) => void
+  setSocialBindings: (bindings: SocialBinding[]) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -26,6 +36,7 @@ export const useAuthStore = create<AuthState>()(
       token: null,
       userInfo: null,
       isLoggedIn: false,
+      socialBindings: [],
 
       login: (token, userInfo) => set({ token, userInfo, isLoggedIn: true }),
 
@@ -35,6 +46,8 @@ export const useAuthStore = create<AuthState>()(
         set((state) => ({
           userInfo: state.userInfo ? { ...state.userInfo, ...info } : null,
         })),
+
+      setSocialBindings: (bindings) => set({ socialBindings: bindings }),
     }),
     { name: 'mall-auth' }
   )

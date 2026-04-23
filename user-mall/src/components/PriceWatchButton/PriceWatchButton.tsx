@@ -4,7 +4,6 @@ import { setPriceWatch, cancelPriceWatch } from '@/api/priceWatch'
 
 interface Props {
   skuId: string
-  productName: string
   currentPrice: number
   isWatching?: boolean
   onWatchChange?: (isWatching: boolean) => void
@@ -12,7 +11,6 @@ interface Props {
 
 export default function PriceWatchButton({
   skuId,
-  productName,
   currentPrice,
   isWatching = false,
   onWatchChange
@@ -88,13 +86,15 @@ export default function PriceWatchButton({
               商品当前价格：<span className="text-[#00C853] font-bold">{formatPrice(currentPrice)}</span>
             </div>
             <div className="mb-2 text-sm text-gray-500">目标价格（选填）</div>
-            <Input
-              type="number"
-              placeholder="输入目标价格，降价到该价格时提醒"
-              value={targetPrice}
-              onChange={setTargetPrice}
-              prefix="¥"
-            />
+            <div className="flex items-center">
+              <span className="text-gray-500 mr-1">¥</span>
+              <Input
+                type="number"
+                placeholder="输入目标价格，降价到该价格时提醒"
+                value={targetPrice}
+                onChange={setTargetPrice}
+              />
+            </div>
             <div className="text-xs text-gray-400 mt-2">
               不填目标价格表示：价格下降任意幅度都提醒
             </div>
@@ -102,7 +102,7 @@ export default function PriceWatchButton({
         }
         actions={[
           { text: '取消', key: 'cancel', onClick: () => setShowDialog(false) },
-          { text: '确认', key: 'confirm', onClick: handleSetWatch, loading: loading },
+          { text: loading ? '设置中...' : '确认', key: 'confirm', onClick: handleSetWatch, disabled: loading },
         ]}
       />
     </>

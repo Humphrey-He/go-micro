@@ -381,7 +381,6 @@ export default function ProductDetail() {
         <div className="flex items-center gap-4">
           <PriceWatchButton
             skuId={skuId!}
-            productName={product.title}
             currentPrice={product.price}
             isWatching={isWatching}
             onWatchChange={setIsWatching}

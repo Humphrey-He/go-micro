@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Skeleton, Switch, Empty, PullToRefresh } from 'antd-mobile'
 import { getPriceWatchList, updatePriceWatch, cancelPriceWatch, type PriceWatchItem } from '@/api/priceWatch'
@@ -7,7 +7,6 @@ export default function PriceWatchList() {
   const navigate = useNavigate()
   const [items, setItems] = useState<PriceWatchItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
 
   const fetchList = async () => {
     try {
@@ -17,18 +16,12 @@ export default function PriceWatchList() {
       console.error('Failed to fetch price watch list:', err)
     } finally {
       setLoading(false)
-      setRefreshing(false)
     }
   }
 
   useEffect(() => {
     fetchList()
   }, [])
-
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    await fetchList()
-  }
 
   const handleToggleNotify = async (item: PriceWatchItem, checked: boolean) => {
     try {
@@ -68,7 +61,7 @@ export default function PriceWatchList() {
     return (
       <div className="p-4 space-y-3">
         {[1, 2, 3].map(i => (
-          <Skeleton key={i} animated height={100} className="rounded-lg" />
+          <Skeleton key={i} animated style={{ '--height': '100px' } as React.CSSProperties} className="rounded-lg" />
         ))}
       </div>
     )
@@ -89,7 +82,7 @@ export default function PriceWatchList() {
   }
 
   return (
-    <PullToRefresh onRefresh={handleRefresh}>
+    <PullToRefresh onRefresh={fetchList}>
       <div className="p-4 space-y-3">
         {items.map(item => (
           <div key={item.watch_id} className="bg-white rounded-lg p-3 shadow-sm">
@@ -141,7 +134,7 @@ export default function PriceWatchList() {
                     <Switch
                       checked={item.notify_enabled}
                       onChange={(checked) => handleToggleNotify(item, checked)}
-                      size="small"
+                      style={{ '--width': '32px', '--height': '20px' } as React.CSSProperties}
                     />
                     <span className="text-xs text-gray-500">提醒</span>
                   </div>

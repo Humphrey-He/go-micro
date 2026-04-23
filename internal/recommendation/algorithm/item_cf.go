@@ -33,15 +33,13 @@ func (ic *ItemCF) ComputeSimilarity() error {
 	}
 
 	// Step 3: Calculate similarity and save
-	type similarityRecord struct {
+	var batch []struct {
 		SkuIDA     int64
 		SkuIDB     int64
 		Scene      string
 		Similarity float64
 		Weight     int
 	}
-
-	var batch []similarityRecord
 	for _, pair := range pairs {
 		countA := itemUserCounts[pair.SkuID]
 		countB := itemUserCounts[pair.SkuIDB]
@@ -53,7 +51,13 @@ func (ic *ItemCF) ComputeSimilarity() error {
 		sim := float64(pair.CoUsers) / math.Sqrt(float64(countA)*float64(countB))
 
 		if sim > 0.01 && pair.CoUsers >= ic.minCoUsers {
-			batch = append(batch, similarityRecord{
+			batch = append(batch, struct {
+				SkuIDA     int64
+				SkuIDB     int64
+				Scene      string
+				Similarity float64
+				Weight     int
+			}{
 				SkuIDA:     pair.SkuID,
 				SkuIDB:     pair.SkuIDB,
 				Scene:      pair.Scene,

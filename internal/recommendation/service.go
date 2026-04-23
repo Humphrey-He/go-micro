@@ -13,6 +13,8 @@ type Service struct {
 	redis *redis.Client
 }
 
+const FiveMinuteBucket = 300
+
 func NewService(db *sqlx.DB, redis *redis.Client) *Service {
 	return &Service{
 		db:    db,
@@ -23,7 +25,7 @@ func NewService(db *sqlx.DB, redis *redis.Client) *Service {
 // ReportBehavior - Report user behavior
 func (s *Service) ReportBehavior(ctx context.Context, req *BehaviorReportRequest, userID int64) error {
 	// Calculate 5-minute time bucket
-	timeBucket := int(time.Now().Unix() / 300)
+	timeBucket := int(time.Now().Unix() / FiveMinuteBucket)
 
 	_, err := s.db.Exec(`
 		INSERT INTO user_behavior_logs (user_id, anonymous_id, sku_id, behavior_type, source, stay_duration, time_bucket, created_at)

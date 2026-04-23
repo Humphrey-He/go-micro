@@ -113,8 +113,12 @@ func (h *Handler) getColdStart(c *gin.Context) {
 }
 
 func (h *Handler) setPreference(c *gin.Context) {
-	userID, _ := c.Get(middleware.CtxUserID)
-	uid, _ := userID.(int64)
+	userID := int64(0)
+	if uid, exists := c.Get(middleware.CtxUserID); exists {
+		if id, ok := uid.(int64); ok {
+			userID = id
+		}
+	}
 
 	var req SetPreferenceRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -123,7 +127,7 @@ func (h *Handler) setPreference(c *gin.Context) {
 		return
 	}
 
-	if err := h.svc.SetUserPreference(c.Request.Context(), uid, req.CategoryIDs); err != nil {
+	if err := h.svc.SetUserPreference(c.Request.Context(), userID, req.CategoryIDs); err != nil {
 		code, body := httpx.Fail(errx.CodeInternalError, "set preference failed")
 		c.JSON(code, body)
 		return

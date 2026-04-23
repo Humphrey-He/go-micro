@@ -1,5 +1,7 @@
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 import { Button, Card, Result } from 'antd-mobile'
+import RecommendationFeed from '@/components/RecommendationFeed'
+import { getPayCompleteRecommendations } from '@/api/recommendation'
 
 export default function PaymentResult() {
   const { orderNo } = useParams<{ orderNo: string }>()
@@ -49,6 +51,14 @@ export default function PaymentResult() {
           返回首页
         </Button>
       </div>
+
+      {/* 猜你喜欢 */}
+      <RecommendationFeed
+        api={() => getPayCompleteRecommendations({ purchased_sku_ids: [], limit: 6 })}
+        layout="grid"
+        title="猜你喜欢"
+        emptyText="暂无推荐"
+      />
     </div>
   )
 }

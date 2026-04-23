@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Form, Input, Button, Card, message } from 'antd'
 import { UserOutlined, LockOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
@@ -25,8 +25,14 @@ interface LoginFormValues {
 
 export const LoginPage: React.FC = () => {
   const [loading, setLoading] = useState(false)
+  const [btnHover, setBtnHover] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const navigate = useNavigate()
   const { setAuth } = useAuthStore()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleSubmit = async (values: LoginFormValues) => {
     setLoading(true)
@@ -61,7 +67,15 @@ export const LoginPage: React.FC = () => {
         padding: '20px',
       }}
     >
-      <div style={{ width: '100%', maxWidth: 420 }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 420,
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translateY(0)' : 'translateY(20px)',
+          transition: 'opacity 0.6s ease-out, transform 0.6s ease-out',
+        }}
+      >
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div
             style={{
@@ -151,17 +165,25 @@ export const LoginPage: React.FC = () => {
                 htmlType="submit"
                 block
                 loading={loading}
+                onMouseEnter={() => setBtnHover(true)}
+                onMouseLeave={() => setBtnHover(false)}
                 style={{
-                  height: 48,
-                  borderRadius: 10,
+                  height: 52,
+                  borderRadius: 12,
                   fontSize: 16,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   border: 'none',
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  boxShadow: '0 4px 14px rgba(102, 126, 234, 0.4)',
+                  background: btnHover
+                    ? 'linear-gradient(135deg, #7a8ef5 0%, #8d5cb8 100%)'
+                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  boxShadow: btnHover
+                    ? '0 8px 20px rgba(102, 126, 234, 0.5)'
+                    : '0 4px 14px rgba(102, 126, 234, 0.4)',
+                  transform: btnHover ? 'translateY(-2px)' : 'translateY(0)',
+                  transition: 'all 0.3s ease',
                 }}
               >
-                登录
+                {loading ? '登录中...' : '登 录'}
               </Button>
             </Form.Item>
           </Form>

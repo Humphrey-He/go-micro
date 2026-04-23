@@ -52,8 +52,9 @@ export const AppRoutes: React.FC = () => {
             <Route path={paths.notifications} element={<NotificationsPage />} />
           </Route>
 
-          <Route path="/" element={<Navigate to={paths.dashboard} replace />} />
-          <Route path="*" element={<Navigate to={paths.orders} replace />} />
+          <Route path="/" element={<Navigate to="/user-mall" replace />} />
+          <Route path="/user-mall" element={<Navigate to="http://localhost:3002" replace />} />
+          <Route path="*" element={<Navigate to={paths.login} replace />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

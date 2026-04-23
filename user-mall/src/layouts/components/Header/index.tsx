@@ -21,6 +21,13 @@ export function MobileHeader() {
         {/* 图标按钮 */}
         <div className="flex items-center gap-3 ml-4">
           <LanguageSwitcher />
+          <span
+            className="text-sm text-gray-500 cursor-pointer hover:text-purple-600 transition-colors"
+            onClick={() => window.open('http://localhost:3000', '_blank')}
+            title="管理后台"
+          >
+            后台
+          </span>
           <MessageOutlined
             className="text-xl text-gray-600"
             onClick={() => navigate('/messages')}

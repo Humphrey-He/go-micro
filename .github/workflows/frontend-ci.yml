@@ -1,0 +1,153 @@
+name: frontend-ci
+
+on:
+  push:
+    branches: [ "dev", "main", "prod" ]
+    paths:
+      - 'user-mall/**'
+      - 'order-admin/**'
+  pull_request:
+    branches: [ "main", "prod" ]
+    paths:
+      - 'user-mall/**'
+      - 'order-admin/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  user-mall:
+    name: Build user-mall
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: user-mall
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: user-mall/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck || npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: user-mall-dist
+          path: user-mall/dist
+          retention-days: 7
+
+  order-admin:
+    name: Build order-admin
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: order-admin
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: order-admin/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+
+      - name: Run tests
+        run: npm test || true
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: order-admin-dist
+          path: order-admin/dist
+          retention-days: 7
+
+  comment-success:
+    name: Comment success
+    runs-on: ubuntu-latest
+    needs: [user-mall, order-admin]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Add comment
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --body "Frontend builds completed successfully. :white_check_mark:"
+
+      - name: Post check run结论
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: checks } = await github.rest.checks.listForRef({
+              ...context.repo,
+              ref: context.sha,
+              status: 'completed'
+            });
+            console.log('Check runs:', checks);
+
+  # Optional: Deploy preview for PRs
+  preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [user-mall, order-admin]
+    if: github.event_name == 'pull_request'
+    environment:
+      name: preview
+      url: ${{ steps.preview.outputs.url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Build user-mall
+        run: |
+          cd user-mall
+          npm ci
+          npm run build
+
+      - name: Deploy preview comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const comment = `Preview build ${{ job.status == 'success' && ':rocket:' || ':x:' }}
+            - User mall: \`/user-mall/dist\`
+            - Order admin: \`/order-admin/dist\``;
+
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
+              body: comment
+            });

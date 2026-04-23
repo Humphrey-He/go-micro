@@ -17,6 +17,7 @@ permissions:
 env:
   GO_VERSION: "1.25.x"
   GOTOOLCHAIN: auto
+  GH_CLI_VERSION: "2.65.0"
 
 jobs:
   quality:
@@ -25,6 +26,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        run: |
+          gh extension install github/gh-actions-comment || true
+          gh extension update || true
 
       - name: Set up Go
         uses: actions/setup-go@v5

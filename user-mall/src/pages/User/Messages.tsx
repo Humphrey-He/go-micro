@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Badge, Empty, Tabs } from 'antd-mobile'
 import {
   BellOutline,
@@ -7,6 +8,7 @@ import {
   TruckOutline,
   ExclamationCircleOutline,
 } from 'antd-mobile-icons'
+import { getPriceWatchNotifications, type PriceWatchNotification } from '@/api/priceWatch'
 
 interface Message {
   id: string
@@ -70,8 +72,11 @@ const getMessageIcon = (type: string) => {
 }
 
 export default function Messages() {
+  const navigate = useNavigate()
   const [messages, setMessages] = useState<Message[]>(mockMessages)
   const [activeTab, setActiveTab] = useState('all')
+  const [priceNotifications, setPriceNotifications] = useState<PriceWatchNotification[]>([])
+  const [priceUnreadCount, setPriceUnreadCount] = useState(0)
 
   const unreadCount = messages.filter((m) => !m.read).length
 
@@ -90,6 +95,24 @@ export default function Messages() {
   const handleReadAll = () => {
     setMessages((prev) => prev.map((m) => ({ ...m, read: true })))
   }
+
+  useEffect(() => {
+    if (activeTab === 'price') {
+      fetchPriceNotifications()
+    }
+  }, [activeTab])
+
+  const fetchPriceNotifications = async () => {
+    try {
+      const res = await getPriceWatchNotifications({ page: 1, page_size: 50 })
+      setPriceNotifications(res.items || [])
+      setPriceUnreadCount(res.unread_count)
+    } catch (err) {
+      console.error('Failed to fetch price notifications:', err)
+    }
+  }
+
+  const formatPrice = (price: number) => `¥${(price / 100).toFixed(2)}`
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -127,11 +150,48 @@ export default function Messages() {
         <Tabs.Tab title="订单" key="order" />
         <Tabs.Tab title="优惠" key="promotion" />
         <Tabs.Tab title="活动" key="activity" />
+        <Tabs.Tab title={`价格提醒${priceUnreadCount > 0 ? ` (${priceUnreadCount})` : ''}`} key="price" />
       </Tabs>
 
       {/* 消息列表 */}
       <div className="bg-white">
-        {filteredMessages.length === 0 ? (
+        {activeTab === 'price' ? (
+          priceNotifications.length === 0 ? (
+            <Empty description="暂无价格提醒" />
+          ) : (
+            <div className="p-4 space-y-3">
+              {priceNotifications.map(item => (
+                <div
+                  key={item.notification_id}
+                  className="bg-white rounded-lg p-3 flex gap-3"
+                  onClick={() => navigate(`/product/${item.sku_id}`)}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.product_name}
+                    className="w-16 h-16 rounded object-cover bg-gray-100"
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium line-clamp-1">{item.product_name}</div>
+                    <div className="mt-1 text-sm">
+                      <span className="text-gray-400 line-through">{formatPrice(item.old_price)}</span>
+                      <span className="text-[#00C853] font-bold ml-2">{formatPrice(item.new_price)}</span>
+                    </div>
+                    <div className="mt-1 text-xs text-green-500">
+                      降价 {formatPrice(item.discount_amount)} ({item.discount_rate.toFixed(1)}%)
+                    </div>
+                    <div className="mt-1 text-xs text-gray-400">
+                      {item.created_at}
+                    </div>
+                  </div>
+                  {!item.is_read && (
+                    <div className="w-2 h-2 bg-[#00C853] rounded-full" />
+                  )}
+                </div>
+              ))}
+            </div>
+          )
+        ) : filteredMessages.length === 0 ? (
           <Empty description="暂无消息" className="py-12" />
         ) : (
           filteredMessages.map((message) => (

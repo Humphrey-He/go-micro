@@ -1,7 +1,7 @@
 // user-mall/src/pages/Auth/LoginLuxury.tsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Form, Input, Toast } from 'antd-mobile'
+import { Button, Form, Toast } from 'antd-mobile'
 import { login, smsLogin, sendSms } from '@/api/auth'
 import { useAuthStore } from '@/stores/authStore'
 import SocialLoginButtons from '@/components/SocialLoginButtons'
@@ -14,10 +14,9 @@ export default function LoginLuxury() {
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'password' | 'sms'>('password')
   const [smsCountdown, setSmsCountdown] = useState(0)
-  const [smsLoading, setSmsLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [form] = Form.useForm()
   const [isDesktopView, setIsDesktopView] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -41,14 +40,11 @@ export default function LoginLuxury() {
       return
     }
     try {
-      setSmsLoading(true)
       await sendSms({ phone, type: 'login' })
       Toast.show('验证码已发送')
       setSmsCountdown(60)
     } catch {
       Toast.show('发送失败')
-    } finally {
-      setSmsLoading(false)
     }
   }
 

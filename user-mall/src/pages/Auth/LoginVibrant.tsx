@@ -14,14 +14,11 @@ export default function LoginVibrant() {
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'password' | 'sms'>('password')
   const [smsCountdown, setSmsCountdown] = useState(0)
-  const [smsLoading, setSmsLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
   const [form] = Form.useForm()
   const [tabStyle, setTabStyle] = useState({ left: '0%', width: '50%' })
   const [isDesktopView, setIsDesktopView] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const check = () => setIsDesktopView(isDesktop())
     check()
     window.addEventListener('resize', check)
@@ -47,14 +44,11 @@ export default function LoginVibrant() {
       return
     }
     try {
-      setSmsLoading(true)
       await sendSms({ phone, type: 'login' })
       Toast.show('验证码已发送')
       setSmsCountdown(60)
     } catch {
       Toast.show('发送失败')
-    } finally {
-      setSmsLoading(false)
     }
   }
 

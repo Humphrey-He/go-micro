@@ -1,12 +1,27 @@
 import { Toast } from 'antd-mobile'
 import { wechatLogin, googleLogin, appleLogin, qqLogin } from '@/utils/socialLogin'
+import type { LoginTheme } from '@/styles/login-themes/theme-config'
 
 interface SocialLoginButtonsProps {
+  theme?: LoginTheme
   onWechatClick?: () => void
   onGoogleClick?: () => void
   onAppleClick?: () => void
   onQQClick?: () => void
   layout?: 'horizontal' | 'vertical'
+}
+
+const getSocialButtonClass = (socialStyle: string) => {
+  switch (socialStyle) {
+    case 'colorful':
+      return 'w-12 h-12 rounded-full flex items-center justify-center text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95'
+    case 'subtle':
+      return 'w-10 h-10 rounded flex items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors'
+    case 'outline':
+      return 'w-10 h-10 rounded-full border-2 flex items-center justify-center text-gray-500 hover:border-[#C9A96E] hover:text-[#C9A96E] transition-all'
+    default:
+      return ''
+  }
 }
 
 const WechatIcon = () => (
@@ -40,12 +55,15 @@ const QQIcon = () => (
 )
 
 export default function SocialLoginButtons({
+  theme = 'vibrant',
   onWechatClick,
   onGoogleClick,
   onAppleClick,
   onQQClick,
   layout = 'horizontal'
 }: SocialLoginButtonsProps) {
+  const socialStyle = theme === 'vibrant' ? 'colorful' : theme === 'stable' ? 'subtle' : 'outline'
+
   const handleWechat = () => {
     if (onWechatClick) {
       onWechatClick()
@@ -98,34 +116,34 @@ export default function SocialLoginButtons({
     <div className={`flex ${layout === 'horizontal' ? 'justify-center gap-4' : 'flex-col gap-3'}`}>
       <button
         onClick={handleWechat}
-        className="w-12 h-12 rounded-full bg-[#07C160] flex items-center justify-center text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
+        className={`${getSocialButtonClass(socialStyle)} ${socialStyle === 'colorful' ? 'bg-[#07C160]' : ''}`}
         title="微信登录"
       >
         <WechatIcon />
       </button>
 
       <button
+        onClick={handleQQ}
+        className={`${getSocialButtonClass(socialStyle)} ${socialStyle === 'colorful' ? 'bg-[#12B7F5]' : ''}`}
+        title="QQ登录"
+      >
+        <QQIcon />
+      </button>
+
+      <button
         onClick={handleGoogle}
-        className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
-        title="Google 登录"
+        className={`${getSocialButtonClass(socialStyle)} ${socialStyle === 'colorful' ? 'bg-white border border-gray-200' : ''}`}
+        title="Google登录"
       >
         <GoogleIcon />
       </button>
 
       <button
         onClick={handleApple}
-        className="w-12 h-12 rounded-full bg-black flex items-center justify-center text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
-        title="Apple 登录"
+        className={`${getSocialButtonClass(socialStyle)} ${socialStyle === 'colorful' ? 'bg-black' : ''}`}
+        title="Apple登录"
       >
         <AppleIcon />
-      </button>
-
-      <button
-        onClick={handleQQ}
-        className="w-12 h-12 rounded-full bg-[#12B7F5] flex items-center justify-center text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
-        title="QQ 登录"
-      >
-        <QQIcon />
       </button>
     </div>
   )

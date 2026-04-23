@@ -19,7 +19,6 @@ export const ThemeSwitcher: React.FC = () => {
           }`}
           style={{
             background: `linear-gradient(135deg, ${t.colors.primary}, ${t.colors.secondary})`,
-            ringColor: t.colors.primary,
           }}
           title={t.nameCn}
         >

@@ -1,5 +1,5 @@
 // user-mall/src/context/ThemeContext.tsx
-import { createContext, useContext } from 'react'
+import { createContext } from 'react'
 import { useThemeStore } from '@/stores/themeStore'
 import { themes, type LoginTheme } from '@/styles/login-themes/theme-config'
 

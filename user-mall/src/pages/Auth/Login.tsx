@@ -10,10 +10,10 @@ const LoginLuxury = () => import('./LoginLuxury')
 
 export default function Login() {
   const theme = useThemeStore((s) => s.theme)
-  const [DynamicComponent, setDynamicComponent] = useState<React.LazyExoticComponent<() => JSX.Element> | null>(null)
+  const [DynamicComponent, setDynamicComponent] = useState<React.ComponentType | null>(null)
 
   useEffect(() => {
-    let loader: () => Promise<{ default: () => JSX.Element }>
+    let loader: () => Promise<{ default: React.ComponentType }>
     switch (theme) {
       case 'vibrant':
         loader = LoginVibrant

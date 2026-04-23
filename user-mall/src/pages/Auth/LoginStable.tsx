@@ -14,7 +14,6 @@ export default function LoginStable() {
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'password' | 'sms'>('password')
   const [smsCountdown, setSmsCountdown] = useState(0)
-  const [smsLoading, setSmsLoading] = useState(false)
   const [form] = Form.useForm()
   const [isDesktopView, setIsDesktopView] = useState(false)
 
@@ -39,14 +38,11 @@ export default function LoginStable() {
       return
     }
     try {
-      setSmsLoading(true)
       await sendSms({ phone, type: 'login' })
       Toast.show('验证码已发送')
       setSmsCountdown(60)
     } catch {
       Toast.show('发送失败')
-    } finally {
-      setSmsLoading(false)
     }
   }
 

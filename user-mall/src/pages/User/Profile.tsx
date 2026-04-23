@@ -10,15 +10,13 @@ import {
   SendOutline,
   TruckOutline,
   EditSFill,
-  LightningOutline,
-  TicketOutline,
-  UserGroupOutline,
+  FireFill,
   CalendarOutline,
   UnorderedListOutline,
   GiftOutline,
-  SettingOutline,
+  SetOutline,
   QuestionCircleOutline,
-  HeadsetOutline,
+  PhoneFill,
 } from 'antd-mobile-icons'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -64,7 +62,6 @@ export default function Profile() {
             <Button
               size="small"
               fill="outline"
-              color="white"
               onClick={() => navigate('/settings')}
               className="text-white border-white"
             >
@@ -148,8 +145,8 @@ export default function Profile() {
         </div>
         <div className="grid grid-cols-4 gap-4">
           {[
-            { icon: <LightningOutline className="text-xl" />, label: '秒杀', color: '#ff6a00', bg: '#fff7e6' },
-            { icon: <TicketOutline className="text-xl" />, label: '优惠券', color: '#ff4d4f', bg: '#fff1f0' },
+            { icon: <FireFill className="text-xl" />, label: '秒杀', color: '#ff6a00', bg: '#fff7e6' },
+            { icon: <CouponOutline className="text-xl" />, label: '优惠券', color: '#ff4d4f', bg: '#fff1f0' },
             { icon: <GiftOutline className="text-xl" />, label: '礼品卡', color: '#eb2f96', bg: '#fff0f3' },
             { icon: <CalendarOutline className="text-xl" />, label: '签到', color: '#52c41a', bg: '#f6ffed' },
           ].map((item) => (
@@ -216,7 +213,7 @@ export default function Profile() {
       <Card className="mx-2 mt-2 rounded-xl shadow-sm">
         <List mode="card" className="bg-transparent">
           <List.Item
-            prefix={<HeadsetOutline className="text-lg" style={{ color: '#52c41a' }} />}
+            prefix={<PhoneFill className="text-lg" style={{ color: '#52c41a' }} />}
             arrow
             onClick={() => navigate('/support')}
           >
@@ -230,7 +227,7 @@ export default function Profile() {
             帮助与反馈
           </List.Item>
           <List.Item
-            prefix={<SettingOutline className="text-lg" style={{ color: '#595959' }} />}
+            prefix={<SetOutline className="text-lg" style={{ color: '#595959' }} />}
             arrow
             onClick={() => navigate('/settings')}
           >

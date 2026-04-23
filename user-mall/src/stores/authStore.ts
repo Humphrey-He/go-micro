@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
-interface UserInfo {
+export interface UserInfo {
   user_id: string
   phone: string
   nickname: string

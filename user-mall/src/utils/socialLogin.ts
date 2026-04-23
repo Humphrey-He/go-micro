@@ -105,12 +105,3 @@ export const appleLogin = () => {
 
   window.location.href = authUrl
 }
-
-// 获取环境变量类型定义
-declare global {
-  interface ImportMetaEnv {
-    VITE_WECHAT_APP_ID?: string
-    VITE_GOOGLE_CLIENT_ID?: string
-    VITE_APPLE_CLIENT_ID?: string
-  }
-}

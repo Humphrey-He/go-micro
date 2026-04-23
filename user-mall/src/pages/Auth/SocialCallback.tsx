@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { SpinLoading, Toast } from 'antd-mobile'
 import { post } from '@/api/request'
-import { useAuthStore } from '@/stores/authStore'
+import { useAuthStore, UserInfo } from '@/stores/authStore'
 import { getStoredPKCE, clearPKCE } from '@/utils/socialLogin'
 import type { SocialProvider } from '@/api/auth'
 
@@ -107,7 +107,18 @@ export default function SocialCallback() {
         }>(`/auth/social/callback/${provider}`, callbackParams)
 
         // 登录成功
-        setAuth(response.token, response.user_info)
+        const userInfo: UserInfo = {
+          user_id: response.user_info.user_id,
+          phone: '',
+          nickname: response.user_info.nickname,
+          avatar: response.user_info.avatar,
+          level: 0,
+          member_title: '普通会员',
+          points: 0,
+          phone_bound: response.user_info.phone_bound,
+          is_new_user: response.is_new_user,
+        }
+        setAuth(response.token, userInfo)
         setStatus('success')
         Toast.show('登录成功')
 

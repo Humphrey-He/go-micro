@@ -10,7 +10,7 @@ export default function SocialBind() {
   const { login: setAuth } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [countdown, setCountdown] = useState(0)
-  const [isNewUser, setIsNewUser] = useState(
+  const [isNewUser] = useState(
     (location.state as { isNewUser?: boolean })?.isNewUser ?? true
   )
 
@@ -20,7 +20,7 @@ export default function SocialBind() {
       return
     }
     try {
-      await sendSms({ phone, type: 'bind' })
+      await sendSms({ phone, type: 'login' })
       Toast.show('验证码已发送')
       setCountdown(60)
       const timer = setInterval(() => {

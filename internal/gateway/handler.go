@@ -1,6 +1,8 @@
 package gateway
 
 import (
+	"bytes"
+	"io"
 	"net/http"
 	"strconv"
 
@@ -9,18 +11,31 @@ import (
 	"go-micro/internal/activity"
 	"go-micro/internal/payment"
 	"go-micro/internal/price"
+	"go-micro/internal/pricewatch"
 	"go-micro/internal/refund"
+	"go-micro/internal/social"
+	"go-micro/pkg/config"
 	"go-micro/pkg/errx"
 	"go-micro/pkg/httpx"
 	"go-micro/pkg/middleware"
 )
 
 type Handler struct {
-	svc *Service
+	svc            *Service
+	socialSvc      *social.Service
+	socialHandler  *social.Handler
+	pricewatchSvc  *pricewatch.Service
+	pricewatchHandler *pricewatch.Handler
 }
 
-func NewHandler(svc *Service) *Handler {
-	return &Handler{svc: svc}
+func NewHandler(svc *Service, socialSvc *social.Service, pricewatchSvc *pricewatch.Service) *Handler {
+	return &Handler{
+		svc:               svc,
+		socialSvc:         socialSvc,
+		socialHandler:     social.NewHandler(socialSvc),
+		pricewatchSvc:     pricewatchSvc,
+		pricewatchHandler: pricewatch.NewHandler(pricewatchSvc),
+	}
 }
 
 func (h *Handler) Register(r *gin.Engine) {
@@ -54,6 +69,27 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.POST("/price/calculate", h.calculatePrice)
 	api.GET("/price/history", h.priceHistory)
 	api.GET("/users/me", h.me)
+
+	// Recommendation service proxy
+	rec := api.Group("/rec")
+	rec.POST("/report", h.reportBehavior)
+	rec.GET("/home", h.getHomeRecommendations)
+	rec.GET("/similar/:sku_id", h.getSimilarProducts)
+	rec.GET("/cold-start", h.getColdStart)
+	rec.POST("/cart-addon", h.getCartAddons)
+	rec.GET("/pay-complete", h.getPayCompleteRecommendations)
+
+	// Social login routes (no auth required)
+	social := api.Group("/auth/social")
+	h.socialHandler.Register(social)
+
+	// Price watch routes (require auth via middleware)
+	priceWatch := api.Group("/price-watch")
+	priceWatch.Use(middleware.JWTAuth())
+	h.pricewatchHandler.Register(priceWatch)
+
+	// Product price history (no auth required for read)
+	api.GET("/products/:sku_id/price-history", h.getProductPriceHistory)
 }
 
 // @Summary 用户登录
@@ -430,6 +466,30 @@ func (h *Handler) priceHistory(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+// @Summary 获取商品价格走势
+// @Tags Price
+// @Produce json
+// @Param sku_id path string true "sku id"
+// @Param period query string false "period: 30d, 90d, 1y" default(30d)
+// @Success 200 {object} httpx.Response
+// @Router /api/v1/products/{sku_id}/price-history [get]
+func (h *Handler) getProductPriceHistory(c *gin.Context) {
+	skuID := c.Param("sku_id")
+	if skuID == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "sku_id required")
+		c.JSON(code, body)
+		return
+	}
+	period := c.DefaultQuery("period", "30d")
+	resp, err := h.pricewatchSvc.GetPriceHistory(c.Request.Context(), skuID, period)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "price service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	c.JSON(http.StatusOK, resp)
+}
+
 // @Summary 获取当前用户信息
 // @Tags User
 // @Produce json
@@ -556,4 +616,147 @@ func toString(v interface{}) string {
 		return s
 	}
 	return ""
+}
+
+// Recommendation handlers - proxy to recommendation service
+func (h *Handler) reportBehavior(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "invalid request")
+		c.JSON(code, body)
+		return
+	}
+	req, err := http.NewRequest(http.MethodPost, recURL+"/api/v1/rec/report", bytes.NewReader(body))
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func (h *Handler) getHomeRecommendations(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	req, err := http.NewRequest(http.MethodGet, recURL+"/api/v1/rec/home?"+c.Request.URL.RawQuery, nil)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func (h *Handler) getSimilarProducts(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	req, err := http.NewRequest(http.MethodGet, recURL+"/api/v1/rec/similar/"+c.Param("sku_id")+"?"+c.Request.URL.RawQuery, nil)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func (h *Handler) getColdStart(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	req, err := http.NewRequest(http.MethodGet, recURL+"/api/v1/rec/cold-start", nil)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func (h *Handler) getCartAddons(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "invalid request")
+		c.JSON(code, body)
+		return
+	}
+	req, err := http.NewRequest(http.MethodPost, recURL+"/api/v1/rec/cart-addon", bytes.NewReader(body))
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func (h *Handler) getPayCompleteRecommendations(c *gin.Context) {
+	recURL := config.GetEnv("RECOMMENDATION_URL", "http://localhost:8085")
+	req, err := http.NewRequest(http.MethodGet, recURL+"/api/v1/rec/pay-complete?"+c.Request.URL.RawQuery, nil)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "internal error")
+		c.JSON(code, body)
+		return
+	}
+	copyHeaders(req.Header, c.Request.Header)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil || resp == nil {
+		code, body := httpx.Fail(errx.CodeUpstreamUnavail, "recommendation service unavailable")
+		c.JSON(code, body)
+		return
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	c.Data(resp.StatusCode, "application/json", respBody)
+}
+
+func copyHeaders(dst, src http.Header) {
+	for k, v := range src {
+		for _, v2 := range v {
+			dst.Add(k, v2)
+		}
+	}
 }

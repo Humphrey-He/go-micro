@@ -16,7 +16,9 @@ import (
 	"go-micro/internal/order"
 	"go-micro/internal/payment"
 	"go-micro/internal/price"
+	"go-micro/internal/pricewatch"
 	"go-micro/internal/refund"
+	"go-micro/internal/social"
 	"go-micro/internal/task"
 	"go-micro/internal/user"
 	"go-micro/pkg/config"
@@ -25,6 +27,7 @@ import (
 	"go-micro/pkg/metrics"
 	"go-micro/pkg/middleware"
 	"go-micro/pkg/tracing"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -122,10 +125,18 @@ func Run() error {
 		logger.Error("mysql connect failed", zap.Error(err))
 		return err
 	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr: config.GetEnv("REDIS_ADDR", "localhost:6379"),
+		DB:   config.GetInt("REDIS_DB", 0),
+	})
+
+	socialSvc := social.NewService(dbx, rdb)
+	pricewatchSvc := pricewatch.NewService(dbx)
 	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})
 	svc := gateway.NewService(orderClient, userClient, invClient, taskClient, refundClient, activityClient, priceClient)
 	svc.SetPayment(paySvc)
-	h := gateway.NewHandler(svc)
+	h := gateway.NewHandler(svc, socialSvc, pricewatchSvc)
 	h.Register(r)
 
 	addr := config.GetEnv("GATEWAY_ADDR", ":8080")

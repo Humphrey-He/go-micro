@@ -1,17 +1,19 @@
 package algorithm
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/jmoiron/sqlx"
 )
 
 const (
-	WeightPurchase = 10
-	WeightCart     = 3
-	WeightFavorite = 5
-	DefaultTopN    = 100
-	DefaultPeriod  = "30d"
+	WeightPurchase    = 10
+	WeightCart        = 3
+	WeightFavorite    = 5
+	DefaultTopN       = 100
+	DefaultPeriod     = "30d"
+	DefaultPeriodDays = 30 // Number of days for the behavior analysis period in SQL interval
 )
 
 type Bestseller struct {
@@ -28,7 +30,7 @@ func NewBestseller(db *sqlx.DB) *Bestseller {
 
 // ComputeCategoryBestsellers calculates category bestseller rankings
 func (b *Bestseller) ComputeCategoryBestsellers() error {
-	rows, err := b.db.Query(`
+	query := fmt.Sprintf(`
 		SELECT
 			COALESCE(p.category_id, 0) as category_id,
 			b.sku_id,
@@ -39,10 +41,11 @@ func (b *Bestseller) ComputeCategoryBestsellers() error {
 			END) as score
 		FROM user_behavior_logs b
 		LEFT JOIN products p ON b.sku_id = p.sku_id
-		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)
+		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL %d DAY)
 			AND b.user_id > 0
 		GROUP BY COALESCE(p.category_id, 0), b.sku_id
-	`, WeightPurchase, WeightCart, WeightFavorite)
+	`, DefaultPeriodDays)
+	rows, err := b.db.Query(query, WeightPurchase, WeightCart, WeightFavorite)
 	if err != nil {
 		return err
 	}
@@ -83,7 +86,7 @@ func (b *Bestseller) ComputeCategoryBestsellers() error {
 
 // ComputeGlobalBestsellers calculates global bestseller rankings
 func (b *Bestseller) ComputeGlobalBestsellers() error {
-	rows, err := b.db.Query(`
+	query := fmt.Sprintf(`
 		SELECT
 			b.sku_id,
 			SUM(CASE b.behavior_type
@@ -92,12 +95,13 @@ func (b *Bestseller) ComputeGlobalBestsellers() error {
 				WHEN 'favorite' THEN ?
 			END) as score
 		FROM user_behavior_logs b
-		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL 30 DAY)
+		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL %d DAY)
 			AND b.user_id > 0
 		GROUP BY b.sku_id
 		ORDER BY score DESC
 		LIMIT ?
-	`, WeightPurchase, WeightCart, WeightFavorite, b.topN)
+	`, DefaultPeriodDays)
+	rows, err := b.db.Query(query, WeightPurchase, WeightCart, WeightFavorite, b.topN)
 	if err != nil {
 		return err
 	}

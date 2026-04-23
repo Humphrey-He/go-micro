@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Form, Input, Toast } from 'antd-mobile'
-import { login } from '@/api/auth'
+import { login, smsLogin, sendSms } from '@/api/auth'
 import { useAuthStore } from '@/stores/authStore'
 import SocialLoginButtons from '@/components/SocialLoginButtons'
 
@@ -10,6 +10,39 @@ export default function Login() {
   const { login: setAuth } = useAuthStore()
   const [loading, setLoading] = useState(false)
   const [loginType, setLoginType] = useState<'password' | 'sms'>('password')
+  const [smsCountdown, setSmsCountdown] = useState(0)
+  const [smsLoading, setSmsLoading] = useState(false)
+  const [form] = Form.useForm()
+
+  // 验证码倒计时
+  useEffect(() => {
+    if (smsCountdown > 0) {
+      const timer = setTimeout(() => setSmsCountdown(smsCountdown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [smsCountdown])
+
+  const handleSendSms = async () => {
+    const phone = form.getFieldValue('phone')
+    if (!phone) {
+      Toast.show('请输入手机号')
+      return
+    }
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+      Toast.show('请输入正确的手机号')
+      return
+    }
+    try {
+      setSmsLoading(true)
+      await sendSms({ phone, type: 'login' })
+      Toast.show('验证码已发送')
+      setSmsCountdown(60)
+    } catch (error) {
+      Toast.show('发送失败，请稍后重试')
+    } finally {
+      setSmsLoading(false)
+    }
+  }
 
   const handleSubmit = async (values: { account?: string; password?: string; phone?: string; code?: string }) => {
     try {
@@ -23,10 +56,16 @@ export default function Login() {
         Toast.show('登录成功')
         navigate('/')
       } else {
-        Toast.show('请使用密码登录')
+        const res = await smsLogin({
+          phone: values.phone || '',
+          code: values.code || '',
+        })
+        setAuth(res.token, res.user)
+        Toast.show('登录成功')
+        navigate('/')
       }
     } catch (error) {
-      Toast.show('登录失败，请检查账号密码')
+      Toast.show('登录失败，请检查账号信息')
     } finally {
       setLoading(false)
     }
@@ -77,7 +116,7 @@ export default function Login() {
           </Button>
         </Form>
       ) : (
-        <Form layout="vertical" onFinish={handleSubmit}>
+        <Form layout="vertical" onFinish={handleSubmit} form={form}>
           <Form.Item name="phone" rules={[{ required: true, message: '请输入手机号' }]}>
             <Input placeholder="手机号" className="py-3" />
           </Form.Item>
@@ -85,8 +124,11 @@ export default function Login() {
             name="code"
             rules={[{ required: true, message: '请输入验证码' }]}
             extra={
-              <span className="text-primary-500 text-sm">
-                获取验证码
+              <span
+                className={`text-sm ${smsCountdown > 0 ? 'text-gray-400' : 'text-primary-500'}`}
+                onClick={smsCountdown > 0 ? undefined : handleSendSms}
+              >
+                {smsCountdown > 0 ? `${smsCountdown}s后重发` : smsLoading ? '发送中...' : '获取验证码'}
               </span>
             }
           >

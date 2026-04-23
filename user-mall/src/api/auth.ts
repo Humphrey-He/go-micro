@@ -33,6 +33,15 @@ export interface SendSmsParams {
 export const sendSms = (params: SendSmsParams) =>
   post<{ expires_in: number }>('/auth/sms/send', params)
 
+// 验证码登录
+export interface SmsLoginParams {
+  phone: string
+  code: string
+}
+
+export const smsLogin = (params: SmsLoginParams) =>
+  post<LoginResponse>('/auth/sms/login', params)
+
 // 注册
 export interface RegisterParams {
   phone: string

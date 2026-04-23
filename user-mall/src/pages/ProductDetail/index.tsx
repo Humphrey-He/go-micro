@@ -8,6 +8,7 @@ import { PriceWatchButton } from '@/components/PriceWatchButton'
 import { PriceTrendChart } from '@/components/PriceTrendChart'
 import { getPriceHistory, getPriceWatchList, type PriceHistoryResponse } from '@/api/priceWatch'
 import { useCartStore } from '@/stores/cartStore'
+import { useBehaviorReport } from '@/hooks/useBehaviorReport'
 import type { ProductDetailResponse, Review } from '@/api/product'
 import type { RecommendationItem } from '@/api/recommendation'
 
@@ -27,6 +28,12 @@ export default function ProductDetail() {
   const [showPriceHistory, setShowPriceHistory] = useState(false)
 
   const { addItem } = useCartStore()
+
+  const { reportFavorite, reportCart } = useBehaviorReport({
+    skuId: skuId || '',
+    source: 'detail',
+    enabled: !!skuId,
+  })
 
   useEffect(() => {
     if (skuId) {
@@ -101,10 +108,12 @@ export default function ProductDetail() {
       if (product.is_favorite) {
         await removeFavorite(product.sku_id)
         setProduct({ ...product, is_favorite: false, favorite_count: product.favorite_count - 1 })
+        reportFavorite('remove')
         Toast.show('已取消收藏')
       } else {
         await addFavorite(product.sku_id)
         setProduct({ ...product, is_favorite: true, favorite_count: product.favorite_count + 1 })
+        reportFavorite('add')
         Toast.show('已添加收藏')
       }
     } catch (error) {
@@ -125,6 +134,7 @@ export default function ProductDetail() {
       shop_id: product.shop.shop_id,
       shop_name: product.shop.name,
     })
+    reportCart('add', quantity)
     Toast.show('已加入购物车')
   }
 

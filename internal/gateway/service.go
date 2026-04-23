@@ -541,7 +541,7 @@ func computeViewStatus(orderStatus, taskStatus, taskType, resvStatus string) (st
 }
 
 type LoginRequest struct {
-	Username string `json:"username"`
+	Account  string `json:"account"`   // 支持手机号或用户名
 	Password string `json:"password"`
 }
 

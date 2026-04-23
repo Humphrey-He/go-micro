@@ -4,11 +4,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"go-micro/pkg/db"
 )
 
 type PreferenceJob struct {
-	db *db.DB
+	db *sqlx.DB
 }
 
 func NewPreferenceJob() (*PreferenceJob, error) {

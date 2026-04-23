@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react'
-import { reportBehavior, BehaviorType, RecommendationSource } from '@/api/recommendation'
+import { reportBehavior, RecommendationSource } from '@/api/recommendation'
 
 interface UseBehaviorReportOptions {
   skuId: string
@@ -43,7 +43,7 @@ export function useBehaviorReport({ skuId, source, enabled = true }: UseBehavior
 
   // 上报收藏
   const reportFavorite = useCallback(
-    async (action: 'add' | 'remove') => {
+    async (_action: 'add' | 'remove') => {
       if (!enabled) return
       try {
         await reportBehavior({
@@ -60,7 +60,7 @@ export function useBehaviorReport({ skuId, source, enabled = true }: UseBehavior
 
   // 上报加购
   const reportCart = useCallback(
-    async (action: 'add' | 'remove', quantity: number = 1) => {
+    async (_action: 'add' | 'remove', _quantity: number = 1) => {
       if (!enabled) return
       try {
         await reportBehavior({
@@ -77,7 +77,7 @@ export function useBehaviorReport({ skuId, source, enabled = true }: UseBehavior
 
   // 上报购买
   const reportPurchase = useCallback(
-    async (orderId: string) => {
+    async (_orderId: string) => {
       if (!enabled) return
       try {
         await reportBehavior({

@@ -51,7 +51,7 @@ export default function RecommendationFeed({
         {title && <div className="font-bold text-lg mb-3">{title}</div>}
         <div className={layout === 'grid' ? 'grid grid-cols-2 gap-3' : 'space-y-2'}>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} animated="pulse" height={layout === 'grid' ? '180px' : '80px'} />
+            <Skeleton key={i} animated style={{ height: layout === 'grid' ? '180px' : '80px' }} />
           ))}
         </div>
       </div>

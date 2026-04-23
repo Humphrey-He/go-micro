@@ -1,7 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { Swiper } from 'antd-mobile'
 import { useState } from 'react'
-import ProductCard from '@/components/ProductCard'
 import RecommendationFeed from '@/components/RecommendationFeed'
 import { getHomeRecommendations } from '@/api/recommendation'
 

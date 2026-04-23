@@ -3,6 +3,7 @@ import { lazy, Suspense } from 'react'
 import { BasicLayout } from './layouts/BasicLayout'
 import { BlankLayout } from './layouts/BlankLayout'
 import Loading from './components/LoadingSkeleton'
+import ProtectedRoute from './components/ProtectedRoute'
 
 const Home = lazy(() => import('./pages/Home'))
 const ProductList = lazy(() => import('./pages/ProductList'))
@@ -92,9 +93,17 @@ function App() {
             key={route.path}
             path={route.path}
             element={
-              <route.layout>
-                <route.component />
-              </route.layout>
+              route.requiresAuth ? (
+                <ProtectedRoute>
+                  <route.layout>
+                    <route.component />
+                  </route.layout>
+                </ProtectedRoute>
+              ) : (
+                <route.layout>
+                  <route.component />
+                </route.layout>
+              )
             }
           />
         ))}

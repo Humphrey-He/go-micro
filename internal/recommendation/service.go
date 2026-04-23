@@ -2,6 +2,7 @@ package recommendation
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -11,14 +12,16 @@ import (
 type Service struct {
 	db    *sqlx.DB
 	redis *redis.Client
+	cache *Cache
 }
 
 const FiveMinuteBucket = 300
 
-func NewService(db *sqlx.DB, redis *redis.Client) *Service {
+func NewService(db *sqlx.DB, redis *redis.Client, cache *Cache) *Service {
 	return &Service{
 		db:    db,
 		redis: redis,
+		cache: cache,
 	}
 }
 
@@ -71,9 +74,34 @@ func (s *Service) GetSimilarProducts(ctx context.Context, skuID int64, scene str
 	if limit <= 0 {
 		limit = 10
 	}
+
+	// Try cache first
+	if s.cache != nil {
+		if items, ok := s.cache.GetSimilarProducts(ctx, skuID, scene); ok {
+			return &SimilarProductsResponse{Scene: scene, Items: items}, nil
+		}
+	}
+
+	// Cache miss - compute from database
+	// TODO: Implement actual DB query using ItemCF
+
+	items := []RecItem{} // Placeholder
+
+	// Enrich items (TODO: fetch real product info)
+	for i := range items {
+		if items[i].Name == "" {
+			items[i].Name = fmt.Sprintf("Product %d", items[i].SkuID)
+		}
+	}
+
+	// Update cache
+	if s.cache != nil && len(items) > 0 {
+		s.cache.SetSimilarProducts(ctx, skuID, scene, items)
+	}
+
 	return &SimilarProductsResponse{
 		Scene: scene,
-		Items: []RecItem{},
+		Items: items,
 	}, nil
 }
 
@@ -85,13 +113,40 @@ func (s *Service) GetHomeRecommendations(ctx context.Context, userID int64, page
 	if pageSize <= 0 {
 		pageSize = 20
 	}
-	return &HomeRecResponse{
-		Items:    []RecItem{},
+
+	// Try cache first
+	if s.cache != nil {
+		if resp, ok := s.cache.GetHomeRec(ctx, userID, page, pageSize); ok {
+			return resp, nil
+		}
+	}
+
+	// Cache miss - compute recommendations
+	// For now, return global bestsellers as fallback
+
+	items := []RecItem{} // TODO: Implement User-CF
+
+	// Enrich items
+	for i := range items {
+		if items[i].Name == "" {
+			items[i].Name = fmt.Sprintf("Product %d", items[i].SkuID)
+		}
+	}
+
+	resp := &HomeRecResponse{
+		Items:    items,
 		Page:     page,
 		PageSize: pageSize,
-		Total:    0,
+		Total:    len(items),
 		Source:   "global",
-	}, nil
+	}
+
+	// Update cache
+	if s.cache != nil && len(items) > 0 {
+		s.cache.SetHomeRec(ctx, userID, page, pageSize, resp)
+	}
+
+	return resp, nil
 }
 
 // GetColdStartData - Get cold start data

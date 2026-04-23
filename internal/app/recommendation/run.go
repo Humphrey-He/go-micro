@@ -72,7 +72,8 @@ func Run() error {
 		rabbit = nil
 	}
 
-	svc := recommendation.NewService(dbx, rdb)
+	cache := recommendation.NewCache(rdb)
+	svc := recommendation.NewService(dbx, rdb, cache)
 	h := recommendation.NewHandler(svc)
 
 	// Start MQ consumer if available

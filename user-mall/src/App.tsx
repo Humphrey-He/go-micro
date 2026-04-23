@@ -17,6 +17,8 @@ const OrderList = lazy(() => import('./pages/Orders/OrderList'))
 const OrderDetail = lazy(() => import('./pages/OrderDetail'))
 const Login = lazy(() => import('./pages/Auth/Login'))
 const Register = lazy(() => import('./pages/Auth/Register'))
+const SocialCallback = lazy(() => import('./pages/Auth/SocialCallback'))
+const SocialBind = lazy(() => import('./pages/Auth/SocialBind'))
 const UserProfile = lazy(() => import('./pages/User/Profile'))
 const AddressList = lazy(() => import('./pages/User/AddressList'))
 const AddressEdit = lazy(() => import('./pages/User/AddressEdit'))
@@ -54,6 +56,12 @@ const routes = [
   // 认证
   { path: '/login', component: Login, layout: BlankLayout },
   { path: '/register', component: Register, layout: BlankLayout },
+
+  // 社交登录回调
+  { path: '/auth/social/callback/wechat', component: SocialCallback, layout: BlankLayout },
+  { path: '/auth/social/callback/google', component: SocialCallback, layout: BlankLayout },
+  { path: '/auth/social/callback/apple', component: SocialCallback, layout: BlankLayout },
+  { path: '/auth/social/bind', component: SocialBind, layout: BlankLayout },
 
   // 个人中心
   { path: '/user', component: UserProfile, layout: BasicLayout, requiresAuth: true },

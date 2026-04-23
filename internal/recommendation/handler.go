@@ -29,6 +29,8 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.GET("/home", h.getHomeRecommendations)
 	api.GET("/cold-start", h.getColdStart)
 	api.POST("/preference", h.setPreference)
+	api.POST("/cart-addon", h.getCartAddons)
+	api.GET("/pay-complete", h.getPayCompleteRecommendations)
 }
 
 func (h *Handler) reportBehavior(c *gin.Context) {
@@ -139,4 +141,84 @@ func (h *Handler) setPreference(c *gin.Context) {
 
 type SetPreferenceRequest struct {
 	CategoryIDs []int64 `json:"category_ids" binding:"required,min=1"`
+}
+
+func (h *Handler) getCartAddons(c *gin.Context) {
+	var req struct {
+		CartSKUIDs []int64 `json:"cart_sku_ids" binding:"required"`
+		Limit      int      `json:"limit"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "invalid request")
+		c.JSON(code, body)
+		return
+	}
+
+	if req.Limit <= 0 {
+		req.Limit = 10
+	}
+
+	resp, err := h.svc.GetCartAddons(c.Request.Context(), req.CartSKUIDs, req.Limit)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "get cart addons failed")
+		c.JSON(code, body)
+		return
+	}
+
+	code, body := httpx.OK(resp)
+	c.JSON(code, body)
+}
+
+func (h *Handler) getPayCompleteRecommendations(c *gin.Context) {
+	purchasedStr := c.Query("purchased_sku_ids")
+	if purchasedStr == "" {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "purchased_sku_ids required")
+		c.JSON(code, body)
+		return
+	}
+
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	// Parse comma-separated SKU IDs
+	var purchasedSKUIDs []int64
+	for _, s := range splitString(purchasedStr) {
+		if id, err := strconv.ParseInt(s, 10, 64); err == nil {
+			purchasedSKUIDs = append(purchasedSKUIDs, id)
+		}
+	}
+
+	if len(purchasedSKUIDs) == 0 {
+		code, body := httpx.Fail(errx.CodeInvalidRequest, "no valid sku_ids")
+		c.JSON(code, body)
+		return
+	}
+
+	resp, err := h.svc.GetPayCompleteRecommendations(c.Request.Context(), purchasedSKUIDs, limit)
+	if err != nil {
+		code, body := httpx.Fail(errx.CodeInternalError, "get pay complete recommendations failed")
+		c.JSON(code, body)
+		return
+	}
+
+	code, body := httpx.OK(resp)
+	c.JSON(code, body)
+}
+
+func splitString(s string) []string {
+	var result []string
+	current := ""
+	for _, c := range s {
+		if c == ',' {
+			if current != "" {
+				result = append(result, current)
+			}
+			current = ""
+		} else {
+			current += string(c)
+		}
+	}
+	if current != "" {
+		result = append(result, current)
+	}
+	return result
 }

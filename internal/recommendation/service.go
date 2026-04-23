@@ -7,12 +7,16 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
+	"go-micro/internal/recommendation/algorithm"
 )
 
 type Service struct {
-	db    *sqlx.DB
-	redis *redis.Client
-	cache *Cache
+	db         *sqlx.DB
+	redis     *redis.Client
+	cache     *Cache
+	itemCF    *algorithm.ItemCF
+	userCF    *algorithm.UserCF
+	assoc     *algorithm.Association
 }
 
 const FiveMinuteBucket = 300
@@ -22,6 +26,9 @@ func NewService(db *sqlx.DB, redis *redis.Client, cache *Cache) *Service {
 		db:    db,
 		redis: redis,
 		cache: cache,
+		itemCF: algorithm.NewItemCF(db),
+		userCF: algorithm.NewUserCF(db),
+		assoc: algorithm.NewAssociation(db),
 	}
 }
 
@@ -167,4 +174,72 @@ func (s *Service) SetUserPreference(ctx context.Context, userID int64, categoryI
 		return nil
 	}
 	return nil
+}
+
+// CartAddonResponse - Cart add-on recommendation response
+type CartAddonResponse struct {
+	Items []RecItem `json:"items"`
+}
+
+// GetCartAddons - Get cart add-on recommendations
+func (s *Service) GetCartAddons(ctx context.Context, cartSKUIDs []int64, limit int) (*CartAddonResponse, error) {
+	if len(cartSKUIDs) == 0 {
+		return &CartAddonResponse{Items: []RecItem{}}, nil
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	algoItems, err := s.assoc.GetCartAddons(cartSKUIDs, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]RecItem, len(algoItems))
+	for i, item := range algoItems {
+		items[i] = RecItem{
+			SkuID:      item.SkuID,
+			Name:       item.Name,
+			Price:      item.Price,
+			Image:      item.Image,
+			Similarity: item.Similarity,
+			Reason:     item.Reason,
+		}
+	}
+
+	return &CartAddonResponse{Items: items}, nil
+}
+
+// PayCompleteResponse - Pay complete recommendation response
+type PayCompleteResponse struct {
+	Items []RecItem `json:"items"`
+}
+
+// GetPayCompleteRecommendations - Get recommendations after purchase
+func (s *Service) GetPayCompleteRecommendations(ctx context.Context, purchasedSKUIDs []int64, limit int) (*PayCompleteResponse, error) {
+	if len(purchasedSKUIDs) == 0 {
+		return &PayCompleteResponse{Items: []RecItem{}}, nil
+	}
+	if limit <= 0 {
+		limit = 10
+	}
+
+	algoItems, err := s.assoc.GetPayCompleteRecommendations(purchasedSKUIDs, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]RecItem, len(algoItems))
+	for i, item := range algoItems {
+		items[i] = RecItem{
+			SkuID:      item.SkuID,
+			Name:       item.Name,
+			Price:      item.Price,
+			Image:      item.Image,
+			Similarity: item.Similarity,
+			Reason:     item.Reason,
+		}
+	}
+
+	return &PayCompleteResponse{Items: items}, nil
 }

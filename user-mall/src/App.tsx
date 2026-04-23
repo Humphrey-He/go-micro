@@ -32,6 +32,7 @@ const Seckill = lazy(() => import('./pages/Activity/Seckill'))
 const CouponCenter = lazy(() => import('./pages/Activity/CouponCenter'))
 const CheckIn = lazy(() => import('./pages/Activity/CheckIn'))
 const GroupBuy = lazy(() => import('./pages/Activity/GroupBuy'))
+const PriceWatchList = lazy(() => import('./pages/PriceWatchList'))
 
 const routes = [
   // 首页 & 商品
@@ -73,6 +74,7 @@ const routes = [
   { path: '/messages', component: Messages, layout: BasicLayout, requiresAuth: true },
   { path: '/membership', component: Membership, layout: BasicLayout, requiresAuth: true },
   { path: '/settings', component: Settings, layout: BasicLayout, requiresAuth: true },
+  { path: '/price-watch', component: PriceWatchList, layout: BasicLayout, requiresAuth: true },
 
   // 活动
   { path: '/seckill', component: Seckill, layout: BasicLayout },

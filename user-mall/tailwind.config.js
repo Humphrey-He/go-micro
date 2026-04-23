@@ -28,6 +28,8 @@ export default {
         'float-fast': 'float 4s ease-in-out infinite',
         'pulse-slow': 'pulse-slow 4s ease-in-out infinite',
         'gradient-shift': 'gradient-shift 15s ease infinite',
+        'breathing-glow': 'breathing-glow 2s ease-in-out infinite',
+        'burst-particle': 'burst-particle 0.6s ease-out forwards',
       },
       keyframes: {
         float: {
@@ -42,6 +44,14 @@ export default {
         'gradient-shift': {
           '0%, 100%': { backgroundPosition: '0% 50%' },
           '50%': { backgroundPosition: '100% 50%' },
+        },
+        'breathing-glow': {
+          '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
+          '50%': { opacity: '0.6', transform: 'scale(1.1)' },
+        },
+        'burst-particle': {
+          '0%': { transform: 'translate(0, 0) scale(1)', opacity: '1' },
+          '100%': { transform: 'translate(var(--end-x), var(--end-y)) scale(0)', opacity: '0' },
         },
       },
     },

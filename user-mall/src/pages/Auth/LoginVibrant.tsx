@@ -1,5 +1,5 @@
 // user-mall/src/pages/Auth/LoginVibrant.tsx
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, Form, Input, Toast } from 'antd-mobile'
 import { login, smsLogin, sendSms } from '@/api/auth'
@@ -7,6 +7,39 @@ import { useAuthStore } from '@/stores/authStore'
 import SocialLoginButtons from '@/components/SocialLoginButtons'
 
 const isDesktop = () => window.innerWidth >= 768
+
+// Mak's Store Logo Component
+const MakLogo = ({ size = 'large' }: { size?: 'large' | 'small' }) => {
+  const sizeClasses = size === 'large' ? 'w-20 h-20 text-4xl' : 'w-10 h-10 text-xl'
+  return (
+    <div className={`${sizeClasses} relative flex items-center justify-center`}>
+      <svg viewBox="0 0 100 100" className="w-full h-full">
+        {/* Outer ring with gradient */}
+        <defs>
+          <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FF6B35" />
+            <stop offset="50%" stopColor="#FF4D94" />
+            <stop offset="100%" stopColor="#FF6B35" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+            <feMerge>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+        </defs>
+        {/* Background circle */}
+        <circle cx="50" cy="50" r="45" fill="url(#logoGradient)" filter="url(#glow)" />
+        {/* M letter */}
+        <text x="50" y="62" textAnchor="middle" fill="white" fontSize="40" fontWeight="bold" fontFamily="Arial, sans-serif">M</text>
+        {/* Decorative dots */}
+        <circle cx="20" cy="50" r="3" fill="#F7C948" />
+        <circle cx="80" cy="50" r="3" fill="#00D9C0" />
+      </svg>
+    </div>
+  )
+}
 
 // Floating particle component
 const FloatingParticle = ({ delay, size, x, y, color }: { delay: number; size: number; x: number; y: number; color: string }) => (
@@ -53,6 +86,47 @@ const AnimatedGradientBg = () => {
   )
 }
 
+// Click burst effect component
+const ClickBurst = ({ x, y, active }: { x: number; y: number; active: boolean }) => {
+  if (!active) return null
+
+  const particles = Array.from({ length: 12 }, (_, i) => {
+    const angle = (i / 12) * Math.PI * 2
+    const distance = 60 + Math.random() * 40
+    const endX = Math.cos(angle) * distance
+    const endY = Math.sin(angle) * distance
+    const color = ['#FF6B35', '#FF4D94', '#F7C948', '#00D9C0'][i % 4]
+    const size = 6 + Math.random() * 6
+
+    return (
+      <div
+        key={i}
+        className="absolute rounded-full animate-burst-particle"
+        style={{
+          width: size,
+          height: size,
+          background: color,
+          '--end-x': `${endX}px`,
+          '--end-y': `${endY}px`,
+        } as React.CSSProperties}
+      />
+    )
+  })
+
+  return (
+    <div
+      className="pointer-events-none fixed z-[9999]"
+      style={{
+        left: x,
+        top: y,
+        transform: 'translate(-50%, -50%)',
+      }}
+    >
+      {particles}
+    </div>
+  )
+}
+
 export default function LoginVibrant() {
   const navigate = useNavigate()
   const { login: setAuth } = useAuthStore()
@@ -63,6 +137,9 @@ export default function LoginVibrant() {
   const [tabStyle, setTabStyle] = useState({ left: '0%', width: '50%' })
   const [isDesktopView, setIsDesktopView] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [clickEffect, setClickEffect] = useState({ active: false, x: 0, y: 0 })
+  const [isHovered, setIsHovered] = useState(false)
+  const btnRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -99,22 +176,28 @@ export default function LoginVibrant() {
     }
   }
 
+  const handleLoginClick = (e: React.MouseEvent) => {
+    // Trigger burst effect at click position
+    setClickEffect({ active: true, x: e.clientX, y: e.clientY })
+    setTimeout(() => setClickEffect(prev => ({ ...prev, active: false })), 600)
+  }
+
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true)
       if (loginType === 'password') {
         const res = await login({ account: values.account || '', password: values.password || '' })
         setAuth(res.token, res.user)
-        Toast.show('登录成功')
+        Toast.show('🎉 登录成功，欢迎回来！')
         navigate('/')
       } else {
         const res = await smsLogin({ phone: values.phone || '', code: values.code || '' })
         setAuth(res.token, res.user)
-        Toast.show('登录成功')
+        Toast.show('🎉 登录成功，欢迎回来！')
         navigate('/')
       }
     } catch {
-      Toast.show('登录失败')
+      Toast.show('登录失败，请重试')
     } finally {
       setLoading(false)
     }
@@ -124,6 +207,7 @@ export default function LoginVibrant() {
   if (isDesktopView) {
     return (
       <div className="min-h-screen flex relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 50%, #FF6B35 100%)', backgroundSize: '200% 200%' }}>
+        <ClickBurst x={clickEffect.x} y={clickEffect.y} active={clickEffect.active} />
         <AnimatedGradientBg />
 
         {/* Floating particles */}
@@ -143,9 +227,15 @@ export default function LoginVibrant() {
           }}
         >
           <div className="text-center text-white">
-            <h1 className="text-6xl font-black mb-4 tracking-tight">
-              <span className="animate-bounce inline-block" style={{ animationDuration: '2s' }}>🎉</span> 兴趣电商
-            </h1>
+            {/* Logo and Brand Name */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <MakLogo size="large" />
+              <div className="text-left">
+                <h1 className="text-5xl font-black tracking-tight">Mak's Store</h1>
+                <p className="text-lg text-white/80 font-light">探索品质生活</p>
+              </div>
+            </div>
+
             <p className="text-2xl text-white/90 mb-10 font-light">发现你的热爱，好物即刻享</p>
             <div className="flex gap-12 justify-center text-white/95">
               <div className="text-center">
@@ -253,22 +343,44 @@ export default function LoginVibrant() {
               </>
             )}
 
-            <Button
-              block
-              type="submit"
-              loading={loading}
-              className="h-14 rounded-2xl text-base font-bold shadow-md hover:shadow-xl transition-shadow"
-              style={{
-                background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)',
-                border: 'none',
-              }}
+            {/* Breathing gradient login button */}
+            <div
+              ref={btnRef}
+              className="relative"
+              style={{ cursor: isHovered ? 'pointer' : 'default' }}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
             >
-              {loading ? (
-                <span className="text-white/90">登录中...</span>
-              ) : (
-                <span className="text-white font-bold">立即登录</span>
-              )}
-            </Button>
+              {/* Breathing glow effect */}
+              <div
+                className="absolute inset-0 rounded-2xl animate-breathing-glow"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 50%, #FF6B35 100%)',
+                  filter: 'blur(15px)',
+                  opacity: isHovered ? 0.6 : 0.3,
+                  transform: 'scale(1.05)',
+                }}
+              />
+
+              <Button
+                block
+                type="submit"
+                loading={loading}
+                onClick={handleLoginClick}
+                className="relative h-14 rounded-2xl text-base font-bold shadow-md hover:shadow-xl transition-all duration-300 animate-gradient-shift"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)',
+                  border: 'none',
+                  backgroundSize: '200% 200%',
+                }}
+              >
+                {loading ? (
+                  <span className="text-white/90">登录中...</span>
+                ) : (
+                  <span className="text-white font-bold relative z-10">✨ 立即登录 ✨</span>
+                )}
+              </Button>
+            </div>
           </Form>
 
           <div className="mt-8">
@@ -304,10 +416,14 @@ export default function LoginVibrant() {
   // Mobile Layout
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)' }}>
+      <ClickBurst x={clickEffect.x} y={clickEffect.y} active={clickEffect.active} />
       <AnimatedGradientBg />
 
       <div className="p-4 flex justify-between items-center relative z-10">
-        <div className="text-white font-bold">🎉 兴趣电商</div>
+        <div className="flex items-center gap-2 text-white">
+          <MakLogo size="small" />
+          <span className="font-bold text-lg">Mak's Store</span>
+        </div>
         <button onClick={() => navigate('/')} className="text-white/80 text-sm px-4 py-2 rounded-full bg-white/20 backdrop-blur-sm">
           跳过
         </button>
@@ -322,7 +438,9 @@ export default function LoginVibrant() {
         }}
       >
         <div className="text-center text-white mb-8">
-          <h1 className="text-4xl font-black mb-2">🎉 兴趣电商</h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <MakLogo size="large" />
+          </div>
           <p className="text-white/80">发现你的热爱</p>
         </div>
 
@@ -395,18 +513,31 @@ export default function LoginVibrant() {
             </div>
           )}
 
-          <Button
-            block
-            type="submit"
-            loading={loading}
-            className="h-12 rounded-xl font-bold text-base"
-            style={{
-              background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)',
-              border: 'none',
-            }}
-          >
-            <span className="text-white">立即登录</span>
-          </Button>
+          {/* Breathing gradient login button for mobile */}
+          <div className="relative">
+            <div
+              className="absolute inset-0 rounded-xl animate-breathing-glow"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)',
+                filter: 'blur(10px)',
+                opacity: 0.4,
+                transform: 'scale(1.02)',
+              }}
+            />
+            <Button
+              block
+              type="submit"
+              loading={loading}
+              onClick={handleLoginClick}
+              className="relative h-12 rounded-xl font-bold text-base"
+              style={{
+                background: 'linear-gradient(135deg, #FF6B35 0%, #FF4D94 100%)',
+                border: 'none',
+              }}
+            >
+              <span className="text-white">✨ 立即登录 ✨</span>
+            </Button>
+          </div>
         </Form>
 
         <div className="mt-6">

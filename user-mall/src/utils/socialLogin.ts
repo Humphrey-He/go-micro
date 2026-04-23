@@ -105,3 +105,18 @@ export const appleLogin = () => {
 
   window.location.href = authUrl
 }
+
+// QQ 登录
+export const qqLogin = (callbackURL: string) => {
+  const appId = import.meta.env.VITE_QQ_APP_ID
+  if (!appId) {
+    throw new Error('QQ_APP_ID not configured')
+  }
+  const redirectURI = encodeURIComponent(callbackURL)
+  const scope = 'get_user_info'
+  const state = crypto.randomUUID()
+
+  const authURL = `https://graph.qq.com/oauth2.0/authorize?response_type=code&client_id=${appId}&redirect_uri=${redirectURI}&scope=${scope}&state=${state}`
+
+  window.location.href = authURL
+}

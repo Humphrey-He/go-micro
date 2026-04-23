@@ -1,10 +1,11 @@
 import { Toast } from 'antd-mobile'
-import { wechatLogin, googleLogin, appleLogin } from '@/utils/socialLogin'
+import { wechatLogin, googleLogin, appleLogin, qqLogin } from '@/utils/socialLogin'
 
 interface SocialLoginButtonsProps {
   onWechatClick?: () => void
   onGoogleClick?: () => void
   onAppleClick?: () => void
+  onQQClick?: () => void
   layout?: 'horizontal' | 'vertical'
 }
 
@@ -29,10 +30,20 @@ const AppleIcon = () => (
   </svg>
 )
 
+const QQIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-6 h-6">
+    <path fill="#12B7F5" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+    <path fill="#12B7F5" d="M12 6c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm0 10c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4z"/>
+    <circle fill="#12B7F5" cx="8" cy="11" r="1.5"/>
+    <circle fill="#12B7F5" cx="16" cy="11" r="1.5"/>
+  </svg>
+)
+
 export default function SocialLoginButtons({
   onWechatClick,
   onGoogleClick,
   onAppleClick,
+  onQQClick,
   layout = 'horizontal'
 }: SocialLoginButtonsProps) {
   const handleWechat = () => {
@@ -71,6 +82,18 @@ export default function SocialLoginButtons({
     }
   }
 
+  const handleQQ = () => {
+    if (onQQClick) {
+      onQQClick()
+    } else {
+      try {
+        qqLogin(`${window.location.origin}/auth/social/callback/qq`)
+      } catch {
+        Toast.show('QQ 登录暂不可用')
+      }
+    }
+  }
+
   return (
     <div className={`flex ${layout === 'horizontal' ? 'justify-center gap-4' : 'flex-col gap-3'}`}>
       <button
@@ -95,6 +118,14 @@ export default function SocialLoginButtons({
         title="Apple 登录"
       >
         <AppleIcon />
+      </button>
+
+      <button
+        onClick={handleQQ}
+        className="w-12 h-12 rounded-full bg-[#12B7F5] flex items-center justify-center text-white shadow-md hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
+        title="QQ 登录"
+      >
+        <QQIcon />
       </button>
     </div>
   )

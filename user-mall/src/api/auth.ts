@@ -58,7 +58,7 @@ export const logout = () => post<void>('/auth/logout')
 
 // ============ 社交登录相关 ============
 
-export type SocialProvider = 'wechat' | 'google' | 'apple'
+export type SocialProvider = 'wechat' | 'google' | 'apple' | 'qq'
 
 // 社交登录响应
 export interface SocialLoginResponse {

@@ -3,14 +3,16 @@ package recommendation
 import (
 	"context"
 	"log"
+
+	"go-micro/pkg/mq"
 )
 
 type Consumer struct {
 	svc    *Service
-	rabbit interface{}
+	rabbit *mq.Rabbit
 }
 
-func NewConsumer(svc *Service, rabbit interface{}) *Consumer {
+func NewConsumer(svc *Service, rabbit *mq.Rabbit) *Consumer {
 	return &Consumer{
 		svc:    svc,
 		rabbit: rabbit,

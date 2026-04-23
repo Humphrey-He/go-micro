@@ -4,6 +4,9 @@ import { Swiper, Toast, Button, Tag } from 'antd-mobile'
 import { HeartOutlined, ShoppingCartOutlined, StarFilled } from '@ant-design/icons'
 import { getProductDetail, getProductReviews, addFavorite, removeFavorite } from '@/api/product'
 import { getSimilarRecommendations } from '@/api/recommendation'
+import { PriceWatchButton } from '@/components/PriceWatchButton'
+import { PriceTrendChart } from '@/components/PriceTrendChart'
+import { getPriceHistory, getPriceWatchList, type PriceHistoryResponse } from '@/api/priceWatch'
 import { useCartStore } from '@/stores/cartStore'
 import type { ProductDetailResponse, Review } from '@/api/product'
 import type { RecommendationItem } from '@/api/recommendation'
@@ -19,6 +22,9 @@ export default function ProductDetail() {
   const [activeTab, setActiveTab] = useState<'detail' | 'review'>('detail')
   const [similarScene, setSimilarScene] = useState<'view' | 'purchase'>('view')
   const [similarProducts, setSimilarProducts] = useState<RecommendationItem[]>([])
+  const [isWatching, setIsWatching] = useState(false)
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryResponse | null>(null)
+  const [showPriceHistory, setShowPriceHistory] = useState(false)
 
   const { addItem } = useCartStore()
 
@@ -41,6 +47,32 @@ export default function ProductDetail() {
       fetchSimilar()
     }
   }, [skuId, similarScene])
+
+  useEffect(() => {
+    // 检查是否已在监控中
+    const checkWatchStatus = async () => {
+      try {
+        const res = await getPriceWatchList({ page: 1, page_size: 50, status: 'active' })
+        const watching = res.items?.some(item => item.sku_id === skuId)
+        setIsWatching(watching)
+      } catch (err) {
+        console.error('Failed to check watch status:', err)
+      }
+    }
+
+    // 获取价格走势
+    const fetchPriceHistory = async () => {
+      try {
+        const res = await getPriceHistory(skuId!, '30d')
+        setPriceHistory(res)
+      } catch (err) {
+        console.error('Failed to fetch price history:', err)
+      }
+    }
+
+    checkWatchStatus()
+    fetchPriceHistory()
+  }, [skuId])
 
   const loadData = async () => {
     if (!skuId) return
@@ -100,6 +132,8 @@ export default function ProductDetail() {
     handleAddToCart()
     navigate('/checkout')
   }
+
+  const formatPrice = (price: number) => `¥${(price / 100).toFixed(2)}`
 
   if (loading || !product) {
     return (
@@ -169,6 +203,45 @@ export default function ProductDetail() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* 价格走势 */}
+      {priceHistory && priceHistory.price_points.length > 0 && (
+        <div className="mt-2 bg-white">
+          <div
+            className="p-3 flex items-center justify-between"
+            onClick={() => setShowPriceHistory(!showPriceHistory)}
+          >
+            <span className="font-bold">价格走势</span>
+            <span className="text-gray-400">
+              {showPriceHistory ? '收起' : '查看'}
+            </span>
+          </div>
+          {showPriceHistory && (
+            <div className="px-3 pb-3">
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-gray-500">
+                  最高: <span className="text-red-500">{formatPrice(priceHistory.highest_price)}</span>
+                </span>
+                <span className="text-gray-500">
+                  最低: <span className="text-green-500">{formatPrice(priceHistory.lowest_price)}</span>
+                </span>
+                <span className="text-gray-500">
+                  平均: <span>{formatPrice(priceHistory.average_price)}</span>
+                </span>
+              </div>
+              <PriceTrendChart
+                pricePoints={priceHistory.price_points}
+                currentPrice={priceHistory.current_price}
+                width={320}
+                height={160}
+              />
+              <div className="mt-2 text-xs text-gray-400 text-center">
+                数据来源：近30天价格记录
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -306,6 +379,13 @@ export default function ProductDetail() {
       {/* 底部操作栏 */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t flex items-center justify-around p-3 safe-area-bottom">
         <div className="flex items-center gap-4">
+          <PriceWatchButton
+            skuId={skuId!}
+            productName={product.title}
+            currentPrice={product.price}
+            isWatching={isWatching}
+            onWatchChange={setIsWatching}
+          />
           <div className="flex flex-col items-center" onClick={handleToggleFavorite}>
             <HeartOutlined className={`text-xl ${product.is_favorite ? 'text-red-500' : 'text-gray-400'}`} />
             <span className="text-xs text-gray-500">收藏</span>

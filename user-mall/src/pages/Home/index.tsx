@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { Swiper } from 'antd-mobile'
 import { useState } from 'react'
 import ProductCard from '@/components/ProductCard'
+import RecommendationFeed from '@/components/RecommendationFeed'
+import { getHomeRecommendations } from '@/api/recommendation'
 
 // 简化商品类型
 interface SimpleProduct {
@@ -131,18 +133,13 @@ export default function Home() {
         </div>
       </div>
 
-      {/* 商品推荐 */}
-      <div className="mt-2 bg-white p-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="font-bold text-lg">为你推荐</span>
-          <span className="text-sm text-gray-400">根据你的喜好</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {products.slice(0, 4).map((product) => (
-            <ProductCard key={product.sku_id} product={product as any} />
-          ))}
-        </div>
-      </div>
+      {/* 为你推荐 */}
+<RecommendationFeed
+  api={() => getHomeRecommendations({ page: 1, page_size: 6 })}
+  layout="grid"
+  title="为你推荐"
+  emptyText="暂无推荐，看看热销商品"
+/>
 
       {/* 热销榜单 */}
       <div className="mt-2 bg-white p-4">

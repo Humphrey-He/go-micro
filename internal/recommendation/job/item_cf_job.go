@@ -4,22 +4,18 @@ import (
 	"log"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"go-micro/internal/recommendation/algorithm"
-	"go-micro/pkg/db"
 )
 
 type ItemCFJob struct {
 	itemCF *algorithm.ItemCF
 }
 
-func NewItemCFJob() (*ItemCFJob, error) {
-	dbx, err := db.NewMySQL()
-	if err != nil {
-		return nil, err
-	}
+func NewItemCFJob(db *sqlx.DB) *ItemCFJob {
 	return &ItemCFJob{
-		itemCF: algorithm.NewItemCF(dbx),
-	}, nil
+		itemCF: algorithm.NewItemCF(db),
+	}
 }
 
 func (j *ItemCFJob) Run() error {

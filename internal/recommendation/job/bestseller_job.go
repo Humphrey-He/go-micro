@@ -4,22 +4,18 @@ import (
 	"log"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"go-micro/internal/recommendation/algorithm"
-	"go-micro/pkg/db"
 )
 
 type BestsellerJob struct {
 	bs *algorithm.Bestseller
 }
 
-func NewBestsellerJob() (*BestsellerJob, error) {
-	dbx, err := db.NewMySQL()
-	if err != nil {
-		return nil, err
-	}
+func NewBestsellerJob(db *sqlx.DB) *BestsellerJob {
 	return &BestsellerJob{
-		bs: algorithm.NewBestseller(dbx),
-	}, nil
+		bs: algorithm.NewBestseller(db),
+	}
 }
 
 func (j *BestsellerJob) Run() error {

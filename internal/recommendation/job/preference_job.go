@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"go-micro/pkg/db"
 )
 
 const (
@@ -19,12 +18,8 @@ type PreferenceJob struct {
 	db *sqlx.DB
 }
 
-func NewPreferenceJob() (*PreferenceJob, error) {
-	dbx, err := db.NewMySQL()
-	if err != nil {
-		return nil, err
-	}
-	return &PreferenceJob{db: dbx}, nil
+func NewPreferenceJob(db *sqlx.DB) *PreferenceJob {
+	return &PreferenceJob{db: db}
 }
 
 func (j *PreferenceJob) Run() error {

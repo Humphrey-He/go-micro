@@ -76,6 +76,10 @@ func Run() error {
 	svc := recommendation.NewService(dbx, rdb, cache)
 	h := recommendation.NewHandler(svc)
 
+	// Start scheduler for offline jobs
+	scheduler := recommendation.NewScheduler(dbx)
+	go scheduler.Start(ctx)
+
 	// Start MQ consumer if available
 	if rabbit != nil {
 		consumer := recommendation.NewConsumer(svc, rabbit)

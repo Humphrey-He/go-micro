@@ -553,9 +553,23 @@ func (s *Service) ListOrders(req ListOrdersRequest) (*ListOrdersResponse, error)
 	query := fmt.Sprintf(`
 		SELECT o.order_id, o.biz_no, o.user_id, o.status, o.total_amount,
 		       o.created_at, o.updated_at,
-		       (SELECT COUNT(1) FROM order_items WHERE order_id = o.order_id) as item_count,
-		       COALESCE((SELECT status FROM payments WHERE order_id = o.order_id LIMIT 1), '') as payment_status
+		       COALESCE(ic.item_count, 0) as item_count,
+		       COALESCE(p.status, '') as payment_status
 		FROM orders o
+		LEFT JOIN (
+		    SELECT order_id, COUNT(1) as item_count
+		    FROM order_items
+		    GROUP BY order_id
+		) ic ON o.order_id = ic.order_id
+		LEFT JOIN (
+		    SELECT o2.order_id, p2.status
+		    FROM (
+		        SELECT order_id, MAX(id) as max_id
+		        FROM payments
+		        GROUP BY order_id
+		    ) o2
+		    JOIN payments p2 ON o2.max_id = p2.id
+		) p ON o.order_id = p.order_id
 		%s
 		ORDER BY %s
 		LIMIT ? OFFSET ?

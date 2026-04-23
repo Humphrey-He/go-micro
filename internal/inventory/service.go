@@ -51,27 +51,10 @@ func (s *Service) Reserve(req ReserveRequest) (ReserveResponse, error) {
 		return ReserveResponse{}, errors.New("invalid request")
 	}
 
-	// Distributed lock per SKU to avoid oversell in high concurrency.
-	locks := make([]string, 0, len(req.Items))
-	for _, it := range req.Items {
-		lockKey := "lock:inventory:" + it.SkuID
-		locked, _ := cache.TryLock(s.ctx, s.cache.rdb, lockKey, 5*time.Second)
-		if !locked {
-			for _, lk := range locks {
-				_ = cache.Unlock(s.ctx, s.cache.rdb, lk)
-			}
-			return ReserveResponse{}, ErrBusy
-		}
-		locks = append(locks, lockKey)
-	}
-	defer func() {
-		for _, lk := range locks {
-			_ = cache.Unlock(s.ctx, s.cache.rdb, lk)
-		}
-	}()
-
 	reservedID := uuid.NewString()
 	err := db.Tx(s.db, func(tx *sqlx.Tx) error {
+		// FOR UPDATE lock per SKU - held for duration of transaction, auto-released on commit/rollback.
+		// This prevents concurrent transactions from modifying the same SKU simultaneously.
 		for _, it := range req.Items {
 			var inv Inventory
 			if err := tx.Get(&inv, `SELECT * FROM inventory WHERE sku_id = ? FOR UPDATE`, it.SkuID); err != nil {

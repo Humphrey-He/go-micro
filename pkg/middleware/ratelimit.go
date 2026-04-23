@@ -14,10 +14,26 @@ type tokenBucket struct {
 	last   time.Time
 }
 
-var (
-	rlMu      sync.Mutex
-	rlBuckets = map[string]*tokenBucket{}
-)
+const shardCount = 256
+
+type shard struct {
+	mu      sync.Mutex
+	buckets map[string]*tokenBucket
+}
+
+type ratelimitStore struct {
+	shards []shard
+}
+
+var rls = func() *ratelimitStore {
+	s := &ratelimitStore{
+		shards: make([]shard, shardCount),
+	}
+	for i := range s.shards {
+		s.shards[i].buckets = make(map[string]*tokenBucket)
+	}
+	return s
+}()
 
 func RateLimit() gin.HandlerFunc {
 	qps := float64(getInt("RATE_LIMIT_QPS", 100))
@@ -41,12 +57,13 @@ func RateLimit() gin.HandlerFunc {
 
 func allow(key string, qps, burst float64) bool {
 	now := time.Now()
-	rlMu.Lock()
-	defer rlMu.Unlock()
+	shard := rls.getShard(key)
+	shard.mu.Lock()
+	defer shard.mu.Unlock()
 
-	b, ok := rlBuckets[key]
+	b, ok := shard.buckets[key]
 	if !ok {
-		rlBuckets[key] = &tokenBucket{tokens: burst - 1, last: now}
+		shard.buckets[key] = &tokenBucket{tokens: burst - 1, last: now}
 		return true
 	}
 	elapsed := now.Sub(b.last).Seconds()
@@ -60,6 +77,20 @@ func allow(key string, qps, burst float64) bool {
 	}
 	b.tokens -= 1
 	return true
+}
+
+func (s *ratelimitStore) getShard(key string) *shard {
+	h := fnvHash(key)
+	return &s.shards[h%shardCount]
+}
+
+func fnvHash(s string) uint32 {
+	h := uint32(2166136261)
+	for i := 0; i < len(s); i++ {
+		h ^= uint32(s[i])
+		h *= 16777619
+	}
+	return h
 }
 
 func getInt(key string, def int) int {

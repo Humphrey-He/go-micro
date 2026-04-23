@@ -16,9 +16,9 @@ func NewMySQL() (*sqlx.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	db.SetMaxOpenConns(config.GetInt("MYSQL_MAX_OPEN_CONNS", 50))
-	db.SetMaxIdleConns(config.GetInt("MYSQL_MAX_IDLE_CONNS", 10))
-	db.SetConnMaxLifetime(time.Duration(config.GetInt("MYSQL_CONN_MAX_LIFETIME_SECONDS", 300)) * time.Second)
+	db.SetMaxOpenConns(config.GetInt("MYSQL_MAX_OPEN_CONNS", 100))
+	db.SetMaxIdleConns(config.GetInt("MYSQL_MAX_IDLE_CONNS", 20))
+	db.SetConnMaxLifetime(time.Duration(config.GetInt("MYSQL_CONN_MAX_LIFETIME_SECONDS", 600)) * time.Second)
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}

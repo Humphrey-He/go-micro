@@ -56,7 +56,7 @@ export const BasicLayout: React.FC = () => {
         trigger={null}
         width={220}
         style={{
-          borderRight: '1px solid #e5e7eb',
+          borderRight: '1px solid #e2e8f0',
           background: '#fff',
           position: 'fixed',
           left: floatMode ? 0 : -220,
@@ -65,7 +65,7 @@ export const BasicLayout: React.FC = () => {
           zIndex: 100,
           transition: 'left 250ms cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'auto',
-          boxShadow: floatMode ? '2px 0 8px rgba(0,0,0,0.1)' : 'none',
+          boxShadow: floatMode ? '2px 0 12px rgba(0,0,0,0.08)' : 'none',
         }}
       >
         <div
@@ -74,11 +74,24 @@ export const BasicLayout: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderBottom: '1px solid #e5e7eb',
-            background: 'linear-gradient(135deg, #1677ff 0%, #0958d9 100%)',
+            borderBottom: '1px solid #e2e8f0',
+            background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
         >
-          <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>
+          {/* Subtle accent line */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+            }}
+          />
+          <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
             订单管理系统
           </span>
         </div>
@@ -91,7 +104,7 @@ export const BasicLayout: React.FC = () => {
         width={220}
         collapsedWidth={64}
         style={{
-          borderRight: '1px solid #e5e7eb',
+          borderRight: '1px solid #e2e8f0',
           background: '#fff',
           position: 'fixed',
           left: 0,
@@ -108,17 +121,33 @@ export const BasicLayout: React.FC = () => {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderBottom: '1px solid #e5e7eb',
-            background: 'linear-gradient(135deg, #1677ff 0%, #0958d9 100%)',
+            borderBottom: '1px solid #e2e8f0',
+            background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+            transition: 'all 250ms ease',
           }}
         >
+          {/* Subtle accent line */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 3,
+              background: 'linear-gradient(90deg, #3b82f6, #1d4ed8)',
+              opacity: collapsed ? 0 : 1,
+              transition: 'opacity 200ms ease',
+            }}
+          />
           {!collapsed && (
-            <span style={{ fontSize: 17, fontWeight: 700, color: '#fff', letterSpacing: 0.5 }}>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', letterSpacing: 1 }}>
               订单管理系统
             </span>
           )}
           {collapsed && (
-            <span style={{ fontSize: 17, fontWeight: 700, color: '#fff' }}>订</span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>订</span>
           )}
         </div>
 
@@ -131,7 +160,7 @@ export const BasicLayout: React.FC = () => {
           <div
             style={{
               padding: '12px 8px',
-              borderTop: '1px solid #e5e7eb',
+              borderTop: '1px solid #e2e8f0',
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
@@ -145,11 +174,11 @@ export const BasicLayout: React.FC = () => {
                 icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
                 onClick={toggleCollapse}
                 style={{
-                  color: '#1677ff',
+                  color: '#64748b',
                   background: 'transparent',
-                  transition: 'all 150ms ease',
+                  transition: 'all 200ms ease',
                 }}
-                className="collapse-btn"
+                className="admin-collapse-btn"
               />
             </Tooltip>
           </div>
@@ -170,10 +199,11 @@ export const BasicLayout: React.FC = () => {
             display: 'flex',
             justifyContent: 'flex-end',
             alignItems: 'center',
-            borderBottom: '1px solid #e5e7eb',
+            borderBottom: '1px solid #e2e8f0',
             position: 'sticky',
             top: 0,
             zIndex: 99,
+            boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
           }}
         >
           <Space size={16}>
@@ -182,22 +212,22 @@ export const BasicLayout: React.FC = () => {
               <Space
                 style={{
                   cursor: 'pointer',
-                  padding: '4px 8px',
+                  padding: '6px 12px',
                   borderRadius: 8,
-                  transition: 'background 0.2s',
+                  transition: 'all 200ms ease',
+                  border: '1px solid transparent',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = '#f3f4f6')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                className="admin-user-menu"
               >
-                <Avatar size={32} style={{ background: '#1677ff' }} icon={<UserOutlined />} />
-                <span style={{ fontWeight: 500, fontSize: 14 }}>{userInfo?.username || 'Admin'}</span>
+                <Avatar size={32} style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)' }} icon={<UserOutlined />} />
+                <span style={{ fontWeight: 500, fontSize: 14, color: '#374151' }}>{userInfo?.username || 'Admin'}</span>
               </Space>
             </Dropdown>
           </Space>
         </Header>
         <Content
           style={{
-            background: '#f5f5f5',
+            background: '#f8fafc',
             minHeight: 'calc(100vh - 64px)',
             position: 'relative',
           }}
@@ -210,7 +240,8 @@ export const BasicLayout: React.FC = () => {
                 left: 0,
                 right: 0,
                 height: 3,
-                background: 'linear-gradient(90deg, #1677ff, #0958d9)',
+                background: 'linear-gradient(90deg, #3b82f6, #1d4ed8, #3b82f6)',
+                backgroundSize: '200% 100%',
                 zIndex: 100,
                 animation: 'routeLoading 1s ease-in-out infinite',
               }}
@@ -218,7 +249,7 @@ export const BasicLayout: React.FC = () => {
           )}
           <div
             style={{
-              opacity: isRouteChanging ? 0.8 : 1,
+              opacity: isRouteChanging ? 0.85 : 1,
               transition: 'opacity 150ms ease-out',
             }}
           >
@@ -229,18 +260,22 @@ export const BasicLayout: React.FC = () => {
 
       {/* 添加全局样式 */}
       <style>{`
-        .collapse-btn:hover {
-          background: #e6f4ff !important;
-          color: #0958d9 !important;
+        .admin-collapse-btn:hover {
+          background: #f1f5f9 !important;
+          color: #1e3a5f !important;
         }
         .float-btn:hover {
           transform: scale(1.05);
-          box-shadow: 0 6px 20px rgba(22, 119, 255, 0.4) !important;
+          box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35) !important;
+        }
+        .admin-user-menu:hover {
+          background: #f8fafc !important;
+          border-color: #e2e8f0 !important;
         }
         @keyframes routeLoading {
-          0% { width: 0%; opacity: 1; }
-          50% { width: 70%; opacity: 1; }
-          100% { width: 100%; opacity: 0; }
+          0% { background-position: 100% 0; }
+          50% { background-position: 0% 0; }
+          100% { background-position: 100% 0; }
         }
       `}</style>
     </Layout>

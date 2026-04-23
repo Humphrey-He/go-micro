@@ -2,51 +2,54 @@ package middleware
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"io"
-	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go-micro/pkg/config"
 )
 
-// idempotencyEntry stores the state of an idempotency key
-type idempotencyEntry struct {
+type responseData struct {
 	ResponseCode int
 	ResponseBody []byte
-	CreatedAt    time.Time
-	Expiry       time.Time
 }
 
-// idempotencyStore holds idempotency keys in memory
 type idempotencyStore struct {
-	mu     sync.RWMutex
-	keys   map[string]*idempotencyEntry
-	ttl    time.Duration
-	clean  chan struct{}
+	rdb *redis.Client
+	ttl time.Duration
 }
 
 var (
-	idempStore = &idempotencyStore{
-		keys:  make(map[string]*idempotencyEntry),
-		ttl:   24 * time.Hour,
-		clean: make(chan struct{}),
-	}
+	idempStore *idempotencyStore
+	redisOnce  bool
 )
 
-// Idempotency returns a middleware that ensures operations are idempotent
-// Prevents duplicate order creation, payment processing, etc.
+func InitIdempotency(rdb *redis.Client) {
+	idempStore = &idempotencyStore{
+		rdb: rdb,
+		ttl: 24 * time.Hour,
+	}
+}
+
 func Idempotency() gin.HandlerFunc {
+	if idempStore == nil || idempStore.rdb == nil {
+		// Fallback to no-op if Redis not initialized
+		return func(c *gin.Context) {
+			c.Next()
+		}
+	}
+
 	ttlSeconds := config.GetEnv("IDEMPOTENCY_TTL_SECONDS", "86400")
 	ttl := time.Duration(parseInt(ttlSeconds)) * time.Second
 	if ttl <= 0 {
 		ttl = 24 * time.Hour
 	}
 	idempStore.ttl = ttl
-
-	go idempStore.cleanupExpired()
 
 	return func(c *gin.Context) {
 		method := c.Request.Method
@@ -60,7 +63,8 @@ func Idempotency() gin.HandlerFunc {
 			idempKey = generateRequestHash(c)
 		}
 
-		if existing := idempStore.get(idempKey); existing != nil {
+		ctx := context.Background()
+		if existing := idempStore.get(ctx, idempKey); existing != nil {
 			c.Writer.Header().Set("X-Idempotency-Key", idempKey)
 			c.Writer.Header().Set("X-Idempotency-Replayed", "true")
 			c.Data(existing.ResponseCode, "application/json", existing.ResponseBody)
@@ -68,10 +72,18 @@ func Idempotency() gin.HandlerFunc {
 			return
 		}
 
-		idempStore.setPending(idempKey)
+		if !idempStore.setPending(ctx, idempKey) {
+			existing := idempStore.get(ctx, idempKey)
+			if existing != nil {
+				c.Writer.Header().Set("X-Idempotency-Key", idempKey)
+				c.Writer.Header().Set("X-Idempotency-Replayed", "true")
+				c.Data(existing.ResponseCode, "application/json", existing.ResponseBody)
+				c.Abort()
+				return
+			}
+		}
 		c.Writer.Header().Set("X-Idempotency-Key", idempKey)
 
-		// Create response buffer to capture response
 		buf := &bytes.Buffer{}
 		writer := &responseWriter{ResponseWriter: c.Writer, buffer: buf}
 		c.Writer = writer
@@ -79,7 +91,7 @@ func Idempotency() gin.HandlerFunc {
 		c.Next()
 
 		if c.Writer.Status() < 400 {
-			idempStore.setComplete(idempKey, c.Writer.Status(), buf.Bytes())
+			idempStore.setComplete(ctx, idempKey, c.Writer.Status(), buf.Bytes())
 		}
 	}
 }
@@ -104,52 +116,33 @@ func generateRequestHash(c *gin.Context) string {
 	return hex.EncodeToString(hasher.Sum(nil))[:32]
 }
 
-func (s *idempotencyStore) get(key string) *idempotencyEntry {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	if entry, ok := s.keys[key]; ok {
-		if time.Now().Before(entry.Expiry) {
-			return entry
-		}
+func (s *idempotencyStore) get(ctx context.Context, key string) *responseData {
+	redisKey := "idempotency:" + key
+	data, err := s.rdb.Get(ctx, redisKey).Bytes()
+	if err == redis.Nil {
+		return nil
 	}
-	return nil
+	if err != nil {
+		return nil
+	}
+	var resp responseData
+	if err := json.Unmarshal(data, &resp); err != nil {
+		return nil
+	}
+	return &resp
 }
 
-func (s *idempotencyStore) setPending(key string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	s.keys[key] = &idempotencyEntry{
-		CreatedAt: time.Now(),
-		Expiry:    time.Now().Add(s.ttl),
-	}
+func (s *idempotencyStore) setPending(ctx context.Context, key string) bool {
+	redisKey := "idempotency:" + key
+	pending := responseData{ResponseCode: -1}
+	data, _ := json.Marshal(pending)
+	ok, err := s.rdb.SetNX(ctx, redisKey, data, s.ttl).Result()
+	return ok && err == nil
 }
 
-func (s *idempotencyStore) setComplete(key string, code int, body []byte) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if entry, ok := s.keys[key]; ok {
-		entry.ResponseCode = code
-		entry.ResponseBody = make([]byte, len(body))
-		copy(entry.ResponseBody, body)
-	}
-}
-
-func (s *idempotencyStore) cleanupExpired() {
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-	for {
-		select {
-		case <-ticker.C:
-			s.mu.Lock()
-			now := time.Now()
-			for key, entry := range s.keys {
-				if now.After(entry.Expiry) {
-					delete(s.keys, key)
-				}
-			}
-			s.mu.Unlock()
-		case <-s.clean:
-			return
-		}
-	}
+func (s *idempotencyStore) setComplete(ctx context.Context, key string, code int, body []byte) {
+	redisKey := "idempotency:" + key
+	resp := responseData{ResponseCode: code, ResponseBody: body}
+	data, _ := json.Marshal(resp)
+	s.rdb.Set(ctx, redisKey, data, s.ttl)
 }

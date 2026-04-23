@@ -44,19 +44,22 @@ const StatCard: React.FC<StatCardProps> = ({
   <Card
     style={{
       borderRadius: 12,
-      border: '1px solid #e5e7eb',
+      border: '1px solid #e2e8f0',
       overflow: 'hidden',
+      transition: 'transform 0.25s ease, box-shadow 0.25s ease',
     }}
     bodyStyle={{ padding: '20px 24px' }}
+    className="stat-card-lift"
   >
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
         <div
           style={{
             fontSize: 13,
-            color: '#6b7280',
+            color: '#64748b',
             fontWeight: 500,
             marginBottom: 8,
+            letterSpacing: 0.3,
           }}
         >
           {title}
@@ -66,18 +69,18 @@ const StatCard: React.FC<StatCardProps> = ({
             {value}
           </span>
           {suffix && (
-            <span style={{ fontSize: 14, color: '#6b7280', fontWeight: 500 }}>{suffix}</span>
+            <span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>{suffix}</span>
           )}
         </div>
         {subValue && (
-          <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 4 }}>{subValue}</div>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>{subValue}</div>
         )}
         {trend !== undefined && (
           <div style={{ marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
             {trend >= 0 ? (
-              <ArrowUpOutlined style={{ fontSize: 12, color: '#16a34a' }} />
+              <ArrowUpOutlined style={{ fontSize: 11, color: '#16a34a' }} />
             ) : (
-              <ArrowDownOutlined style={{ fontSize: 12, color: '#dc2626' }} />
+              <ArrowDownOutlined style={{ fontSize: 11, color: '#dc2626' }} />
             )}
             <span
               style={{
@@ -88,7 +91,7 @@ const StatCard: React.FC<StatCardProps> = ({
             >
               {Math.abs(trend)}%
             </span>
-            <span style={{ fontSize: 12, color: '#9ca3af' }}>较昨日</span>
+            <span style={{ fontSize: 12, color: '#94a3b8' }}>较昨日</span>
           </div>
         )}
       </div>
@@ -102,7 +105,9 @@ const StatCard: React.FC<StatCardProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: 22,
+          transition: 'transform 0.25s ease',
         }}
+        className="stat-icon"
       >
         {prefix}
       </div>
@@ -349,7 +354,7 @@ export const DashboardPage: React.FC = () => {
       key: 'biz_no',
       width: 150,
       render: (biz_no: string) => (
-        <Text strong style={{ fontFamily: 'monospace', fontSize: 13 }}>
+        <Text strong style={{ fontFamily: 'monospace', fontSize: 13, color: '#1e3a5f' }}>
           {biz_no}
         </Text>
       ),
@@ -375,7 +380,7 @@ export const DashboardPage: React.FC = () => {
       width: 100,
       align: 'right' as const,
       render: (amount: number) => (
-        <Text strong style={{ color: '#16a34a' }}>
+        <Text strong style={{ color: '#16a34a', fontWeight: 600 }}>
           ¥{formatAmount(amount)}
         </Text>
       ),
@@ -402,7 +407,7 @@ export const DashboardPage: React.FC = () => {
             marginBottom: 24,
             display: 'flex',
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: 'flex-start',
           }}
         >
           <div>
@@ -425,6 +430,7 @@ export const DashboardPage: React.FC = () => {
         type={selectedRange === range.value ? 'primary' : 'default'}
         size="small"
         onClick={() => setSelectedRange(range.value)}
+        style={selectedRange === range.value ? {} : { border: '1px solid #e2e8f0' }}
       >
         {range.label}
       </Button>
@@ -443,10 +449,11 @@ export const DashboardPage: React.FC = () => {
           </div>
           <div style={{
   fontSize: 13,
-  color: '#6b7280',
-  background: '#f3f4f6',
+  color: '#64748b',
+  background: '#f1f5f9',
   padding: '6px 14px',
   borderRadius: 20,
+  border: '1px solid #e2e8f0',
 }}>
   <Space size={8}>
     <CalendarOutlined />
@@ -472,11 +479,11 @@ export const DashboardPage: React.FC = () => {
             <Card
               title={
                 <Space>
-                  <UnorderedListOutlined />
+                  <UnorderedListOutlined style={{ color: '#3b82f6' }} />
                   <span>订单状态分布</span>
                 </Space>
               }
-              style={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
               bodyStyle={{ padding: '20px 24px' }}
             >
               <Row gutter={[24, 0]}>
@@ -519,11 +526,11 @@ export const DashboardPage: React.FC = () => {
             <Card
               title={
                 <Space>
-                  <ClockCircleOutlined />
+                  <ClockCircleOutlined style={{ color: '#3b82f6' }} />
                   <span>关键指标</span>
                 </Space>
               }
-              style={{ borderRadius: 12, border: '1px solid #e5e7eb', height: '100%' }}
+              style={{ borderRadius: 12, border: '1px solid #e2e8f0', height: '100%' }}
               bodyStyle={{ padding: '20px 24px' }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -536,11 +543,13 @@ export const DashboardPage: React.FC = () => {
                     background: '#f0fdf4',
                     borderRadius: 10,
                     border: '1px solid #bbf7d0',
+                    transition: 'all 0.2s ease',
                   }}
+                  className="metric-card"
                 >
                   <div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>今日成交额</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#16a34a' }}>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>今日成交额</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#15803d' }}>
                       ¥{formatAmount(data?.today_order_amount ?? 0)}
                     </div>
                   </div>
@@ -552,18 +561,20 @@ export const DashboardPage: React.FC = () => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '12px 16px',
-                    background: '#e6f4ff',
+                    background: '#eff6ff',
                     borderRadius: 10,
-                    border: '1px solid #bae0ff',
+                    border: '1px solid #bfdbfe',
+                    transition: 'all 0.2s ease',
                   }}
+                  className="metric-card"
                 >
                   <div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>订单完成率</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#1677ff' }}>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>订单完成率</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#1d4ed8' }}>
                       {((data?.payment_success_rate ?? 0)).toFixed(1)}%
                     </div>
                   </div>
-                  <CheckCircleOutlined style={{ fontSize: 20, color: '#1677ff' }} />
+                  <CheckCircleOutlined style={{ fontSize: 20, color: '#3b82f6' }} />
                 </div>
                 <div
                   style={{
@@ -574,11 +585,13 @@ export const DashboardPage: React.FC = () => {
                     background: '#fff7ed',
                     borderRadius: 10,
                     border: '1px solid #fed7aa',
+                    transition: 'all 0.2s ease',
                   }}
+                  className="metric-card"
                 >
                   <div>
-                    <div style={{ fontSize: 12, color: '#6b7280' }}>退款待处理</div>
-                    <div style={{ fontSize: 22, fontWeight: 800, color: '#ea580c' }}>
+                    <div style={{ fontSize: 12, color: '#64748b' }}>退款待处理</div>
+                    <div style={{ fontSize: 22, fontWeight: 800, color: '#c2410c' }}>
                       {data?.pending_refund_count ?? 0} 件
                     </div>
                   </div>
@@ -593,19 +606,19 @@ export const DashboardPage: React.FC = () => {
         <Card
           title={
             <Space>
-              <ShoppingOutlined />
+              <ShoppingOutlined style={{ color: '#3b82f6' }} />
               <span>最新订单</span>
             </Space>
           }
           extra={
             <Text
-              style={{ cursor: 'pointer', color: '#1677ff', fontSize: 13 }}
+              style={{ cursor: 'pointer', color: '#3b82f6', fontSize: 13, fontWeight: 500 }}
               onClick={() => navigate('/orders')}
             >
               查看全部 →
             </Text>
           }
-          style={{ borderRadius: 12, border: '1px solid #e5e7eb' }}
+          style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
           bodyStyle={{ padding: 0 }}
         >
           <Table

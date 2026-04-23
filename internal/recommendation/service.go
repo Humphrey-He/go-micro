@@ -173,6 +173,38 @@ func (s *Service) SetUserPreference(ctx context.Context, userID int64, categoryI
 	if userID <= 0 || len(categoryIDs) == 0 {
 		return nil
 	}
+
+	tx, err := s.db.Beginx()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Clear old explicit preferences
+	_, err = tx.Exec(`DELETE FROM user_category_preference WHERE user_id = ? AND source = 'explicit'`, userID)
+	if err != nil {
+		return err
+	}
+
+	// Insert new preferences
+	for _, catID := range categoryIDs {
+		_, err := tx.Exec(`
+			INSERT INTO user_category_preference (user_id, category_id, weight, source)
+			VALUES (?, ?, 1.0, 'explicit')
+		`, userID, catID)
+		if err != nil {
+			return err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+
+	// Clear cache
+	cacheKey := fmt.Sprintf("rec:user_pref:%d", userID)
+	s.redis.Del(ctx, cacheKey)
+
 	return nil
 }
 

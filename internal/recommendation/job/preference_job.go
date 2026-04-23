@@ -74,9 +74,9 @@ func (j *PreferenceJob) computeUserPreference(userID int64) error {
 		SELECT
 			COALESCE(p.category_id, 0) as category_id,
 			CASE b.behavior_type
-				WHEN 'purchase' THEN weightPurchase
-				WHEN 'cart' THEN weightCart
-				WHEN 'favorite' THEN weightFavorite
+				WHEN 'purchase' THEN 10
+				WHEN 'cart' THEN 3
+				WHEN 'favorite' THEN 5
 			END as weight
 		FROM user_behavior_logs b
 		LEFT JOIN products p ON b.sku_id = p.sku_id

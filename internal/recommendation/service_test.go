@@ -1,13 +1,11 @@
 package recommendation
 
 import (
-	"context"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestService_ReportBehavior(t *testing.T) {

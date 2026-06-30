@@ -1,5 +1,7 @@
 package gateway
 
+import "go-micro/internal/user"
+
 type Item struct {
 	SkuID    string `json:"skuId"`
 	Quantity int    `json:"quantity"`
@@ -49,4 +51,14 @@ type ListOrdersRequest struct {
 	EndTime   int64  `json:"end_time"`
 	SortBy    string `json:"sort_by"`
 	SortOrder string `json:"sort_order"`
+}
+
+type LoginRequest struct {
+	Account  string `json:"account"`   // 支持手机号或用户名
+	Password string `json:"password"`
+}
+
+type LoginResponse struct {
+	Token string     `json:"token"`
+	User  *user.User `json:"user"`
 }

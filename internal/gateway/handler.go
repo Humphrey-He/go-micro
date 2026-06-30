@@ -101,9 +101,12 @@ func (h *Handler) Register(r *gin.Engine) {
 // @Router /api/v1/auth/login [post]
 func (h *Handler) login(c *gin.Context) {
 	var req LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil || req.Account == "" || req.Password == "" {
-		code, body := httpx.Fail(errx.CodeInvalidRequest, errx.MsgInvalidRequest)
-		c.JSON(code, body)
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "bind error: " + err.Error()})
+		return
+	}
+	if req.Account == "" || req.Password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"code": 40001, "message": "account or password empty", "account": req.Account, "password_len": len(req.Password)})
 		return
 	}
 	resp, err := h.svc.Login(req.Account, req.Password)

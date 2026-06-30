@@ -17,6 +17,7 @@ import (
 	"go-micro/pkg/httpx"
 	"go-micro/pkg/resilience"
 	"go-micro/proto/orderpb"
+	"go-micro/proto/userpb"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -540,16 +541,6 @@ func computeViewStatus(orderStatus, taskStatus, taskType, resvStatus string) (st
 	return "UNKNOWN", ""
 }
 
-type LoginRequest struct {
-	Account  string `json:"account"`   // 支持手机号或用户名
-	Password string `json:"password"`
-}
-
-type LoginResponse struct {
-	Token string     `json:"token"`
-	User  *user.User `json:"user"`
-}
-
 func (s *Service) Login(account, password string) (*LoginResponse, error) {
 	// Development mode fallback - allow hardcoded admin credentials
 	if account == "admin" && password == "admin123" {
@@ -571,35 +562,21 @@ func (s *Service) Login(account, password string) (*LoginResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	var u *user.User
+	var upb *userpb.User
 	var err error
 
 	// 优先按手机号查找用户
 	err = s.cbUser.Execute(func() error {
-		upb, callErr := s.user.GetUserByPhone(ctx, account)
-		if callErr == nil && upb != nil {
-			u = &user.User{
-				UserID:   upb.UserId,
-				Username: upb.Username,
-				Role:     upb.Role,
-				Status:   int(upb.Status),
-			}
-		}
+		var callErr error
+		upb, callErr = s.user.GetUserByPhone(ctx, account)
 		return callErr
 	})
 
 	// 如果没找到手机号，按用户名查找
-	if u == nil || err != nil {
+	if upb == nil || err != nil {
 		err = s.cbUser.Execute(func() error {
-			upb, callErr := s.user.GetUserByName(ctx, account)
-			if callErr == nil && upb != nil {
-				u = &user.User{
-					UserID:   upb.UserId,
-					Username: upb.Username,
-					Role:     upb.Role,
-					Status:   int(upb.Status),
-				}
-			}
+			var callErr error
+			upb, callErr = s.user.GetUserByName(ctx, account)
 			return callErr
 		})
 	}
@@ -608,25 +585,20 @@ func (s *Service) Login(account, password string) (*LoginResponse, error) {
 		return nil, err
 	}
 
-	if u == nil {
+	if upb == nil {
 		return nil, errors.New("user not found")
 	}
 
-	// 验证密码 - 需要获取完整用户信息包含 password_hash
-	fullUser, err := s.user.GetUserByName(ctx, u.Username)
-	if err != nil {
-		return nil, err
-	}
-
-	if !s.user.VerifyPassword(fullUser, password) {
+	// 验证密码
+	if !s.user.VerifyPassword(upb, password) {
 		return nil, errors.New("invalid credentials")
 	}
 
 	secret := []byte(config.GetEnv("JWT_SECRET", "dev-secret"))
 	claims := jwt.MapClaims{
-		"user_id":  u.UserID,
-		"username": u.Username,
-		"role":     u.Role,
+		"user_id":  upb.UserId,
+		"username": upb.Username,
+		"role":     upb.Role,
 		"exp":      time.Now().Add(2 * time.Hour).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -636,7 +608,7 @@ func (s *Service) Login(account, password string) (*LoginResponse, error) {
 	}
 	return &LoginResponse{
 		Token: signed,
-		User:  &user.User{UserID: u.UserID, Username: u.Username, Role: u.Role, Status: int(u.Status)},
+		User:  &user.User{UserID: upb.UserId, Username: upb.Username, Role: upb.Role, Status: int(upb.Status)},
 	}, nil
 }
 

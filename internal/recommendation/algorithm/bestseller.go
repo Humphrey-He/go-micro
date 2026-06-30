@@ -34,18 +34,20 @@ func (b *Bestseller) ComputeCategoryBestsellers() error {
 		SELECT
 			COALESCE(p.category_id, 0) as category_id,
 			b.sku_id,
-			SUM(CASE b.behavior_type
-				WHEN 'purchase' THEN ?
-				WHEN 'cart' THEN ?
-				WHEN 'favorite' THEN ?
-			END) as score
+			SUM(
+				CASE b.behavior_type
+					WHEN 'purchase' THEN 10
+					WHEN 'cart' THEN 3
+					WHEN 'favorite' THEN 5
+				END * EXP(-0.1 * (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(b.created_at)) / 86400)
+			) as score
 		FROM user_behavior_logs b
 		LEFT JOIN products p ON b.sku_id = p.sku_id
 		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL %d DAY)
 			AND b.user_id > 0
 		GROUP BY COALESCE(p.category_id, 0), b.sku_id
 	`, DefaultPeriodDays)
-	rows, err := b.db.Query(query, WeightPurchase, WeightCart, WeightFavorite)
+	rows, err := b.db.Query(query)
 	if err != nil {
 		return err
 	}
@@ -89,11 +91,13 @@ func (b *Bestseller) ComputeGlobalBestsellers() error {
 	query := fmt.Sprintf(`
 		SELECT
 			b.sku_id,
-			SUM(CASE b.behavior_type
-				WHEN 'purchase' THEN ?
-				WHEN 'cart' THEN ?
-				WHEN 'favorite' THEN ?
-			END) as score
+			SUM(
+				CASE b.behavior_type
+					WHEN 'purchase' THEN 10
+					WHEN 'cart' THEN 3
+					WHEN 'favorite' THEN 5
+				END * EXP(-0.1 * (UNIX_TIMESTAMP(NOW()) - UNIX_TIMESTAMP(b.created_at)) / 86400)
+			) as score
 		FROM user_behavior_logs b
 		WHERE b.created_at > DATE_SUB(NOW(), INTERVAL %d DAY)
 			AND b.user_id > 0
@@ -101,7 +105,7 @@ func (b *Bestseller) ComputeGlobalBestsellers() error {
 		ORDER BY score DESC
 		LIMIT ?
 	`, DefaultPeriodDays)
-	rows, err := b.db.Query(query, WeightPurchase, WeightCart, WeightFavorite, b.topN)
+	rows, err := b.db.Query(query, b.topN)
 	if err != nil {
 		return err
 	}

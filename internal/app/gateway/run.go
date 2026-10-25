@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	_ "go-micro/docs/swagger"
 	"go-micro/internal/activity"
+	"go-micro/internal/auth"
 	"go-micro/internal/gateway"
 	"go-micro/internal/inventory"
 	"go-micro/internal/order"
@@ -133,10 +134,13 @@ func Run() error {
 
 	socialSvc := social.NewService(dbx, rdb)
 	pricewatchSvc := pricewatch.NewService(dbx)
+	authSvc := auth.NewService(dbx, rdb)
+	// 登出 token 黑名单依赖 Redis，未初始化时中间件自动跳过黑名单检查
+	middleware.InitJWTBlacklist(rdb)
 	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})
 	svc := gateway.NewService(orderClient, userClient, invClient, taskClient, refundClient, activityClient, priceClient)
 	svc.SetPayment(paySvc)
-	h := gateway.NewHandler(svc, socialSvc, pricewatchSvc)
+	h := gateway.NewHandler(svc, socialSvc, pricewatchSvc, authSvc)
 	h.Register(r)
 
 	addr := config.GetEnv("GATEWAY_ADDR", ":8080")

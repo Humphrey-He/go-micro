@@ -15,6 +15,15 @@ const (
 	CodeForbidden          = 40105
 )
 
+// 短信认证错误码 (40111-40119)
+const (
+	CodeSmsSendTooFrequent = 40111
+	CodeSmsDailyLimit      = 40112
+	CodeSmsCodeInvalid     = 40113
+	CodeSmsCodeExpired     = 40114
+	CodeSmsTooManyAttempts = 40115
+)
+
 // User服务错误码 (40201-40299)
 const (
 	CodeUserNotFound       = 40201
@@ -141,6 +150,16 @@ const (
 	MsgInvalidCredentials = "invalid username or password"
 	MsgTokenExpired       = "token has expired"
 	MsgTokenInvalid       = "invalid token"
+)
+
+// 短信认证错误消息
+const (
+	MsgSmsSendTooFrequent = "sms send too frequent, please retry later"
+	MsgSmsDailyLimit      = "sms daily send limit exceeded"
+	MsgSmsCodeInvalid     = "sms code invalid"
+	MsgSmsCodeExpired     = "sms code expired"
+	MsgSmsTooManyAttempts = "too many verify attempts, please resend the code"
+	MsgTokenRevoked       = "token has been revoked"
 )
 
 // User服务错误消息

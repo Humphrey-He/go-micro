@@ -57,14 +57,26 @@
 | 更新监控设置 | `/api/v1/price-watch/:sku_id` | PUT | ✅ |
 | 价格提醒通知 | `/api/v1/notifications/price-watch` | GET | ✅ |
 
+### ✅ 短信认证闭环 (2026-10-25 已实现)
+
+| 功能 | 端点 | 方法 | 状态 |
+|------|------|------|------|
+| 发送短信验证码 | `/api/v1/auth/sms/send` | POST | ✅ |
+| 短信验证码登录 | `/api/v1/auth/sms/login` | POST | ✅ |
+| 用户注册 | `/api/v1/auth/register` | POST | ✅ |
+| 登出 | `/api/v1/auth/logout` | POST | ✅ |
+
+实现说明（`internal/auth` 包，挂载于 gateway 进程，直连 MySQL + Redis）：
+
+- **验证码收发**：6 位数字码存 Redis（`sms:code:{type}:{phone}`，TTL 5 分钟）；60 秒发送冷却 + 单手机号每日 10 次上限防刷；验证失败 5 次后作废当次验证码；验证成功立即作废防重放。
+- **开发模式**：未配置 `SMS_PROVIDER` 时验证码不真实下发，输出到服务日志（手机号脱敏）；可用 `SMS_DEBUG_CODE` 固定验证码便于联调。
+- **注册/登录**：注册用户编号规则与种子数据一致（`USER-{phone}` / `user_{phone}`）；JWT claims 与账号密码登录完全同构（user_id/username/role，2 小时有效期）。
+- **登出**：JWT 黑名单（`auth:revoked:{sha256}`，TTL 为 token 剩余有效期），`JWTAuth` 中间件校验时检查，未初始化黑名单的服务不受影响。
+- **顺带修复的既有问题**：`user` 包 `Phone` 字段改 `sql.NullString` 后的编译错误与 `db:"user_no"` 列名回归（`SELECT *` 全链路失败）；social 路由组误继承 JWTAuth 导致 OAuth 回调 401；social handler 将 `user_id` 断言为 `int64` 永远失败；`cmd/tools` 多个脚本同目录重复声明 `main` 导致构建失败。
+
 ### ❌ 未实现
 
-| 功能 | 端点 | 说明 |
-|------|------|------|
-| 发送短信验证码 | `/api/v1/auth/sms/send` | 前端已实现，等待后端 |
-| 短信验证码登录 | `/api/v1/auth/sms/login` | 前端已实现，等待后端 |
-| 用户注册 | `/api/v1/auth/register` | 前端已实现，等待后端 |
-| 登出 | `/api/v1/auth/logout` | 前端已实现，等待后端 |
+（无 — 认证相关接口已全部实现，等待真实短信服务商接入：当前仅日志输出验证码）
 
 ---
 

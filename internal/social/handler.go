@@ -1,6 +1,8 @@
 package social
 
 import (
+	"strconv"
+
 	"github.com/gin-gonic/gin"
 	"go-micro/pkg/errx"
 	"go-micro/pkg/httpx"
@@ -16,13 +18,17 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) Register(r *gin.RouterGroup) {
+	// OAuth 回调：登录前调用，不加鉴权
 	social := r.Group("/auth/social")
 	social.POST("/callback/wechat", h.wechatCallback)
 	social.POST("/callback/google", h.googleCallback)
 	social.POST("/callback/apple", h.appleCallback)
-	social.GET("/bindings", h.getBindings)
-	social.POST("/unbind", h.unbind)
-	social.POST("/associate", h.associatePhone)
+
+	// 账号绑定管理：需要登录，无论调用方分组是否已挂 JWTAuth
+	authed := r.Group("/auth/social", middleware.JWTAuth())
+	authed.GET("/bindings", h.getBindings)
+	authed.POST("/unbind", h.unbind)
+	authed.POST("/associate", h.associatePhone)
 }
 
 func (h *Handler) wechatCallback(c *gin.Context) {
@@ -90,8 +96,14 @@ func (h *Handler) getBindings(c *gin.Context) {
 		return
 	}
 
-	uid, ok := userID.(int64)
+	uidStr, ok := userID.(string)
 	if !ok {
+		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
+		c.JSON(code, body)
+		return
+	}
+	uid, err := strconv.ParseInt(uidStr, 10, 64)
+	if err != nil {
 		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
 		c.JSON(code, body)
 		return
@@ -116,8 +128,14 @@ func (h *Handler) unbind(c *gin.Context) {
 		return
 	}
 
-	uid, ok := userID.(int64)
+	uidStr, ok := userID.(string)
 	if !ok {
+		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
+		c.JSON(code, body)
+		return
+	}
+	uid, err := strconv.ParseInt(uidStr, 10, 64)
+	if err != nil {
 		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
 		c.JSON(code, body)
 		return
@@ -150,8 +168,14 @@ func (h *Handler) associatePhone(c *gin.Context) {
 		return
 	}
 
-	uid, ok := userID.(int64)
+	uidStr, ok := userID.(string)
 	if !ok {
+		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
+		c.JSON(code, body)
+		return
+	}
+	uid, err := strconv.ParseInt(uidStr, 10, 64)
+	if err != nil {
 		code, body := httpx.Fail(errx.CodeUnauthorized, "invalid user")
 		c.JSON(code, body)
 		return

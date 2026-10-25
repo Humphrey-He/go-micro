@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
 	"go-micro/internal/activity"
+	"go-micro/internal/auth"
 	"go-micro/internal/payment"
 	"go-micro/internal/price"
 	"go-micro/internal/pricewatch"
@@ -21,20 +22,22 @@ import (
 )
 
 type Handler struct {
-	svc            *Service
-	socialSvc      *social.Service
-	socialHandler  *social.Handler
-	pricewatchSvc  *pricewatch.Service
+	svc               *Service
+	socialSvc         *social.Service
+	socialHandler     *social.Handler
+	pricewatchSvc     *pricewatch.Service
 	pricewatchHandler *pricewatch.Handler
+	authHandler       *auth.Handler
 }
 
-func NewHandler(svc *Service, socialSvc *social.Service, pricewatchSvc *pricewatch.Service) *Handler {
+func NewHandler(svc *Service, socialSvc *social.Service, pricewatchSvc *pricewatch.Service, authSvc *auth.Service) *Handler {
 	return &Handler{
 		svc:               svc,
 		socialSvc:         socialSvc,
 		socialHandler:     social.NewHandler(socialSvc),
 		pricewatchSvc:     pricewatchSvc,
 		pricewatchHandler: pricewatch.NewHandler(pricewatchSvc),
+		authHandler:       auth.NewHandler(authSvc),
 	}
 }
 
@@ -46,6 +49,11 @@ func (h *Handler) Register(r *gin.Engine) {
 
 	api := r.Group("/api/v1")
 	api.POST("/auth/login", h.login)
+	// 无需登录的认证路由（短信验证码、短信登录、注册）
+	// 与社交登录回调一样，必须注册在 JWTAuth 之前，否则会被要求携带 token
+	h.authHandler.RegisterPublic(api)
+	social := api.Group("/auth/social")
+	h.socialHandler.Register(social)
 	api.Use(middleware.JWTAuth())
 	api.POST("/orders", h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
@@ -79,14 +87,13 @@ func (h *Handler) Register(r *gin.Engine) {
 	rec.POST("/cart-addon", h.getCartAddons)
 	rec.GET("/pay-complete", h.getPayCompleteRecommendations)
 
-	// Social login routes (no auth required)
-	social := api.Group("/auth/social")
-	h.socialHandler.Register(social)
-
 	// Price watch routes (require auth via middleware)
 	priceWatch := api.Group("/price-watch")
 	priceWatch.Use(middleware.JWTAuth())
 	h.pricewatchHandler.Register(priceWatch)
+
+	// Logout (requires auth; group already behind JWTAuth)
+	h.authHandler.RegisterAuthed(api)
 
 	// Product price history (no auth required for read)
 	api.GET("/products/:sku_id/price-history", h.getProductPriceHistory)

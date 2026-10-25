@@ -135,6 +135,8 @@ func Run() error {
 	socialSvc := social.NewService(dbx, rdb)
 	pricewatchSvc := pricewatch.NewService(dbx)
 	authSvc := auth.NewService(dbx, rdb)
+	// 请求级幂等：响应快照重放（Redis），见 docs/幂等语义.md
+	middleware.InitIdempotency(rdb)
 	// 登出 token 黑名单依赖 Redis，未初始化时中间件自动跳过黑名单检查
 	middleware.InitJWTBlacklist(rdb)
 	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})

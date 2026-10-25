@@ -15,6 +15,7 @@ import (
 	"go-micro/internal/task"
 	"go-micro/pkg/config"
 	"go-micro/pkg/db"
+	"go-micro/pkg/idemp"
 	"go-micro/pkg/logx"
 	"go-micro/pkg/middleware"
 	"go-micro/pkg/mq"
@@ -104,7 +105,7 @@ func Run() error {
 	defer orderConn.Close()
 
 	cb := newBreakerFromEnv()
-	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb})
+	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb}, idemp.NewConsumeRecorder(dbx))
 	workerStop := make(chan struct{})
 	go func() {
 		<-ctx.Done()

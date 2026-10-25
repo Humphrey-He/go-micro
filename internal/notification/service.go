@@ -106,7 +106,11 @@ func (s *Service) sendNotification(n *Notification) {
 }
 
 func (s *Service) broadcastToUser(userID string, n *Notification) {
-    // WebSocket 广播逻辑在 websocket.go 中实现
+    // WebSocket 广播逻辑在 websocket.go 中实现（由 init 注入）；
+    // 钩子未注入时（如单测环境）静默跳过
+    if BroadcastNotification == nil {
+        return
+    }
     BroadcastNotification(userID, n)
 }
 

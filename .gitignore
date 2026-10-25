@@ -2,3 +2,4 @@
 .idea/
 swag
 docs/go-micro面试题.md
+deploy/cloud/host.env

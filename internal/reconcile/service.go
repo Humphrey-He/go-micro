@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"ecomm-micro/pkg/logx"
+	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
 )
 

@@ -8,8 +8,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"github.com/redis/go-redis/v9"
 	_ "ecomm-micro/docs/swagger"
 	"ecomm-micro/internal/activity"
 	"ecomm-micro/internal/auth"
@@ -29,6 +27,8 @@ import (
 	"ecomm-micro/pkg/metrics"
 	"ecomm-micro/pkg/middleware"
 	"ecomm-micro/pkg/tracing"
+	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

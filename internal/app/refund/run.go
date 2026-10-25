@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/internal/inventory"
 	"ecomm-micro/internal/order"
 	"ecomm-micro/internal/refund"
@@ -19,6 +18,7 @@ import (
 	"ecomm-micro/pkg/logx"
 	"ecomm-micro/pkg/middleware"
 	"ecomm-micro/pkg/mq"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

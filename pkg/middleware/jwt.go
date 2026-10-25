@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/errx"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
-	"ecomm-micro/pkg/config"
-	"ecomm-micro/pkg/errx"
 )
 
 const (

@@ -3,10 +3,10 @@ package notification
 import (
 	"strconv"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/pkg/errx"
 	"ecomm-micro/pkg/httpx"
 	"ecomm-micro/pkg/middleware"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {

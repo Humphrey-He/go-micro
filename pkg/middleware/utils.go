@@ -4,8 +4,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/pkg/config"
+	"github.com/gin-gonic/gin"
 )
 
 // getEnvInt parses an environment variable to int with default fallback

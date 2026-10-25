@@ -6,9 +6,9 @@ import (
 	"strings"
 	"time"
 
+	"ecomm-micro/pkg/logx"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"time"
 
+	"ecomm-micro/pkg/config"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"ecomm-micro/pkg/config"
 )
 
 func NewMySQL() (*sqlx.DB, error) {

@@ -6,10 +6,10 @@ import (
 	"errors"
 	"time"
 
+	"ecomm-micro/pkg/cache"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"ecomm-micro/pkg/cache"
 	"golang.org/x/crypto/bcrypt"
 )
 

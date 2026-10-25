@@ -3,10 +3,10 @@ package price
 import (
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
 	"ecomm-micro/pkg/errx"
 	"ecomm-micro/pkg/httpx"
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 type Handler struct {

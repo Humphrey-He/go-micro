@@ -5,8 +5,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/pkg/config"
+	"github.com/gin-gonic/gin"
 )
 
 type tokenBucket struct {

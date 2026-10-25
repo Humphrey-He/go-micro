@@ -4,9 +4,9 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/pkg/errx"
 	"ecomm-micro/pkg/httpx"
+	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {

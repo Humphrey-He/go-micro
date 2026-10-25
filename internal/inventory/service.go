@@ -8,12 +8,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/jmoiron/sqlx"
-	"github.com/redis/go-redis/v9"
 	"ecomm-micro/pkg/cache"
 	"ecomm-micro/pkg/db"
 	"ecomm-micro/pkg/logx"
+	"github.com/google/uuid"
+	"github.com/jmoiron/sqlx"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
 

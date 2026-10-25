@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/internal/user"
 	"ecomm-micro/pkg/cache"
 	"ecomm-micro/pkg/config"
@@ -17,6 +16,7 @@ import (
 	"ecomm-micro/pkg/logx"
 	"ecomm-micro/pkg/middleware"
 	"ecomm-micro/proto/userpb"
+	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 

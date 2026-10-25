@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 
-	"github.com/gin-gonic/gin"
 	"ecomm-micro/pkg/errx"
+	"github.com/gin-gonic/gin"
 )
 
 // Role defines the possible user roles in the system

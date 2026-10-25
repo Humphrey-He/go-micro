@@ -7,9 +7,9 @@ import (
 	"encoding/json"
 	"time"
 
-	amqp "github.com/rabbitmq/amqp091-go"
 	"ecomm-micro/pkg/idemp"
 	"ecomm-micro/pkg/mq"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 // consumerGroupTaskOrderCreated task 服务消费 order.created 的消费组名

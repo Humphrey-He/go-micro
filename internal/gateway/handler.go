@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
-	"github.com/shopspring/decimal"
 	"ecomm-micro/internal/activity"
 	"ecomm-micro/internal/auth"
 	"ecomm-micro/internal/payment"
@@ -19,6 +17,8 @@ import (
 	"ecomm-micro/pkg/errx"
 	"ecomm-micro/pkg/httpx"
 	"ecomm-micro/pkg/middleware"
+	"github.com/gin-gonic/gin"
+	"github.com/shopspring/decimal"
 )
 
 type Handler struct {

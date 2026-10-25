@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"ecomm-micro/internal/recommendation/algorithm"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"ecomm-micro/internal/recommendation/algorithm"
 )
 
 type Service struct {

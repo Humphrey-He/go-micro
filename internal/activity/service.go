@@ -6,10 +6,10 @@ import (
 	"errors"
 	"time"
 
+	"ecomm-micro/pkg/cache"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"ecomm-micro/pkg/cache"
 )
 
 var (

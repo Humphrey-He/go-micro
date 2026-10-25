@@ -3,9 +3,9 @@ package middleware
 import (
 	"time"
 
+	"ecomm-micro/pkg/errx"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"ecomm-micro/pkg/errx"
 	"go.uber.org/zap"
 )
 

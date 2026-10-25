@@ -8,9 +8,9 @@ import (
 )
 
 const (
-	weightPurchase = 10
-	weightCart    = 3
-	weightFavorite = 5
+	weightPurchase     = 10
+	weightCart         = 3
+	weightFavorite     = 5
 	minWeightThreshold = 0.05 // 5%
 )
 

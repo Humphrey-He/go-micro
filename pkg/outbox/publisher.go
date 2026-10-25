@@ -13,10 +13,10 @@ import (
 )
 
 const (
-	StatusPending   = "PENDING"
-	StatusSent      = "SENT"
-	StatusFailed    = "FAILED"
-	StatusDLQ       = "DLQ"
+	StatusPending = "PENDING"
+	StatusSent    = "SENT"
+	StatusFailed  = "FAILED"
+	StatusDLQ     = "DLQ"
 )
 
 var (
@@ -54,14 +54,14 @@ func init() {
 }
 
 type Message struct {
-	ID          int64           `json:"id" db:"id"`
-	EventType   string          `json:"event_type" db:"event_type"`
-	Payload     json.RawMessage `json:"payload" db:"payload"`
-	Status      string          `json:"status" db:"status"`
+	ID         int64           `json:"id" db:"id"`
+	EventType  string          `json:"event_type" db:"event_type"`
+	Payload    json.RawMessage `json:"payload" db:"payload"`
+	Status     string          `json:"status" db:"status"`
 	RetryCount int             `json:"retry_count" db:"retry_count"`
-	LastError   string          `json:"last_error" db:"last_error"`
-	CreatedAt   time.Time      `json:"created_at" db:"created_at"`
-	SentAt      sql.NullTime    `json:"sent_at" db:"sent_at"`
+	LastError  string          `json:"last_error" db:"last_error"`
+	CreatedAt  time.Time       `json:"created_at" db:"created_at"`
+	SentAt     sql.NullTime    `json:"sent_at" db:"sent_at"`
 }
 
 type Publisher interface {
@@ -69,13 +69,13 @@ type Publisher interface {
 }
 
 type Config struct {
-	BatchSize        int
-	Interval         time.Duration
-	MaxRetries       int
-	BaseBackoff      time.Duration
-	MaxBackoff       time.Duration
-	StuckThreshold   time.Duration
-	DLQTopic         string
+	BatchSize      int
+	Interval       time.Duration
+	MaxRetries     int
+	BaseBackoff    time.Duration
+	MaxBackoff     time.Duration
+	StuckThreshold time.Duration
+	DLQTopic       string
 }
 
 func DefaultConfig() *Config {
@@ -116,9 +116,9 @@ func NewOutboxPublisher(db DBInterface, pub Publisher, cfg *Config) *OutboxPubli
 		cfg = DefaultConfig()
 	}
 	return &OutboxPublisher{
-		db:    db,
-		pub:   pub,
-		cfg:   cfg,
+		db:     db,
+		pub:    pub,
+		cfg:    cfg,
 		stopCh: make(chan struct{}),
 	}
 }

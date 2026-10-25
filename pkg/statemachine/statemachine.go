@@ -60,25 +60,25 @@ func (sm *StateMachine) ValidTransitions(from State) map[Event]State {
 const (
 	OrderPending   State = "PENDING"
 	OrderReserved  State = "RESERVED"
-	OrderPaid     State = "PAID"
-	OrderShipped  State = "SHIPPED"
+	OrderPaid      State = "PAID"
+	OrderShipped   State = "SHIPPED"
 	OrderCompleted State = "COMPLETED"
-	OrderCanceled State = "CANCELED"
-	OrderExpired  State = "EXPIRED"
-	OrderFailed   State = "FAILED"
+	OrderCanceled  State = "CANCELED"
+	OrderExpired   State = "EXPIRED"
+	OrderFailed    State = "FAILED"
 )
 
 const (
-	OrderEventCreate      Event = "CREATE"
-	OrderEventReserve     Event = "RESERVE"
-	OrderEventPay         Event = "PAY"
-	OrderEventShip        Event = "SHIP"
-	OrderEventComplete    Event = "COMPLETE"
-	OrderEventCancel      Event = "CANCEL"
-	OrderEventExpire      Event = "EXPIRE"
-	OrderEventFail        Event = "FAIL"
-	OrderEventTimeout     Event = "TIMEOUT"
-	OrderEventCompensate  Event = "COMPENSATE"
+	OrderEventCreate     Event = "CREATE"
+	OrderEventReserve    Event = "RESERVE"
+	OrderEventPay        Event = "PAY"
+	OrderEventShip       Event = "SHIP"
+	OrderEventComplete   Event = "COMPLETE"
+	OrderEventCancel     Event = "CANCEL"
+	OrderEventExpire     Event = "EXPIRE"
+	OrderEventFail       Event = "FAIL"
+	OrderEventTimeout    Event = "TIMEOUT"
+	OrderEventCompensate Event = "COMPENSATE"
 )
 
 func NewOrderStateMachine() *StateMachine {
@@ -101,7 +101,7 @@ func NewOrderStateMachine() *StateMachine {
 }
 
 const (
-	PaymentPending   State = "PENDING"
+	PaymentPending  State = "PENDING"
 	PaymentSuccess  State = "SUCCESS"
 	PaymentFailed   State = "FAILED"
 	PaymentTimeout  State = "TIMEOUT"
@@ -110,12 +110,12 @@ const (
 )
 
 const (
-	PaymentEventCreate   Event = "CREATE"
-	PaymentEventSuccess   Event = "SUCCESS"
-	PaymentEventFail      Event = "FAIL"
-	PaymentEventTimeout   Event = "TIMEOUT"
-	PaymentEventCancel    Event = "CANCEL"
-	PaymentEventRefund    Event = "REFUND"
+	PaymentEventCreate  Event = "CREATE"
+	PaymentEventSuccess Event = "SUCCESS"
+	PaymentEventFail    Event = "FAIL"
+	PaymentEventTimeout Event = "TIMEOUT"
+	PaymentEventCancel  Event = "CANCEL"
+	PaymentEventRefund  Event = "REFUND"
 )
 
 func NewPaymentStateMachine() *StateMachine {
@@ -139,14 +139,14 @@ const (
 )
 
 const (
-	InventoryEventReserve   Event = "RESERVE"
-	InventoryEventConfirm   Event = "CONFIRM"
-	InventoryEventRelease   Event = "RELEASE"
-	InventoryEventLock      Event = "LOCK"
-	InventoryEventUnlock    Event = "UNLOCK"
-	InventoryEventDeplete   Event = "DEPLETE"
-	InventoryEventRestore   Event = "RESTORE"
-	InventoryEventCancel    Event = "CANCEL"
+	InventoryEventReserve Event = "RESERVE"
+	InventoryEventConfirm Event = "CONFIRM"
+	InventoryEventRelease Event = "RELEASE"
+	InventoryEventLock    Event = "LOCK"
+	InventoryEventUnlock  Event = "UNLOCK"
+	InventoryEventDeplete Event = "DEPLETE"
+	InventoryEventRestore Event = "RESTORE"
+	InventoryEventCancel  Event = "CANCEL"
 )
 
 func NewInventoryStateMachine() *StateMachine {
@@ -169,17 +169,17 @@ func NewInventoryStateMachine() *StateMachine {
 
 const (
 	ReservationPending   State = "PENDING"
-	ReservationReserved State = "RESERVED"
+	ReservationReserved  State = "RESERVED"
 	ReservationConfirmed State = "CONFIRMED"
 	ReservationReleased  State = "RELEASED"
 	ReservationExpired   State = "EXPIRED"
 )
 
 const (
-	ReservationEventReserve   Event = "RESERVE"
-	ReservationEventConfirm   Event = "CONFIRM"
-	ReservationEventRelease  Event = "RELEASE"
-	ReservationEventExpire   Event = "EXPIRE"
+	ReservationEventReserve    Event = "RESERVE"
+	ReservationEventConfirm    Event = "CONFIRM"
+	ReservationEventRelease    Event = "RELEASE"
+	ReservationEventExpire     Event = "EXPIRE"
 	ReservationEventCompensate Event = "COMPENSATE"
 )
 
@@ -203,11 +203,11 @@ const (
 )
 
 const (
-	RefundEventInitiate   Event = "INITIATE"
-	RefundEventProcess     Event = "PROCESS"
-	RefundEventSuccess     Event = "SUCCESS"
-	RefundEventFail        Event = "FAIL"
-	RefundEventRetry       Event = "RETRY"
+	RefundEventInitiate Event = "INITIATE"
+	RefundEventProcess  Event = "PROCESS"
+	RefundEventSuccess  Event = "SUCCESS"
+	RefundEventFail     Event = "FAIL"
+	RefundEventRetry    Event = "RETRY"
 )
 
 func NewRefundStateMachine() *StateMachine {
@@ -223,21 +223,21 @@ func NewRefundStateMachine() *StateMachine {
 }
 
 const (
-	TaskPending   State = "PENDING"
-	TaskRunning   State = "RUNNING"
-	TaskSuccess   State = "SUCCESS"
-	TaskFailed    State = "FAILED"
-	TaskRetry     State = "RETRY"
-	TaskDead      State = "DEAD"
+	TaskPending State = "PENDING"
+	TaskRunning State = "RUNNING"
+	TaskSuccess State = "SUCCESS"
+	TaskFailed  State = "FAILED"
+	TaskRetry   State = "RETRY"
+	TaskDead    State = "DEAD"
 )
 
 const (
-	TaskEventSubmit   Event = "SUBMIT"
-	TaskEventStart    Event = "START"
-	TaskEventSuccess  Event = "SUCCESS"
-	TaskEventFail     Event = "FAIL"
-	TaskEventRetry    Event = "RETRY"
-	TaskEventDead     Event = "DEAD"
+	TaskEventSubmit  Event = "SUBMIT"
+	TaskEventStart   Event = "START"
+	TaskEventSuccess Event = "SUCCESS"
+	TaskEventFail    Event = "FAIL"
+	TaskEventRetry   Event = "RETRY"
+	TaskEventDead    Event = "DEAD"
 )
 
 func NewTaskStateMachine() *StateMachine {
@@ -259,7 +259,7 @@ func NewTaskStateMachine() *StateMachine {
 }
 
 type AuditLog struct {
-	Entity     string    `json:"entity"`
+	Entity    string    `json:"entity"`
 	EntityID  string    `json:"entity_id"`
 	FromState State     `json:"from_state"`
 	ToState   State     `json:"to_state"`

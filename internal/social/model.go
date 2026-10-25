@@ -7,23 +7,23 @@ type Provider string
 const (
 	ProviderWechat Provider = "wechat"
 	ProviderGoogle Provider = "google"
-	ProviderApple   Provider = "apple"
+	ProviderApple  Provider = "apple"
 )
 
 type SocialBinding struct {
-	ID              int64     `db:"id" json:"id"`
+	ID             int64     `db:"id" json:"id"`
 	UserID         int64     `db:"user_id" json:"user_id"`
-	Provider        Provider  `db:"provider" json:"provider"`
-	ProviderUserID  string    `db:"provider_user_id" json:"provider_user_id"`
-	AccessToken     string    `db:"access_token" json:"-"`
-	RefreshToken    string    `db:"refresh_token" json:"-"`
-	TokenExpiresAt  time.Time `db:"token_expires_at" json:"token_expires_at,omitempty"`
-	UnionID         string    `db:"union_id" json:"union_id,omitempty"`
-	Nickname        string    `db:"nickname" json:"nickname,omitempty"`
-	Avatar          string    `db:"avatar" json:"avatar,omitempty"`
-	BindStatus      int       `db:"bind_status" json:"bind_status"`
-	CreatedAt       time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt       time.Time `db:"updated_at" json:"updated_at"`
+	Provider       Provider  `db:"provider" json:"provider"`
+	ProviderUserID string    `db:"provider_user_id" json:"provider_user_id"`
+	AccessToken    string    `db:"access_token" json:"-"`
+	RefreshToken   string    `db:"refresh_token" json:"-"`
+	TokenExpiresAt time.Time `db:"token_expires_at" json:"token_expires_at,omitempty"`
+	UnionID        string    `db:"union_id" json:"union_id,omitempty"`
+	Nickname       string    `db:"nickname" json:"nickname,omitempty"`
+	Avatar         string    `db:"avatar" json:"avatar,omitempty"`
+	BindStatus     int       `db:"bind_status" json:"bind_status"`
+	CreatedAt      time.Time `db:"created_at" json:"created_at"`
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at"`
 }
 
 type BindingStatus struct {
@@ -34,9 +34,9 @@ type BindingStatus struct {
 }
 
 type WechatCallbackRequest struct {
-	Code        string `json:"code"`
+	Code         string `json:"code"`
 	CodeVerifier string `json:"code_verifier"`
-	State       string `json:"state"`
+	State        string `json:"state"`
 }
 
 type GoogleCallbackRequest struct {
@@ -44,9 +44,9 @@ type GoogleCallbackRequest struct {
 }
 
 type AppleCallbackRequest struct {
-	IdentityToken       string `json:"identity_token"`
-	AuthorizationCode   string `json:"authorization_code"`
-	User               string `json:"user,omitempty"`
+	IdentityToken     string `json:"identity_token"`
+	AuthorizationCode string `json:"authorization_code"`
+	User              string `json:"user,omitempty"`
 }
 
 type AssociatePhoneRequest struct {
@@ -63,8 +63,8 @@ type SocialLoginResponse struct {
 }
 
 type UserInfoResp struct {
-	UserID      string `json:"user_id"`
-	Nickname    string `json:"nickname"`
-	Avatar      string `json:"avatar"`
-	PhoneBound  bool   `json:"phone_bound"`
+	UserID     string `json:"user_id"`
+	Nickname   string `json:"nickname"`
+	Avatar     string `json:"avatar"`
+	PhoneBound bool   `json:"phone_bound"`
 }

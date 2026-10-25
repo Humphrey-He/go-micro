@@ -8,7 +8,7 @@ const (
 
 // 认证授权错误码 (40101-40199)
 const (
-	CodeUnauthorized        = 40101
+	CodeUnauthorized       = 40101
 	CodeInvalidCredentials = 40102
 	CodeTokenExpired       = 40103
 	CodeTokenInvalid       = 40104
@@ -26,14 +26,14 @@ const (
 
 // User服务错误码 (40201-40299)
 const (
-	CodeUserNotFound       = 40201
-	CodeUserAlreadyExists  = 40202
-	CodeUserCreateFailed   = 40203
-	CodeUserUpdateFailed   = 40204
-	CodeUserDeleteFailed   = 40205
-	CodeUserDisabled       = 40206
-	CodeInvalidPassword    = 40207
-	CodePasswordMismatch   = 40208
+	CodeUserNotFound      = 40201
+	CodeUserAlreadyExists = 40202
+	CodeUserCreateFailed  = 40203
+	CodeUserUpdateFailed  = 40204
+	CodeUserDeleteFailed  = 40205
+	CodeUserDisabled      = 40206
+	CodeInvalidPassword   = 40207
+	CodePasswordMismatch  = 40208
 )
 
 // Task服务错误码 (40301-40399)
@@ -47,7 +47,7 @@ const (
 
 // 资源不存在错误码 (40401-40499)
 const (
-	CodeNotFound           = 40401
+	CodeNotFound            = 40401
 	CodeOrderNotFound       = 40402
 	CodePaymentNotFound     = 40403
 	CodeInventoryNotFound   = 40404
@@ -76,17 +76,17 @@ const (
 const (
 	CodePaymentCreateFailed  = 40601
 	CodePaymentUpdateFailed  = 40602
-	CodePaymentNotPayable   = 40603
-	CodeInvalidPaymentState = 40604
-	CodePaymentTimeout      = 40605
-	CodePaymentCanceled     = 40606
-	CodePaymentRefunded     = 40607
+	CodePaymentNotPayable    = 40603
+	CodeInvalidPaymentState  = 40604
+	CodePaymentTimeout       = 40605
+	CodePaymentCanceled      = 40606
+	CodePaymentRefunded      = 40607
 	CodePaymentAmountInvalid = 40608
 )
 
 // Inventory服务错误码 (40701-40799)
 const (
-	CodeInventoryReserveFailed = 40701
+	CodeInventoryReserveFailed  = 40701
 	CodeInvalidReservationState = 40702
 	CodeInventoryRestoreFailed  = 40703
 	CodeInventoryInsufficient   = 40704
@@ -102,47 +102,47 @@ const (
 	CodeCouponExpired        = 40804
 	CodeCouponInvalid        = 40805
 	CodeSeckillNotStart      = 40806
-	CodeSeckillAlreadyEnd     = 40807
+	CodeSeckillAlreadyEnd    = 40807
 	CodeSeckillInsufficient  = 40808
 	CodeActivityNotActive    = 40809
 )
 
 // Refund服务错误码 (40901-40999)
 const (
-	CodeRefundCreateFailed   = 40901
+	CodeRefundCreateFailed     = 40901
 	CodeRefundAlreadyProcessed = 40902
-	CodeRefundAmountInvalid  = 40903
-	CodeRefundExceedAmount   = 40904
-	CodeRefundNotAllowed     = 40905
-	CodeRefundTimeout        = 40906
+	CodeRefundAmountInvalid    = 40903
+	CodeRefundExceedAmount     = 40904
+	CodeRefundNotAllowed       = 40905
+	CodeRefundTimeout          = 40906
 )
 
 // Price服务错误码 (41001-41099)
 const (
-	CodePriceExpired     = 41002
+	CodePriceExpired      = 41002
 	CodePriceUpdateFailed = 41003
 )
 
 // 服务端错误码 (50001-50099)
 const (
-	CodeInternalError     = 50001
-	CodeUpstreamUnavail  = 50201
-	CodeDatabaseError    = 50002
-	CodeCacheError       = 50003
-	CodeRpcCallFailed    = 50004
-	CodeSerializeFailed  = 50005
+	CodeInternalError      = 50001
+	CodeUpstreamUnavail    = 50201
+	CodeDatabaseError      = 50002
+	CodeCacheError         = 50003
+	CodeRpcCallFailed      = 50004
+	CodeSerializeFailed    = 50005
 	CodeQueuePublishFailed = 50006
 )
 
 // 通用错误消息
 const (
-	MsgOK               = "OK"
-	MsgInvalidRequest   = "invalid request"
-	MsgUnauthorized     = "missing authorization"
-	MsgForbidden        = "forbidden"
-	MsgNotFound         = "not found"
-	MsgInternalError    = "internal error"
-	MsgUpstreamUnavail  = "upstream unavailable"
+	MsgOK              = "OK"
+	MsgInvalidRequest  = "invalid request"
+	MsgUnauthorized    = "missing authorization"
+	MsgForbidden       = "forbidden"
+	MsgNotFound        = "not found"
+	MsgInternalError   = "internal error"
+	MsgUpstreamUnavail = "upstream unavailable"
 )
 
 // 认证授权错误消息
@@ -169,7 +169,7 @@ const (
 	MsgUserCreateFailed  = "create user failed"
 	MsgUserUpdateFailed  = "update user failed"
 	MsgUserDeleteFailed  = "delete user failed"
-	MsgUserDisabled       = "user account is disabled"
+	MsgUserDisabled      = "user account is disabled"
 	MsgInvalidPassword   = "invalid password format"
 	MsgPasswordMismatch  = "passwords do not match"
 )
@@ -185,16 +185,16 @@ const (
 
 // Order服务错误消息
 const (
-	MsgOrderNotFound       = "order not found"
-	MsgOrderCreateFailed  = "create order failed"
-	MsgOrderUpdateFailed  = "update order failed"
-	MsgOrderCancelFailed   = "cancel order failed"
-	MsgOrderNotCancelable  = "order cannot be canceled"
-	MsgInvalidOrderState   = "invalid order state"
+	MsgOrderNotFound         = "order not found"
+	MsgOrderCreateFailed     = "create order failed"
+	MsgOrderUpdateFailed     = "update order failed"
+	MsgOrderCancelFailed     = "cancel order failed"
+	MsgOrderNotCancelable    = "order cannot be canceled"
+	MsgInvalidOrderState     = "invalid order state"
 	MsgInsufficientInventory = "insufficient inventory"
-	MsgOrderAmountInvalid  = "invalid order amount"
-	MsgOrderAlreadyPaid    = "order already paid"
-	MsgOrderAlreadyCanceled = "order already canceled"
+	MsgOrderAmountInvalid    = "invalid order amount"
+	MsgOrderAlreadyPaid      = "order already paid"
+	MsgOrderAlreadyCanceled  = "order already canceled"
 )
 
 // Payment服务错误消息
@@ -212,14 +212,14 @@ const (
 
 // Inventory服务错误消息
 const (
-	MsgSkuNotFound              = "sku not found"
-	MsgInventoryReserveFailed   = "reserve inventory failed"
-	MsgInvalidReservationState  = "invalid reservation state"
-	MsgInventoryRestoreFailed    = "restore inventory failed"
-	MsgInventoryInsufficient     = "insufficient inventory"
-	MsgInventoryLockFailed       = "lock inventory failed"
-	MsgSkuAlreadyExists          = "sku already exists"
-	MsgReservationNotFound       = "reservation not found"
+	MsgSkuNotFound             = "sku not found"
+	MsgInventoryReserveFailed  = "reserve inventory failed"
+	MsgInvalidReservationState = "invalid reservation state"
+	MsgInventoryRestoreFailed  = "restore inventory failed"
+	MsgInventoryInsufficient   = "insufficient inventory"
+	MsgInventoryLockFailed     = "lock inventory failed"
+	MsgSkuAlreadyExists        = "sku already exists"
+	MsgReservationNotFound     = "reservation not found"
 )
 
 // Activity服务错误消息
@@ -234,24 +234,24 @@ const (
 	MsgSeckillAlreadyEnd    = "seckill has ended"
 	MsgSeckillInsufficient  = "seckill inventory insufficient"
 	MsgActivityNotActive    = "activity is not active"
-	MsgActivityCreateFailed  = "create activity failed"
+	MsgActivityCreateFailed = "create activity failed"
 )
 
 // Refund服务错误消息
 const (
-	MsgRefundNotFound           = "refund not found"
-	MsgRefundCreateFailed       = "create refund failed"
-	MsgRefundAlreadyProcessed   = "refund already processed"
-	MsgRefundAmountInvalid      = "invalid refund amount"
-	MsgRefundExceedAmount       = "refund amount exceeds paid amount"
-	MsgRefundNotAllowed         = "refund not allowed"
-	MsgRefundTimeout            = "refund timeout"
+	MsgRefundNotFound         = "refund not found"
+	MsgRefundCreateFailed     = "create refund failed"
+	MsgRefundAlreadyProcessed = "refund already processed"
+	MsgRefundAmountInvalid    = "invalid refund amount"
+	MsgRefundExceedAmount     = "refund amount exceeds paid amount"
+	MsgRefundNotAllowed       = "refund not allowed"
+	MsgRefundTimeout          = "refund timeout"
 )
 
 // Price服务错误消息
 const (
-	MsgPriceNotFound    = "price not found"
-	MsgPriceExpired     = "price has expired"
+	MsgPriceNotFound     = "price not found"
+	MsgPriceExpired      = "price has expired"
 	MsgPriceUpdateFailed = "update price failed"
 )
 

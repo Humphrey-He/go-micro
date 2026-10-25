@@ -17,10 +17,10 @@ import (
 )
 
 var (
-	ErrBindingNotFound   = errors.New("binding not found")
-	ErrAlreadyBound     = errors.New("provider already bound to another user")
-	ErrInvalidToken     = errors.New("invalid token")
-	ErrTokenExpired     = errors.New("token expired")
+	ErrBindingNotFound = errors.New("binding not found")
+	ErrAlreadyBound    = errors.New("provider already bound to another user")
+	ErrInvalidToken    = errors.New("invalid token")
+	ErrTokenExpired    = errors.New("token expired")
 )
 
 type Service struct {
@@ -136,15 +136,15 @@ type wechatTokenResponse struct {
 }
 
 type wechatUserInfo struct {
-	OpenID     string `json:"openid"`
-	Nickname   string `json:"nickname"`
-	Sex        int    `json:"sex"`
-	Province   string `json:"province"`
-	City       string `json:"city"`
-	Country    string `json:"country"`
-	HeadImgURL string `json:"headimgurl"`
+	OpenID     string   `json:"openid"`
+	Nickname   string   `json:"nickname"`
+	Sex        int      `json:"sex"`
+	Province   string   `json:"province"`
+	City       string   `json:"city"`
+	Country    string   `json:"country"`
+	HeadImgURL string   `json:"headimgurl"`
 	Privilege  []string `json:"privilege"`
-	UnionID    string `json:"unionid"`
+	UnionID    string   `json:"unionid"`
 }
 
 func (s *Service) exchangeWechatToken(code, codeVerifier string) (*wechatTokenResponse, error) {

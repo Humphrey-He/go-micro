@@ -10,10 +10,10 @@ import (
 )
 
 const (
-	CacheTTL             = 15 * time.Minute
-	SimilarProductsCache = "rec:similar:%d:%s"  // sku_id:scene
-	HomeRecCache         = "rec:home:%d:%d:%d"   // user_id:page:pageSize
-	GlobalBestsellerCache = "rec:bestseller:global:%d"  // limit
+	CacheTTL              = 15 * time.Minute
+	SimilarProductsCache  = "rec:similar:%d:%s"        // sku_id:scene
+	HomeRecCache          = "rec:home:%d:%d:%d"        // user_id:page:pageSize
+	GlobalBestsellerCache = "rec:bestseller:global:%d" // limit
 )
 
 type Cache struct {

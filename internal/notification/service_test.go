@@ -17,8 +17,8 @@ func newNotificationService(t *testing.T) (*Service, *Store, sqlmock.Sqlmock) {
 	t.Setenv("SMTP_PASSWORD", "")
 
 	// 异步 goroutine 可能在测试结束后仍在运行，钩子必须始终有值
-	BroadcastNotification = func(string, *Notification) {}
-	t.Cleanup(func() { BroadcastNotification = nil })
+	SetBroadcastFunc(func(string, *Notification) {})
+	t.Cleanup(func() { SetBroadcastFunc(nil) })
 
 	db, mock, err := sqlmock.New()
 	if err != nil {
@@ -136,12 +136,12 @@ func TestService_CreateNotification_Broadcasts(t *testing.T) {
 	mock.ExpectQuery(`FROM notification_configs`).WillReturnError(sql.ErrNoRows)
 
 	broadcasted := make(chan *Notification, 1)
-	BroadcastNotification = func(userID string, n *Notification) {
+	SetBroadcastFunc(func(userID string, n *Notification) {
 		if userID == "u-1" {
 			broadcasted <- n
 		}
-	}
-	t.Cleanup(func() { BroadcastNotification = nil })
+	})
+	t.Cleanup(func() { SetBroadcastFunc(nil) })
 
 	if err := svc.CreateNotification(context.Background(), "u-1", TypeLowStock, "低库存", "SKU-1 不足"); err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -167,8 +167,8 @@ func TestService_CreateNotification_RespectsDisabledPush(t *testing.T) {
 			AddRow(1, "u-2", TypeDailyReport, false, false, 0))
 
 	called := false
-	BroadcastNotification = func(string, *Notification) { called = true }
-	t.Cleanup(func() { BroadcastNotification = nil })
+	SetBroadcastFunc(func(string, *Notification) { called = true })
+	t.Cleanup(func() { SetBroadcastFunc(nil) })
 
 	if err := svc.CreateNotification(context.Background(), "u-2", TypeDailyReport, "每日报告", "内容"); err != nil {
 		t.Fatalf("unexpected error: %v", err)

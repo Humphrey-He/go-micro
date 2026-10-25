@@ -22,23 +22,23 @@ type CreateOrderResponse struct {
 }
 
 type OrderViewResponse struct {
-	OrderNo           string     `json:"order_no"`
-	ViewStatus        string     `json:"view_status"`
-	OrderStatus       string     `json:"order_status"`
-	TaskStatus        string     `json:"task_status"`
-	ReservationStatus string     `json:"reservation_status"`
-	CancelReason      string     `json:"cancel_reason"`
+	OrderNo           string `json:"order_no"`
+	ViewStatus        string `json:"view_status"`
+	OrderStatus       string `json:"order_status"`
+	TaskStatus        string `json:"task_status"`
+	ReservationStatus string `json:"reservation_status"`
+	CancelReason      string `json:"cancel_reason"`
 }
 
 type OrderDetailData struct {
-	OrderID        string `json:"orderId"`
-	BizNo          string `json:"bizNo"`
-	UserID         string `json:"userId"`
-	Status         string `json:"status"`
-	TotalAmount    int64  `json:"totalAmount"`
-	Items          []Item `json:"items"`
-	PaymentStatus  string `json:"paymentStatus"`
-	ViewStatus     string `json:"viewStatus"`
+	OrderID       string `json:"orderId"`
+	BizNo         string `json:"bizNo"`
+	UserID        string `json:"userId"`
+	Status        string `json:"status"`
+	TotalAmount   int64  `json:"totalAmount"`
+	Items         []Item `json:"items"`
+	PaymentStatus string `json:"paymentStatus"`
+	ViewStatus    string `json:"viewStatus"`
 }
 
 type ListOrdersRequest struct {
@@ -54,7 +54,7 @@ type ListOrdersRequest struct {
 }
 
 type LoginRequest struct {
-	Account  string `json:"account"`   // 支持手机号或用户名
+	Account  string `json:"account"` // 支持手机号或用户名
 	Password string `json:"password"`
 }
 

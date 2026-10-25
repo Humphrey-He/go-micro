@@ -44,8 +44,8 @@ func TestComputeViewStatus(t *testing.T) {
 
 func TestGetInt(t *testing.T) {
 	cases := []struct {
-		key string
-		def int
+		key  string
+		def  int
 		want int
 	}{
 		{"", 0, 0},

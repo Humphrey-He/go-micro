@@ -14,7 +14,7 @@ permissions:
   id-token: write
 
 env:
-  GO_VERSION: "1.25.x"
+  GO_VERSION: "1.26.x"
   GOTOOLCHAIN: auto
   GH_CLI_VERSION: "2.65.0"
 
@@ -122,7 +122,7 @@ jobs:
 
           # Verify migration files are properly formatted
           for f in deploy/migrations/*.sql; do
-            if ! echo "$f" | grep -qE '^\./deploy/migrations/[0-9]+_[a-z_]+\.(up|down)\.sql$'; then
+            if ! echo "$f" | grep -qE '^(\./)?deploy/migrations/[0-9]+_[a-z0-9_]+\.(up|down)\.sql$'; then
               echo "Invalid migration file naming: $f"
               echo "Expected pattern: 000001_init_schema.up.sql"
               exit 1

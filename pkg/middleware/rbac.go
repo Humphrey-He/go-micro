@@ -31,8 +31,8 @@ const (
 	PermPaymentWrite  Permission = "payment:write"
 	PermPaymentRefund Permission = "payment:refund"
 
-	PermInventoryRead   Permission = "inventory:read"
-	PermInventoryWrite  Permission = "inventory:write"
+	PermInventoryRead    Permission = "inventory:read"
+	PermInventoryWrite   Permission = "inventory:write"
 	PermInventoryReserve Permission = "inventory:reserve"
 
 	PermUserRead  Permission = "user:read"

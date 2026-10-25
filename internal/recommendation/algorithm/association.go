@@ -45,18 +45,18 @@ type Transaction []int64
 
 // FrequentItemset represents a frequent itemset with its support
 type FrequentItemset struct {
-	Items   []int64  `json:"items"`
-	Support float64  `json:"support"`
-	Count   int      `json:"count"`
+	Items   []int64 `json:"items"`
+	Support float64 `json:"support"`
+	Count   int     `json:"count"`
 }
 
 // AssociationRule represents an association rule A -> B
 type AssociationRule struct {
 	SKUIDA          int64   `json:"sku_id_a" db:"sku_id_a"`
 	SKUIDB          int64   `json:"sku_id_b" db:"sku_id_b"`
-	Support         float64 `json:"support" db:"support"`                   // P(A∪B)
-	Confidence      float64 `json:"confidence" db:"confidence"`               // P(B|A)
-	Lift            float64 `json:"lift" db:"lift"`                         // confidence/P(B)
+	Support         float64 `json:"support" db:"support"`       // P(A∪B)
+	Confidence      float64 `json:"confidence" db:"confidence"` // P(B|A)
+	Lift            float64 `json:"lift" db:"lift"`             // confidence/P(B)
 	CoPurchaseCount int     `json:"co_purchase_count" db:"co_purchase_count"`
 	APurchaseCount  int     `json:"a_purchase_count" db:"a_purchase_count"`
 }

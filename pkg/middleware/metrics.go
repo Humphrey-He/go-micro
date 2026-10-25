@@ -19,8 +19,8 @@ type MetricsCollector struct {
 }
 
 type pathMetrics struct {
-	Count    int64
-	Errors   int64
+	Count     int64
+	Errors    int64
 	Latencies []time.Duration
 }
 
@@ -69,8 +69,8 @@ func (m *MetricsCollector) RecordRequest(path string, latency time.Duration, sta
 		pm.Latencies = append(pm.Latencies, latency)
 	} else {
 		m.ByPath[path] = &pathMetrics{
-			Count:    1,
-			Errors:   0,
+			Count:     1,
+			Errors:    0,
 			Latencies: []time.Duration{latency},
 		}
 		if isError {
@@ -87,9 +87,9 @@ func (m *MetricsCollector) GetMetrics() map[string]interface{} {
 	return map[string]interface{}{
 		"requests_total": m.Requests,
 		"errors_total":   m.Errors,
-		"error_rate":    m.errorRate(),
-		"status_codes":  m.StatusCodes,
-		"by_path":       m.pathMetricsSummary(),
+		"error_rate":     m.errorRate(),
+		"status_codes":   m.StatusCodes,
+		"by_path":        m.pathMetricsSummary(),
 	}
 }
 
@@ -104,9 +104,9 @@ func (m *MetricsCollector) pathMetricsSummary() map[string]map[string]interface{
 	result := make(map[string]map[string]interface{})
 	for path, pm := range m.ByPath {
 		result[path] = map[string]interface{}{
-			"count":      pm.Count,
-			"errors":     pm.Errors,
-			"error_rate": m.errorRateFor(pm),
+			"count":       pm.Count,
+			"errors":      pm.Errors,
+			"error_rate":  m.errorRateFor(pm),
 			"avg_latency": m.avgLatency(pm.Latencies),
 		}
 	}

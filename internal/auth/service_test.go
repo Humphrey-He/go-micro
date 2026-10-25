@@ -2,9 +2,9 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
-	"database/sql"
 	"net/http"
 	"net/http/httptest"
 	"strings"

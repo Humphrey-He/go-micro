@@ -8,10 +8,10 @@ import (
 )
 
 const (
-	DefaultMinCoUsers    = 2
-	SimilarityThreshold  = 0.01
-	BatchSize            = 1000
-	DefaultLimit         = 10
+	DefaultMinCoUsers   = 2
+	SimilarityThreshold = 0.01
+	BatchSize           = 1000
+	DefaultLimit        = 10
 )
 
 type ItemCF struct {

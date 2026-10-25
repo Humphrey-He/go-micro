@@ -68,10 +68,10 @@ func NewService(dbx *sqlx.DB, rdb *redis.Client) *Service {
 	return &Service{db: dbx, rdb: rdb, logger: logx.L()}
 }
 
-func codeKey(typ, phone string) string  { return "sms:code:" + typ + ":" + phone }
-func failKey(typ, phone string) string  { return "sms:fail:" + typ + ":" + phone }
-func cooldownKey(phone string) string   { return "sms:cooldown:" + phone }
-func dailyKey(phone string) string      { return "sms:daily:" + time.Now().Format("20060102") + ":" + phone }
+func codeKey(typ, phone string) string { return "sms:code:" + typ + ":" + phone }
+func failKey(typ, phone string) string { return "sms:fail:" + typ + ":" + phone }
+func cooldownKey(phone string) string  { return "sms:cooldown:" + phone }
+func dailyKey(phone string) string     { return "sms:daily:" + time.Now().Format("20060102") + ":" + phone }
 
 // SendCode 生成验证码并写入 Redis，附带发送冷却与每日上限防刷。
 // 未配置 SMS_PROVIDER 时为开发模式：验证码不真实下发，输出到服务日志；

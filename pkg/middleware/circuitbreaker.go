@@ -33,18 +33,18 @@ func (s CircuitBreakerState) String() string {
 // CircuitBreakerConfig holds circuit breaker configuration
 type CircuitBreakerConfig struct {
 	FailureThreshold int           // failures before opening circuit
-	SuccessThreshold  int           // successes in half-open to close
-	OpenDuration      time.Duration // how long circuit stays open
+	SuccessThreshold int           // successes in half-open to close
+	OpenDuration     time.Duration // how long circuit stays open
 }
 
 // circuitBreaker implements the circuit breaker pattern
 type circuitBreaker struct {
-	state            CircuitBreakerState
-	failures         int
+	state           CircuitBreakerState
+	failures        int
 	successes       int
-	lastFailureTime  time.Time
-	config           CircuitBreakerConfig
-	mu               sync.RWMutex
+	lastFailureTime time.Time
+	config          CircuitBreakerConfig
+	mu              sync.RWMutex
 }
 
 // CircuitBreaker returns a middleware that protects against cascading failures
@@ -65,7 +65,7 @@ func CircuitBreaker(serviceName string) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		key := serviceName + ":"+c.FullPath()
+		key := serviceName + ":" + c.FullPath()
 
 		if !cb.allow(key) {
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{

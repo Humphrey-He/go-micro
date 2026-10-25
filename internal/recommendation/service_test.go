@@ -42,7 +42,7 @@ func TestEnrichItems(t *testing.T) {
 
 		// Verify results
 		assert.Len(t, enriched, 3)
-		
+
 		assert.Equal(t, int64(1001), enriched[0].SkuID)
 		assert.Equal(t, "iPhone 15 Pro", enriched[0].Name)
 		assert.Equal(t, 7999.00, enriched[0].Price)
@@ -78,7 +78,7 @@ func TestEnrichItems(t *testing.T) {
 
 		// Verify results
 		assert.Len(t, enriched, 2)
-		
+
 		// First product should have real data
 		assert.Equal(t, "iPhone 15 Pro", enriched[0].Name)
 		assert.Equal(t, 7999.00, enriched[0].Price)

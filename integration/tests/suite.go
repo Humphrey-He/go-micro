@@ -59,9 +59,9 @@ func SetupSuite(t *testing.T) (*IntegrationSuite, func()) {
 	}
 
 	return &IntegrationSuite{
-		MySQL:    db,
-		Redis:    rdb,
-		Cleanup:  teardown,
+		MySQL:     db,
+		Redis:     rdb,
+		Cleanup:   teardown,
 		RequestID: fmt.Sprintf("req-%d", time.Now().UnixNano()),
 	}, teardown
 }

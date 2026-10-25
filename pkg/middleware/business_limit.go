@@ -25,14 +25,14 @@ type RateLimitRule struct {
 
 // businessRateLimiter implements per-resource and per-user rate limiting
 type businessRateLimiter struct {
-	mu      sync.RWMutex
+	mu       sync.RWMutex
 	counters map[string]*userCounter
 	config   BusinessRateLimitConfig
 }
 
 type userCounter struct {
-	total    int
-	byUser   map[string]int
+	total       int
+	byUser      map[string]int
 	windowStart time.Time
 }
 
@@ -93,8 +93,8 @@ func BusinessRateLimit() gin.HandlerFunc {
 		// Check global limit
 		if counter.total >= rule.MaxRequests {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"code":    429,
-				"message": "rate limit exceeded for " + resource,
+				"code":        429,
+				"message":     "rate limit exceeded for " + resource,
 				"retry_after": int(rule.Window.Seconds()),
 			})
 			bizRateLimiter.mu.Unlock()
@@ -104,8 +104,8 @@ func BusinessRateLimit() gin.HandlerFunc {
 		// Check per-user limit
 		if counter.byUser[userIDStr] >= rule.MaxRequestsUser {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"code":    429,
-				"message": "rate limit exceeded for user",
+				"code":        429,
+				"message":     "rate limit exceeded for user",
 				"retry_after": int(rule.Window.Seconds()),
 			})
 			bizRateLimiter.mu.Unlock()
@@ -147,7 +147,7 @@ func OrderCreationLimit() gin.HandlerFunc {
 		counter := bizRateLimiter.counters[key]
 		if counter == nil {
 			counter = &userCounter{
-				byUser:     make(map[string]int),
+				byUser:      make(map[string]int),
 				windowStart: time.Now(),
 			}
 			bizRateLimiter.counters[key] = counter
@@ -163,9 +163,9 @@ func OrderCreationLimit() gin.HandlerFunc {
 		userCount := counter.byUser[userIDStr]
 		if userCount >= limit {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"code":         429,
-				"message":      "order creation rate limit exceeded",
-				"retry_after":  int(window.Seconds()),
+				"code":        429,
+				"message":     "order creation rate limit exceeded",
+				"retry_after": int(window.Seconds()),
 			})
 			bizRateLimiter.mu.Unlock()
 			return
@@ -201,7 +201,7 @@ func PaymentRateLimit() gin.HandlerFunc {
 		counter := bizRateLimiter.counters[key]
 		if counter == nil {
 			counter = &userCounter{
-				byUser:     make(map[string]int),
+				byUser:      make(map[string]int),
 				windowStart: time.Now(),
 			}
 			bizRateLimiter.counters[key] = counter
@@ -217,9 +217,9 @@ func PaymentRateLimit() gin.HandlerFunc {
 		userCount := counter.byUser[userIDStr]
 		if userCount >= limit {
 			c.AbortWithStatusJSON(http.StatusTooManyRequests, gin.H{
-				"code":         429,
-				"message":      "payment rate limit exceeded",
-				"retry_after":  int(window.Seconds()),
+				"code":        429,
+				"message":     "payment rate limit exceeded",
+				"retry_after": int(window.Seconds()),
 			})
 			bizRateLimiter.mu.Unlock()
 			return

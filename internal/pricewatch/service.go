@@ -139,7 +139,7 @@ func (s *Service) GetPriceWatchList(ctx context.Context, userID int64, page, pag
 	type watchResult struct {
 		PriceWatch
 		ProductName sql.NullString `db:"product_name"`
-		Image      sql.NullString `db:"image"`
+		Image       sql.NullString `db:"image"`
 	}
 
 	var results []watchResult
@@ -155,7 +155,7 @@ func (s *Service) GetPriceWatchList(ctx context.Context, userID int64, page, pag
 			ProductName:   r.ProductName.String,
 			Image:         r.Image.String,
 			CurrentPrice:  r.CurrentPrice,
-			OriginalPrice:  r.CurrentPrice * 1.2, // Mock
+			OriginalPrice: r.CurrentPrice * 1.2, // Mock
 			TargetPrice:   float64Ptr(r.TargetPrice),
 			NotifyEnabled: r.NotifyEnabled,
 			CreatedAt:     r.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -246,14 +246,14 @@ func (s *Service) GetPriceHistory(ctx context.Context, skuID string, period stri
 	avg := total / float64(len(snapshots))
 
 	return &PriceHistoryResponse{
-		SkuID:         skuID,
-		CurrentPrice:  snapshots[len(snapshots)-1].Price,
-		LowestPrice:   min,
-		LowestDate:    minDate.Format("2006-01-02"),
-		HighestPrice:  max,
-		HighestDate:   maxDate.Format("2006-01-02"),
-		AveragePrice:  avg,
-		PricePoints:   points,
+		SkuID:        skuID,
+		CurrentPrice: snapshots[len(snapshots)-1].Price,
+		LowestPrice:  min,
+		LowestDate:   minDate.Format("2006-01-02"),
+		HighestPrice: max,
+		HighestDate:  maxDate.Format("2006-01-02"),
+		AveragePrice: avg,
+		PricePoints:  points,
 	}, nil
 }
 
@@ -284,7 +284,7 @@ func (s *Service) GetNotifications(ctx context.Context, userID int64, page, page
 	type notifResult struct {
 		PriceWatchNotification
 		ProductName sql.NullString `db:"product_name"`
-		Image      sql.NullString `db:"image"`
+		Image       sql.NullString `db:"image"`
 	}
 
 	var results []notifResult
@@ -297,23 +297,23 @@ func (s *Service) GetNotifications(ctx context.Context, userID int64, page, page
 		items[i] = NotificationItem{
 			NotificationID: r.ID,
 			SkuID:          r.SkuID,
-			ProductName:   r.ProductName.String,
-			Image:         r.Image.String,
-			OldPrice:      r.OldPrice,
-			NewPrice:      r.NewPrice,
+			ProductName:    r.ProductName.String,
+			Image:          r.Image.String,
+			OldPrice:       r.OldPrice,
+			NewPrice:       r.NewPrice,
 			DiscountAmount: r.DiscountAmount,
 			DiscountRate:   r.DiscountRate,
-			IsRead:        r.IsRead,
-			CreatedAt:     r.CreatedAt.Format("2006-01-02 15:04:05"),
+			IsRead:         r.IsRead,
+			CreatedAt:      r.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 	}
 
 	return &NotificationListResponse{
-		Items:      items,
+		Items:       items,
 		UnreadCount: unread,
-		Page:       page,
-		PageSize:   pageSize,
-		Total:      total,
+		Page:        page,
+		PageSize:    pageSize,
+		Total:       total,
 	}, nil
 }
 

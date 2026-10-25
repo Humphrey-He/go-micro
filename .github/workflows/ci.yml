@@ -12,7 +12,6 @@ permissions:
   contents: read
   packages: write
   id-token: write
-  contents: write
 
 env:
   GO_VERSION: "1.25.x"

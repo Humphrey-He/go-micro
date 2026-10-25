@@ -2,7 +2,7 @@
 
 # Project Introduction
 
-This project is a practical e-commerce order fulfillment microservice project developed based on the Go language. It strictly follows real enterprise-level development processes and engineering standards, simulating the entire business process from user order placement, inventory deduction, order fulfillment to task scheduling in e-commerce scenarios. The core goal of the project is to cover high-frequency interview points and engineering practice essentials for backend development, helping developers master core capabilities such as microservice architecture design, distributed system problem solving, and high-availability architecture construction. It can be directly used as a core personal interview project to quickly improve job-hunting competitiveness.
+This is a **learning-oriented practical project**: a full-chain order-fulfillment sandbox built from scratch following enterprise engineering practices, for the purpose of deeply understanding service decomposition, RPC, message queues and data consistency in an e-commerce context. It simulates the complete business flow from order placement through layered inventory deduction (Redis Lua pre-check + async persistence + reconciliation) to fulfillment scheduling, covering microservice architecture, distributed consistency, idempotency semantics and observability.
 
 Project Address: [https://github.com/Humphrey-He/go-micro](https://github.com/Humphrey-He/go-micro)
 
@@ -20,7 +20,7 @@ With the rapid development of the e-commerce industry, high concurrency, high av
 
 - Implement engineering practices: standardize code structure, improve unit test coverage, achieve observability, and enhance project maintainability and scalability;
 
-- Build an interview-oriented practical project: with prominent project highlights and mainstream technology stack, it can be directly used as a core personal project for job interviews.
+- A complete learning-first exercise: covers the full enterprise development workflow; every design decision and its delta versus real-world practice is documented honestly under docs/.
 
 # Directory Structure
 

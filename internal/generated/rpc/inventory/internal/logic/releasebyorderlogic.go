@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"go-micro/internal/generated/rpc/inventory/internal/svc"
-	"go-micro/internal/generated/rpc/proto/inventorypb"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/svc"
+	"ecomm-micro/internal/generated/rpc/proto/inventorypb"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

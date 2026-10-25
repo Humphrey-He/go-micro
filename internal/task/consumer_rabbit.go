@@ -8,8 +8,8 @@ import (
 	"time"
 
 	amqp "github.com/rabbitmq/amqp091-go"
-	"go-micro/pkg/idemp"
-	"go-micro/pkg/mq"
+	"ecomm-micro/pkg/idemp"
+	"ecomm-micro/pkg/mq"
 )
 
 // consumerGroupTaskOrderCreated task 服务消费 order.created 的消费组名

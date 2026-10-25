@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
 )
 
 // PreStockReserveRequest Redis 预扣请求

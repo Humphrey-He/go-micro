@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	refundapp "go-micro/internal/app/refund"
-	"go-micro/pkg/logx"
+	refundapp "ecomm-micro/internal/app/refund"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

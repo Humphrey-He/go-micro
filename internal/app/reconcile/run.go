@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/internal/reconcile"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/middleware"
+	"ecomm-micro/internal/reconcile"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/middleware"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

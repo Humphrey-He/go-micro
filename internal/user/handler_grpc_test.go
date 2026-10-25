@@ -12,7 +12,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 
-	"go-micro/proto/userpb"
+	"ecomm-micro/proto/userpb"
 )
 
 func newUserRouter(svc *Service) *gin.Engine {

@@ -16,7 +16,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 
-	"go-micro/pkg/middleware"
+	"ecomm-micro/pkg/middleware"
 )
 
 func newSocialService(t *testing.T) (*Service, sqlmock.Sqlmock) {

@@ -14,7 +14,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gin-gonic/gin"
 
-	"go-micro/proto/taskpb"
+	"ecomm-micro/proto/taskpb"
 )
 
 // ---- fakes ----

@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jmoiron/sqlx"
 
-	"go-micro/pkg/middleware"
+	"ecomm-micro/pkg/middleware"
 )
 
 func newPriceWatchService(t *testing.T) (*Service, sqlmock.Sqlmock) {

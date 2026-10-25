@@ -8,7 +8,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/logx"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

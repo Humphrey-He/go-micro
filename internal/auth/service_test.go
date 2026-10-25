@@ -18,7 +18,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 
-	"go-micro/pkg/middleware"
+	"ecomm-micro/pkg/middleware"
 )
 
 const testPhone = "17600000000"

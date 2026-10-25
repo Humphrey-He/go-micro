@@ -7,7 +7,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"go-micro/internal/recommendation/algorithm"
+	"ecomm-micro/internal/recommendation/algorithm"
 )
 
 type Service struct {

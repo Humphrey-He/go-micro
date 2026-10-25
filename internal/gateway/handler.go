@@ -8,17 +8,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"go-micro/internal/activity"
-	"go-micro/internal/auth"
-	"go-micro/internal/payment"
-	"go-micro/internal/price"
-	"go-micro/internal/pricewatch"
-	"go-micro/internal/refund"
-	"go-micro/internal/social"
-	"go-micro/pkg/config"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/middleware"
+	"ecomm-micro/internal/activity"
+	"ecomm-micro/internal/auth"
+	"ecomm-micro/internal/payment"
+	"ecomm-micro/internal/price"
+	"ecomm-micro/internal/pricewatch"
+	"ecomm-micro/internal/refund"
+	"ecomm-micro/internal/social"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/middleware"
 )
 
 type Handler struct {

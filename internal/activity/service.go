@@ -9,7 +9,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/cache"
+	"ecomm-micro/pkg/cache"
 )
 
 var (

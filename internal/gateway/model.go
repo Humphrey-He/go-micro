@@ -1,6 +1,6 @@
 package gateway
 
-import "go-micro/internal/user"
+import "ecomm-micro/internal/user"
 
 type Item struct {
 	SkuID    string `json:"skuId"`

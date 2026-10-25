@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"go-micro/pkg/errx"
+	"ecomm-micro/pkg/errx"
 	"go.uber.org/zap"
 )
 

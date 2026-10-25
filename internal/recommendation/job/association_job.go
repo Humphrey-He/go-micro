@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/jmoiron/sqlx"
-	"go-micro/internal/recommendation/algorithm"
+	"ecomm-micro/internal/recommendation/algorithm"
 )
 
 type AssociationJob struct {

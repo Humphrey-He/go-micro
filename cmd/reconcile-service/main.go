@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	reconcileapp "go-micro/internal/app/reconcile"
-	"go-micro/pkg/logx"
+	reconcileapp "ecomm-micro/internal/app/reconcile"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

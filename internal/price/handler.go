@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
 )
 
 type Handler struct {

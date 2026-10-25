@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"go-micro/pkg/config"
+	"ecomm-micro/pkg/config"
 )
 
 // broadcastFn 由 websocket.go 的 init 注入（WebSocket 实时推送）；

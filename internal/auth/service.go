@@ -19,10 +19,10 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 
-	"go-micro/internal/user"
-	"go-micro/pkg/config"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/middleware"
+	"ecomm-micro/internal/user"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/middleware"
 )
 
 const (

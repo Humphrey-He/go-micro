@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
+	"ecomm-micro/pkg/errx"
 )
 
 // Role defines the possible user roles in the system

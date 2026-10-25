@@ -10,8 +10,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/config"
-	"go-micro/pkg/errx"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/errx"
 )
 
 const (

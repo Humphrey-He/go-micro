@@ -7,7 +7,7 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
-	"go-micro/pkg/config"
+	"ecomm-micro/pkg/config"
 )
 
 func NewMySQL() (*sqlx.DB, error) {

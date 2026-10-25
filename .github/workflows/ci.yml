@@ -233,7 +233,7 @@ jobs:
           context: .
           file: ${{ matrix.dockerfile }}
           push: false
-          tags: go-micro/${{ matrix.image }}:ci
+          tags: ecomm-micro/${{ matrix.image }}:ci
 
   security-image:
     name: security scan ${{ matrix.image }}
@@ -268,12 +268,12 @@ jobs:
           context: .
           file: deploy/docker/Dockerfile.${{ matrix.image }}
           push: false
-          tags: go-micro/${{ matrix.image }}:security-scan
+          tags: ecomm-micro/${{ matrix.image }}:security-scan
 
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'go-micro/${{ matrix.image }}:security-scan'
+          image-ref: 'ecomm-micro/${{ matrix.image }}:security-scan'
           format: 'sarif'
           output: 'trivy-results.sarif'
           severity: 'CRITICAL,HIGH'

@@ -3,7 +3,7 @@ package order
 import (
 	"context"
 
-	"go-micro/proto/orderpb"
+	"ecomm-micro/proto/orderpb"
 )
 
 type GRPCServer struct {

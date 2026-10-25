@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	recommendationapp "go-micro/internal/app/recommendation"
-	"go-micro/pkg/logx"
+	recommendationapp "ecomm-micro/internal/app/recommendation"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

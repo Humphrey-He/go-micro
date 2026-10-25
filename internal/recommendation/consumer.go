@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"go-micro/pkg/mq"
+	"ecomm-micro/pkg/mq"
 )
 
 type Consumer struct {

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/config"
+	"ecomm-micro/pkg/config"
 )
 
 // getEnvInt parses an environment variable to int with default fallback

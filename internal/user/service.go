@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/cache"
+	"ecomm-micro/pkg/cache"
 	"golang.org/x/crypto/bcrypt"
 )
 

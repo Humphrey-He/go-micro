@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"go-micro/pkg/logx"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

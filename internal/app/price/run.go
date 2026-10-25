@@ -10,12 +10,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/internal/price"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/grpcx"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/middleware"
+	"ecomm-micro/internal/price"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/grpcx"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/middleware"
 	"go.uber.org/zap"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"

@@ -1,6 +1,6 @@
 package auth
 
-import "go-micro/internal/user"
+import "ecomm-micro/internal/user"
 
 // SendSmsRequest 发送短信验证码请求
 type SendSmsRequest struct {

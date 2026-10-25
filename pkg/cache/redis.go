@@ -9,8 +9,8 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/config"
-	"go-micro/pkg/logx"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

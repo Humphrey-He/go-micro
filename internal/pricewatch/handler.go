@@ -4,9 +4,9 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/middleware"
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/middleware"
 )
 
 type Handler struct {

@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
-	"go-micro/internal/generated/rpc/refund/internal/config"
-	"go-micro/internal/generated/rpc/refund/internal/server"
-	"go-micro/internal/generated/rpc/refund/internal/svc"
-	"go-micro/proto/refundpb"
+	"ecomm-micro/internal/generated/rpc/refund/internal/config"
+	"ecomm-micro/internal/generated/rpc/refund/internal/server"
+	"ecomm-micro/internal/generated/rpc/refund/internal/svc"
+	"ecomm-micro/proto/refundpb"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"

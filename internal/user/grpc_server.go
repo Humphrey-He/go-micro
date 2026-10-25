@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"go-micro/proto/userpb"
+	"ecomm-micro/proto/userpb"
 )
 
 type GRPCServer struct {

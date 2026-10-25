@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	"go-micro/internal/recommendation/algorithm"
+	"ecomm-micro/internal/recommendation/algorithm"
 )
 
 type ItemCFJob struct {

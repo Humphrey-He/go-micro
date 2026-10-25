@@ -7,7 +7,7 @@ package inventoryservice
 import (
 	"context"
 
-	"go-micro/internal/generated/rpc/proto/inventorypb"
+	"ecomm-micro/internal/generated/rpc/proto/inventorypb"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

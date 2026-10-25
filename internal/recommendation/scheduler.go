@@ -6,7 +6,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	"github.com/robfig/cron/v3"
-	"go-micro/internal/recommendation/job"
+	"ecomm-micro/internal/recommendation/job"
 )
 
 type Scheduler struct {

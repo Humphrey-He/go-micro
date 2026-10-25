@@ -7,9 +7,9 @@ package server
 import (
 	"context"
 
-	"go-micro/internal/generated/rpc/inventory/internal/logic"
-	"go-micro/internal/generated/rpc/inventory/internal/svc"
-	"go-micro/internal/generated/rpc/proto/inventorypb"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/logic"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/svc"
+	"ecomm-micro/internal/generated/rpc/proto/inventorypb"
 )
 
 type InventoryServiceServer struct {

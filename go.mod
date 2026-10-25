@@ -1,4 +1,4 @@
-module go-micro
+module ecomm-micro
 
 go 1.26.10
 

@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	gatewayapp "go-micro/internal/app/gateway"
-	"go-micro/pkg/logx"
+	gatewayapp "ecomm-micro/internal/app/gateway"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

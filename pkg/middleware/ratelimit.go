@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/config"
+	"ecomm-micro/pkg/config"
 )
 
 type tokenBucket struct {

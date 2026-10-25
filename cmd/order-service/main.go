@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	orderapp "go-micro/internal/app/order"
-	"go-micro/pkg/logx"
+	orderapp "ecomm-micro/internal/app/order"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

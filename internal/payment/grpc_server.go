@@ -3,7 +3,7 @@ package payment
 import (
 	"context"
 
-	"go-micro/proto/paymentpb"
+	"ecomm-micro/proto/paymentpb"
 )
 
 type GRPCServer struct {

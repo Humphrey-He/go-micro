@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	taskapp "go-micro/internal/app/task"
-	"go-micro/pkg/logx"
+	taskapp "ecomm-micro/internal/app/task"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

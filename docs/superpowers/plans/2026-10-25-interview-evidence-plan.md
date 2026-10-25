@@ -2,7 +2,7 @@
 
 > 依据：`D:\面试用\26面试\04_元信息与手册\go-micro差距需求文档_20261025.md`（下称"差距文档"）
 > 本文档对差距文档的"现状盘点"逐项核实后，给出修订后的改造清单、困难点与执行顺序。
-> 核实时间：2026-10-25（基于 dev 分支 2c8fcac）
+> 核实时间：2026-10-25（基于 dev 分支 2c8fcac）；P0 执行进度见同目录《2026-10-25-下一轮开发指引.md》
 
 ---
 
@@ -67,28 +67,28 @@ CI 修复（gofmt 41 文件 + notification race 修复 + migration 正则 + 依�
 ## 五、修订后任务清单
 
 ### 第 0 批：收尾进行中工作（先做，≈半天）
-- [ ] 完成依赖升级验证（x/net v0.60 + amqp091 v1.14 要求 Go 1.26）：CI `GO_VERSION` 升 `1.26.x`，全量测试通过
-- [ ] 提交 gofmt 41 文件 + notification race 修复 + migration 正则修复 + 依赖升级（一个 commit：`chore: fix CI ...`）
-- [ ] push dev → CI 全绿 → auto-merge 到 main
+- [x] 完成依赖升级验证（x/net v0.60 + amqp091 v1.14 要求 Go 1.26）：CI `GO_VERSION` 升 `1.26.x`，全量测试通过
+- [x] 提交 gofmt 41 文件 + notification race 修复 + migration 正则修复 + 依赖升级（一个 commit：`chore: fix CI ...`）
+- [x] push dev → CI 全绿 → auto-merge 到 main
 
 ### 第 1 批：前置清理（≈半天）
-- [ ] 0-1 README 口径改学习型项目（中英三份 README 同步）
-- [ ] 0-2 英文死链修复
+- [x] 0-1 README 口径改学习型项目（中英三份 README 同步）
+- [x] 0-2 英文死链修复
 - [ ] 0-3 MIT LICENSE
 - [ ] 0-4 模块改名 ecomm-micro（单独 commit）
 
 ### 第 2 批：P0（5–6 晚，较差距文档省 1–2 晚）
-- [ ] R1-1 Redis Lua 预扣（叠加层设计，docs 先写差异说明）——先写失败测试（红线 3）
-- [ ] R1-2 stock-sync 异步落库 worker（流水唯一键幂等）
-- [ ] R1-3 Redis/DB 流水对账 job + 差异台账表
-- [ ] R1 验收：1000 并发扣 100 → DB=0、零超卖零少卖、对账零差异报告（压测脚本进仓）
-- [ ] R2-1 幂等键统一 X-Request-Id + 业务级消费幂等表（消息 ID 唯一约束）
-- [ ] R2-2 覆盖/累加语义文档（docs/幂等语义.md）
-- [ ] R2 验收：同一请求 5 次 → 1 单 5 同响应（幂等重放测试用例）
-- [ ] R3-1 Outbox 投递补深度：CAS 认领（WHERE status='PENDING'）+ 租约 + owner 校验
-- [ ] R3-2 演示：杀投递线程 → 重启重投 → 下游幂等吸收（演示脚本进仓）
-- [ ] R4 reconcile-service 最小版：订单 vs 库存流水 diff + reconcile_diff 状态机台账
-- [ ] R4 验收：手工造差异 → 台账捕获 → 修复关闭
+- [x] R1-1 Redis Lua 预扣（叠加层设计，docs 先写差异说明）——先写失败测试（红线 3）
+- [x] R1-2 stock-sync 异步落库 worker（流水唯一键幂等）
+- [x] R1-3 Redis/DB 流水对账 job + 差异台账表
+- [x] R1 验收：1000 并发扣 100 → DB=0、零超卖零少卖、对账零差异报告（压测脚本进仓）
+- [x] R2-1 幂等键统一 X-Request-Id + 业务级消费幂等表（消息 ID 唯一约束）
+- [x] R2-2 覆盖/累加语义文档（docs/幂等语义.md）
+- [x] R2 验收：同一请求 5 次 → 1 单 5 同响应（幂等重放测试用例）
+- [x] R3-1 Outbox 投递补深度：CAS 认领（WHERE status='PENDING'）+ 租约 + owner 校验
+- [x] R3-2 演示：杀投递线程 → 重启重投 → 下游幂等吸收（演示脚本进仓）
+- [x] R4 reconcile-service 最小版：订单 vs 库存流水 diff + reconcile_diff 状态机台账
+- [x] R4 验收：手工造差异 → 台账捕获 → 修复关闭
 
 ### 第 3 批：P1（4–6 晚）
 - [ ] R5-1 渠道映射表 + seed 数据（几千条）

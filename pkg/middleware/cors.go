@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/config"
+	"ecomm-micro/pkg/config"
 )
 
 // CORS returns a middleware that handles Cross-Origin Resource Sharing

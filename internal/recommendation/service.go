@@ -5,30 +5,30 @@ import (
 	"fmt"
 	"time"
 
+	"ecomm-micro/internal/recommendation/algorithm"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	"go-micro/internal/recommendation/algorithm"
 )
 
 type Service struct {
-	db         *sqlx.DB
-	redis     *redis.Client
-	cache     *Cache
-	itemCF    *algorithm.ItemCF
-	userCF    *algorithm.UserCF
-	assoc     *algorithm.Association
+	db     *sqlx.DB
+	redis  *redis.Client
+	cache  *Cache
+	itemCF *algorithm.ItemCF
+	userCF *algorithm.UserCF
+	assoc  *algorithm.Association
 }
 
 const FiveMinuteBucket = 300
 
 func NewService(db *sqlx.DB, redis *redis.Client, cache *Cache) *Service {
 	return &Service{
-		db:    db,
-		redis: redis,
-		cache: cache,
+		db:     db,
+		redis:  redis,
+		cache:  cache,
 		itemCF: algorithm.NewItemCF(db),
 		userCF: algorithm.NewUserCF(db),
-		assoc: algorithm.NewAssociation(db),
+		assoc:  algorithm.NewAssociation(db),
 	}
 }
 
@@ -65,8 +65,8 @@ type HomeRecResponse struct {
 
 // ColdStartResponse - Cold start response
 type ColdStartResponse struct {
-	HotItems      []RecItem       `json:"hot_items"`
-	CategoryPrefs []CategoryPref  `json:"category_prefs"`
+	HotItems      []RecItem      `json:"hot_items"`
+	CategoryPrefs []CategoryPref `json:"category_prefs"`
 }
 
 // CategoryPref - Category preference

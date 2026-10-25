@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	paymentapp "go-micro/internal/app/payment"
-	"go-micro/pkg/logx"
+	paymentapp "ecomm-micro/internal/app/payment"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

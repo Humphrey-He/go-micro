@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"go-micro/internal/payment"
+	"ecomm-micro/internal/payment"
 )
 
 type fakeOrderCanceler struct {

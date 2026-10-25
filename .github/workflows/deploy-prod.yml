@@ -15,10 +15,9 @@ on:
 permissions:
   contents: read
   id-token: write
-  contents: write
 
 env:
-  GO_VERSION: "1.25.x"
+  GO_VERSION: "1.26.x"
   GOTOOLCHAIN: auto
   REGISTRY: ghcr.io/${{ github.repository }}
   PROD_NAMESPACE: go-micro-prod

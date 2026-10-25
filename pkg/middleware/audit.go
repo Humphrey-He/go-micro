@@ -139,20 +139,20 @@ func AdminAudit() gin.HandlerFunc {
 		// Only log mutations
 		if c.Request.Method != "GET" {
 			event := &AuditEvent{
-				Timestamp:   start,
-				RequestID:   requestID.(string),
-				UserID:      toString(userID),
-				Username:    toString(username),
-				Role:        toString(role),
-				Action:      classifyAction(c.Request.Method),
-				Resource:    classifyResource(c.Request.URL.Path),
-				ResourceID:  extractResourceID(c),
-				Method:      c.Request.Method,
-				Path:        c.Request.URL.Path,
-				StatusCode:  c.Writer.Status(),
-				ClientIP:    c.ClientIP(),
-				UserAgent:   c.GetHeader("User-Agent"),
-				Duration:    time.Since(start),
+				Timestamp:  start,
+				RequestID:  requestID.(string),
+				UserID:     toString(userID),
+				Username:   toString(username),
+				Role:       toString(role),
+				Action:     classifyAction(c.Request.Method),
+				Resource:   classifyResource(c.Request.URL.Path),
+				ResourceID: extractResourceID(c),
+				Method:     c.Request.Method,
+				Path:       c.Request.URL.Path,
+				StatusCode: c.Writer.Status(),
+				ClientIP:   c.ClientIP(),
+				UserAgent:  c.GetHeader("User-Agent"),
+				Duration:   time.Since(start),
 			}
 
 			if errMsg := c.Errors.String(); errMsg != "" {

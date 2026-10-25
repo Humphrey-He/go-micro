@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
-	_ "github.com/go-sql-driver/mysql"
 )
 
 const TestDBIndex = 15

@@ -18,7 +18,6 @@ on:
 permissions:
   contents: read
   id-token: write
-  contents: write
 
 env:
   STAGING_NAMESPACE: go-micro-staging

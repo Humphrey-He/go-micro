@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/logx"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/config"
-	"go-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

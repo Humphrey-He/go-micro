@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"go-micro/internal/order"
+	"ecomm-micro/internal/order"
 )
 
 type fakeInventory struct {

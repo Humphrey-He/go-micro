@@ -15,6 +15,7 @@ const (
 )
 
 var productionRequired = map[string][]string{
+	"reconcile-service": {"MYSQL_DSN"},
 	"activity-service": {
 		"MYSQL_DSN",
 		"REDIS_ADDR",

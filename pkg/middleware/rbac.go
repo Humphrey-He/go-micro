@@ -3,8 +3,8 @@ package middleware
 import (
 	"fmt"
 
+	"ecomm-micro/pkg/errx"
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
 )
 
 // Role defines the possible user roles in the system
@@ -31,8 +31,8 @@ const (
 	PermPaymentWrite  Permission = "payment:write"
 	PermPaymentRefund Permission = "payment:refund"
 
-	PermInventoryRead   Permission = "inventory:read"
-	PermInventoryWrite  Permission = "inventory:write"
+	PermInventoryRead    Permission = "inventory:read"
+	PermInventoryWrite   Permission = "inventory:write"
 	PermInventoryReserve Permission = "inventory:reserve"
 
 	PermUserRead  Permission = "user:read"

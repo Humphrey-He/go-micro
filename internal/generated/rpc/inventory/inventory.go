@@ -4,10 +4,10 @@ import (
 	"flag"
 	"fmt"
 
-	"go-micro/internal/generated/rpc/inventory/internal/config"
-	"go-micro/internal/generated/rpc/inventory/internal/server"
-	"go-micro/internal/generated/rpc/inventory/internal/svc"
-	"go-micro/internal/generated/rpc/proto/inventorypb"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/config"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/server"
+	"ecomm-micro/internal/generated/rpc/inventory/internal/svc"
+	"ecomm-micro/internal/generated/rpc/proto/inventorypb"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"

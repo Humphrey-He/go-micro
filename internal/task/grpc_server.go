@@ -3,7 +3,7 @@ package task
 import (
 	"context"
 
-	"go-micro/proto/taskpb"
+	"ecomm-micro/proto/taskpb"
 )
 
 type GRPCServer struct {

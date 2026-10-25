@@ -3,7 +3,7 @@ package inventory
 import (
 	"context"
 
-	"go-micro/proto/inventorypb"
+	"ecomm-micro/proto/inventorypb"
 )
 
 type GRPCServer struct {

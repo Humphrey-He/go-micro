@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reconcile-service
+  labels:
+    app: reconcile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reconcile-service
+  template:
+    metadata:
+      labels:
+        app: reconcile-service
+    spec:
+      containers:
+        - name: reconcile-service
+          image: your-registry/reconcile-service:latest
+          ports:
+            - containerPort: 8089
+          env:
+            - name: RECONCILE_ADDR
+              value: ":8089"
+            - name: MYSQL_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: go-micro-secrets
+                  key: mysql-dsn
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8089
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8089
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reconcile-service
+spec:
+  selector:
+    app: reconcile-service
+  ports:
+    - port: 8089
+      targetPort: 8089

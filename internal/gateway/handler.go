@@ -6,35 +6,38 @@ import (
 	"net/http"
 	"strconv"
 
+	"ecomm-micro/internal/activity"
+	"ecomm-micro/internal/auth"
+	"ecomm-micro/internal/payment"
+	"ecomm-micro/internal/price"
+	"ecomm-micro/internal/pricewatch"
+	"ecomm-micro/internal/refund"
+	"ecomm-micro/internal/social"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/shopspring/decimal"
-	"go-micro/internal/activity"
-	"go-micro/internal/payment"
-	"go-micro/internal/price"
-	"go-micro/internal/pricewatch"
-	"go-micro/internal/refund"
-	"go-micro/internal/social"
-	"go-micro/pkg/config"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/middleware"
 )
 
 type Handler struct {
-	svc            *Service
-	socialSvc      *social.Service
-	socialHandler  *social.Handler
-	pricewatchSvc  *pricewatch.Service
+	svc               *Service
+	socialSvc         *social.Service
+	socialHandler     *social.Handler
+	pricewatchSvc     *pricewatch.Service
 	pricewatchHandler *pricewatch.Handler
+	authHandler       *auth.Handler
 }
 
-func NewHandler(svc *Service, socialSvc *social.Service, pricewatchSvc *pricewatch.Service) *Handler {
+func NewHandler(svc *Service, socialSvc *social.Service, pricewatchSvc *pricewatch.Service, authSvc *auth.Service) *Handler {
 	return &Handler{
 		svc:               svc,
 		socialSvc:         socialSvc,
 		socialHandler:     social.NewHandler(socialSvc),
 		pricewatchSvc:     pricewatchSvc,
 		pricewatchHandler: pricewatch.NewHandler(pricewatchSvc),
+		authHandler:       auth.NewHandler(authSvc),
 	}
 }
 
@@ -46,8 +49,13 @@ func (h *Handler) Register(r *gin.Engine) {
 
 	api := r.Group("/api/v1")
 	api.POST("/auth/login", h.login)
+	// 无需登录的认证路由（短信验证码、短信登录、注册）
+	// 与社交登录回调一样，必须注册在 JWTAuth 之前，否则会被要求携带 token
+	h.authHandler.RegisterPublic(api)
+	social := api.Group("/auth/social")
+	h.socialHandler.Register(social)
 	api.Use(middleware.JWTAuth())
-	api.POST("/orders", h.createOrder)
+	api.POST("/orders", middleware.Idempotency(), h.createOrder)
 	api.GET("/orders/:id", h.getOrder)
 	api.GET("/order-views/:order_no", h.getOrderView)
 	api.GET("/admin/orders", h.listOrders)
@@ -55,16 +63,16 @@ func (h *Handler) Register(r *gin.Engine) {
 	api.GET("/admin/refunds", h.listRefunds)
 	api.GET("/admin/dashboard/stats", h.dashboardStats)
 	api.GET("/admin/inventory", h.listInventory)
-	api.POST("/payments", h.createPayment)
+	api.POST("/payments", middleware.Idempotency(), h.createPayment)
 	api.GET("/payments/:id", h.getPayment)
-	api.POST("/payments/:id/success", h.markPaymentSuccess)
-	api.POST("/payments/:id/failed", h.markPaymentFailed)
-	api.POST("/payments/:id/timeout", h.markPaymentTimeout)
-	api.POST("/refund/initiate", h.refundInitiate)
+	api.POST("/payments/:id/success", middleware.Idempotency(), h.markPaymentSuccess)
+	api.POST("/payments/:id/failed", middleware.Idempotency(), h.markPaymentFailed)
+	api.POST("/payments/:id/timeout", middleware.Idempotency(), h.markPaymentTimeout)
+	api.POST("/refund/initiate", middleware.Idempotency(), h.refundInitiate)
 	api.POST("/refund/status", h.refundStatus)
 	api.POST("/refund/rollback", h.refundRollback)
-	api.POST("/activity/coupon", h.issueCoupon)
-	api.POST("/activity/seckill", h.seckill)
+	api.POST("/activity/coupon", middleware.Idempotency(), h.issueCoupon)
+	api.POST("/activity/seckill", middleware.Idempotency(), h.seckill)
 	api.GET("/activity/status", h.activityStatus)
 	api.POST("/price/calculate", h.calculatePrice)
 	api.GET("/price/history", h.priceHistory)
@@ -79,14 +87,13 @@ func (h *Handler) Register(r *gin.Engine) {
 	rec.POST("/cart-addon", h.getCartAddons)
 	rec.GET("/pay-complete", h.getPayCompleteRecommendations)
 
-	// Social login routes (no auth required)
-	social := api.Group("/auth/social")
-	h.socialHandler.Register(social)
-
 	// Price watch routes (require auth via middleware)
 	priceWatch := api.Group("/price-watch")
 	priceWatch.Use(middleware.JWTAuth())
 	h.pricewatchHandler.Register(priceWatch)
+
+	// Logout (requires auth; group already behind JWTAuth)
+	h.authHandler.RegisterAuthed(api)
 
 	// Product price history (no auth required for read)
 	api.GET("/products/:sku_id/price-history", h.getProductPriceHistory)

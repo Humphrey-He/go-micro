@@ -8,25 +8,26 @@ import (
 	"syscall"
 	"time"
 
+	_ "ecomm-micro/docs/swagger"
+	"ecomm-micro/internal/activity"
+	"ecomm-micro/internal/auth"
+	"ecomm-micro/internal/gateway"
+	"ecomm-micro/internal/inventory"
+	"ecomm-micro/internal/order"
+	"ecomm-micro/internal/payment"
+	"ecomm-micro/internal/price"
+	"ecomm-micro/internal/pricewatch"
+	"ecomm-micro/internal/refund"
+	"ecomm-micro/internal/social"
+	"ecomm-micro/internal/task"
+	"ecomm-micro/internal/user"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/metrics"
+	"ecomm-micro/pkg/middleware"
+	"ecomm-micro/pkg/tracing"
 	"github.com/gin-gonic/gin"
-	_ "go-micro/docs/swagger"
-	"go-micro/internal/activity"
-	"go-micro/internal/gateway"
-	"go-micro/internal/inventory"
-	"go-micro/internal/order"
-	"go-micro/internal/payment"
-	"go-micro/internal/price"
-	"go-micro/internal/pricewatch"
-	"go-micro/internal/refund"
-	"go-micro/internal/social"
-	"go-micro/internal/task"
-	"go-micro/internal/user"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/metrics"
-	"go-micro/pkg/middleware"
-	"go-micro/pkg/tracing"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
@@ -133,10 +134,15 @@ func Run() error {
 
 	socialSvc := social.NewService(dbx, rdb)
 	pricewatchSvc := pricewatch.NewService(dbx)
+	authSvc := auth.NewService(dbx, rdb)
+	// 请求级幂等：响应快照重放（Redis），见 docs/幂等语义.md
+	middleware.InitIdempotency(rdb)
+	// 登出 token 黑名单依赖 Redis，未初始化时中间件自动跳过黑名单检查
+	middleware.InitJWTBlacklist(rdb)
 	paySvc := payment.NewService(dbx, &orderCancelAdapter{c: orderClient}, &inventoryReleaseAdapter{c: invClient})
 	svc := gateway.NewService(orderClient, userClient, invClient, taskClient, refundClient, activityClient, priceClient)
 	svc.SetPayment(paySvc)
-	h := gateway.NewHandler(svc, socialSvc, pricewatchSvc)
+	h := gateway.NewHandler(svc, socialSvc, pricewatchSvc, authSvc)
 	h.Register(r)
 
 	addr := config.GetEnv("GATEWAY_ADDR", ":8080")

@@ -9,17 +9,18 @@ import (
 	"syscall"
 	"time"
 
+	"ecomm-micro/internal/inventory"
+	"ecomm-micro/internal/order"
+	"ecomm-micro/internal/task"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/idemp"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/middleware"
+	"ecomm-micro/pkg/mq"
+	"ecomm-micro/pkg/resilience"
+	"ecomm-micro/proto/taskpb"
 	"github.com/gin-gonic/gin"
-	"go-micro/internal/inventory"
-	"go-micro/internal/order"
-	"go-micro/internal/task"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/middleware"
-	"go-micro/pkg/mq"
-	"go-micro/pkg/resilience"
-	"go-micro/proto/taskpb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -104,7 +105,7 @@ func Run() error {
 	defer orderConn.Close()
 
 	cb := newBreakerFromEnv()
-	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb})
+	go task.StartRabbitConsumer(consumer, svc, &inventoryReleaseAdapter{c: invClient, cb: cb}, &orderUpdateAdapter{c: orderClient, cb: cb}, idemp.NewConsumeRecorder(dbx))
 	workerStop := make(chan struct{})
 	go func() {
 		<-ctx.Done()

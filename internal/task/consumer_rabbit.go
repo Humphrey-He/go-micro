@@ -2,11 +2,27 @@ package task
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"time"
 
-	"go-micro/pkg/mq"
+	"ecomm-micro/pkg/idemp"
+	"ecomm-micro/pkg/mq"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
+
+// consumerGroupTaskOrderCreated task 服务消费 order.created 的消费组名
+const consumerGroupTaskOrderCreated = "task-order-created"
+
+// messageIDOf MQ 消息的业务标识：优先 MessageId，缺失时退化为 body 摘要。
+func messageIDOf(msg amqp.Delivery) string {
+	if msg.MessageId != "" {
+		return msg.MessageId
+	}
+	sum := sha256.Sum256(msg.Body)
+	return "body-" + hex.EncodeToString(sum[:])[:24]
+}
 
 type InventoryReleaser interface {
 	Release(ctx context.Context, reservedID string) error
@@ -32,7 +48,7 @@ type OrderCreatedEvent struct {
 	ReservedID string `json:"reserved_id"`
 }
 
-func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord OrderUpdater) {
+func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord OrderUpdater, recorder *idemp.ConsumeRecorder) {
 	if r == nil {
 		return
 	}
@@ -41,6 +57,16 @@ func StartRabbitConsumer(r *mq.Rabbit, svc *Service, inv InventoryReleaser, ord 
 		return
 	}
 	for msg := range msgs {
+		// 消费端幂等：同一条消息重复投递（at-least-once）直接 ACK 吸收
+		if recorder != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+			first, err := recorder.TryRecord(ctx, consumerGroupTaskOrderCreated, messageIDOf(msg))
+			cancel()
+			if err == nil && !first {
+				_ = msg.Ack(false)
+				continue
+			}
+		}
 		// Consume order_reserved event to create fulfillment task.
 		var evt OrderCreatedEvent
 		if err := json.Unmarshal(msg.Body, &evt); err != nil {

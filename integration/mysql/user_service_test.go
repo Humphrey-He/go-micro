@@ -3,7 +3,7 @@ package mysqlit
 import (
 	"testing"
 
-	"go-micro/internal/user"
+	"ecomm-micro/internal/user"
 )
 
 func TestUserService_CreateAndGet(t *testing.T) {

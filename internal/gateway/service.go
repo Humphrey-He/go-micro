@@ -5,19 +5,19 @@ import (
 	"errors"
 	"time"
 
-	"go-micro/internal/activity"
-	"go-micro/internal/inventory"
-	"go-micro/internal/order"
-	"go-micro/internal/payment"
-	"go-micro/internal/price"
-	"go-micro/internal/refund"
-	"go-micro/internal/task"
-	"go-micro/internal/user"
-	"go-micro/pkg/config"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/resilience"
-	"go-micro/proto/orderpb"
-	"go-micro/proto/userpb"
+	"ecomm-micro/internal/activity"
+	"ecomm-micro/internal/inventory"
+	"ecomm-micro/internal/order"
+	"ecomm-micro/internal/payment"
+	"ecomm-micro/internal/price"
+	"ecomm-micro/internal/refund"
+	"ecomm-micro/internal/task"
+	"ecomm-micro/internal/user"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/resilience"
+	"ecomm-micro/proto/orderpb"
+	"ecomm-micro/proto/userpb"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -130,14 +130,14 @@ func (s *Service) ListOrders(req ListOrdersRequest) (httpx.Response, error) {
 }
 
 type DashboardStats struct {
-	TodayOrderCount     int64   `json:"today_order_count"`
-	TodayOrderAmount    int64   `json:"today_order_amount"`
-	PendingRefundCount  int64   `json:"pending_refund_count"`
-	PaymentSuccessRate  float64 `json:"payment_success_rate"`
-	LowStockSkuCount    int64   `json:"low_stock_sku_count"`
-	Period              string  `json:"period"`
-	StartTime           int64   `json:"start_time"`
-	EndTime             int64   `json:"end_time"`
+	TodayOrderCount    int64   `json:"today_order_count"`
+	TodayOrderAmount   int64   `json:"today_order_amount"`
+	PendingRefundCount int64   `json:"pending_refund_count"`
+	PaymentSuccessRate float64 `json:"payment_success_rate"`
+	LowStockSkuCount   int64   `json:"low_stock_sku_count"`
+	Period             string  `json:"period"`
+	StartTime          int64   `json:"start_time"`
+	EndTime            int64   `json:"end_time"`
 }
 
 func (s *Service) GetDashboardStats(startTime, endTime int64, period string) (httpx.Response, error) {
@@ -299,9 +299,9 @@ func (s *Service) ListPayments(page, pageSize int, orderID, status string) (http
 		return httpx.Response{}, err
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: map[string]interface{}{
-		"payments": payments,
-		"total":    total,
-		"page":     page,
+		"payments":  payments,
+		"total":     total,
+		"page":      page,
 		"page_size": pageSize,
 	}}, nil
 }
@@ -399,9 +399,9 @@ func (s *Service) ListRefunds(page, pageSize int, orderID, status string) (httpx
 		return httpx.Response{}, err
 	}
 	return httpx.Response{Code: 0, Message: "OK", Data: map[string]interface{}{
-		"refunds":  resp.Refunds,
-		"total":    resp.Total,
-		"page":     resp.Page,
+		"refunds":   resp.Refunds,
+		"total":     resp.Total,
+		"page":      resp.Page,
 		"page_size": resp.PageSize,
 	}}, nil
 }

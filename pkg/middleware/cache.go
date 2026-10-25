@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"time"
 
+	"ecomm-micro/pkg/config"
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/config"
 )
 
 // CacheControl provides caching directives for client and CDN caching

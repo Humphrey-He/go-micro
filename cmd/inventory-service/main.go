@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	inventoryapp "go-micro/internal/app/inventory"
-	"go-micro/pkg/logx"
+	inventoryapp "ecomm-micro/internal/app/inventory"
+	"ecomm-micro/pkg/logx"
 	"go.uber.org/zap"
 )
 

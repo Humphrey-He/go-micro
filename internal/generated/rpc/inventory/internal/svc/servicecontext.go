@@ -1,6 +1,6 @@
 package svc
 
-import "go-micro/internal/generated/rpc/inventory/internal/config"
+import "ecomm-micro/internal/generated/rpc/inventory/internal/config"
 
 type ServiceContext struct {
 	Config config.Config

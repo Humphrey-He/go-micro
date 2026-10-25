@@ -7,7 +7,7 @@ package refundservice
 import (
 	"context"
 
-	"go-micro/proto/refundpb"
+	"ecomm-micro/proto/refundpb"
 
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"

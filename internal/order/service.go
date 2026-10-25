@@ -8,15 +8,15 @@ import (
 	"fmt"
 	"time"
 
+	"ecomm-micro/pkg/cache"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/resilience"
 	"github.com/go-sql-driver/mysql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/redis/go-redis/v9"
-	"go-micro/pkg/cache"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/resilience"
 )
 
 var (

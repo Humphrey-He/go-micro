@@ -1,3 +1,5 @@
+//go:build ignore
+
 package main
 
 import (
@@ -6,7 +8,7 @@ import (
 	"log"
 	"time"
 
-	"go-micro/proto/userpb"
+	"ecomm-micro/proto/userpb"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"

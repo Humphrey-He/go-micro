@@ -2,7 +2,6 @@ package integration
 
 import (
 	"context"
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -13,16 +12,11 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/testcontainers/testcontainers-go"
-	"github.com/testcontainers/testcontainers-go/modules/mysql"
-	"github.com/testcontainers/testcontainers-go/modules/redis"
-	"github.com/testcontainers/testcontainers-go/modules/rabbitmq"
 )
 
 type IntegrationSuite struct {
 	MySQL     *sqlx.DB
 	Redis     *redis.Client
-	RabbitMQ  *rabbitmq.Container
 	Cleanup   func()
 	RequestID string
 }
@@ -39,19 +33,23 @@ func SetupSuite(t *testing.T) (*IntegrationSuite, func()) {
 		t.Skipf("MySQL not available: %v", err)
 	}
 
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "127.0.0.1:6379"
+	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     os.Getenv("REDIS_ADDR"),
+		Addr:     redisAddr,
 		Password: os.Getenv("REDIS_PASSWORD"),
 		DB:       15,
 	})
-	if rdb.Addr() == ":6379" {
-		rdb = redis.NewClient(&redis.Options{
-			Addr: "127.0.0.1:6380",
-		})
-	}
 	if err := rdb.Ping(ctx).Err(); err != nil {
-		db.Close()
-		t.Skipf("Redis not available: %v", err)
+		// 主地址不可达时尝试备用地址（本地集成环境惯例）
+		rdb.Close()
+		rdb = redis.NewClient(&redis.Options{Addr: "127.0.0.1:6380"})
+		if err := rdb.Ping(ctx).Err(); err != nil {
+			db.Close()
+			t.Skipf("Redis not available: %v", err)
+		}
 	}
 
 	teardown := func() {
@@ -61,9 +59,9 @@ func SetupSuite(t *testing.T) (*IntegrationSuite, func()) {
 	}
 
 	return &IntegrationSuite{
-		MySQL:    db,
-		Redis:    rdb,
-		Cleanup:  teardown,
+		MySQL:     db,
+		Redis:     rdb,
+		Cleanup:   teardown,
 		RequestID: fmt.Sprintf("req-%d", time.Now().UnixNano()),
 	}, teardown
 }

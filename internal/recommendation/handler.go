@@ -3,10 +3,10 @@ package recommendation
 import (
 	"strconv"
 
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/middleware"
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/middleware"
 )
 
 type Handler struct {
@@ -146,7 +146,7 @@ type SetPreferenceRequest struct {
 func (h *Handler) getCartAddons(c *gin.Context) {
 	var req struct {
 		CartSKUIDs []int64 `json:"cart_sku_ids" binding:"required"`
-		Limit      int      `json:"limit"`
+		Limit      int     `json:"limit"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		code, body := httpx.Fail(errx.CodeInvalidRequest, "invalid request")

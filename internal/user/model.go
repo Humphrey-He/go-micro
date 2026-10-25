@@ -14,7 +14,7 @@ type CreateUserRequest struct {
 
 type User struct {
 	ID                int64          `db:"id" json:"-"`
-	UserID            string         `db:"user_no" json:"user_id"`
+	UserID            string         `db:"user_id" json:"user_id"`
 	Username          string         `db:"username" json:"username"`
 	DisplayName       sql.NullString `db:"display_name" json:"display_name,omitempty"`
 	PasswordHash      string         `db:"password_hash" json:"-"`

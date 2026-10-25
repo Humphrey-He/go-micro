@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +16,6 @@ func TestOrderCreationFlow(t *testing.T) {
 	defer cleanup()
 
 	db := suite.MySQL
-	rdb := suite.Red
 	ctx := context.Background()
 
 	userID := SetupUser(t, db, "testuser-order", "buyer")

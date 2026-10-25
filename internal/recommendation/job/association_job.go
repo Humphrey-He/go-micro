@@ -3,8 +3,8 @@ package job
 import (
 	"log"
 
+	"ecomm-micro/internal/recommendation/algorithm"
 	"github.com/jmoiron/sqlx"
-	"go-micro/internal/recommendation/algorithm"
 )
 
 type AssociationJob struct {

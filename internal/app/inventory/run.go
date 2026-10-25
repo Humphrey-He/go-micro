@@ -9,14 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"ecomm-micro/internal/inventory"
+	"ecomm-micro/pkg/cache"
+	"ecomm-micro/pkg/config"
+	"ecomm-micro/pkg/db"
+	"ecomm-micro/pkg/logx"
+	"ecomm-micro/pkg/middleware"
+	"ecomm-micro/proto/inventorypb"
 	"github.com/gin-gonic/gin"
-	"go-micro/internal/inventory"
-	"go-micro/pkg/cache"
-	"go-micro/pkg/config"
-	"go-micro/pkg/db"
-	"go-micro/pkg/logx"
-	"go-micro/pkg/middleware"
-	"go-micro/proto/inventorypb"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
@@ -55,8 +55,15 @@ func Run() error {
 	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	svc := inventory.NewService(dbx, rdb)
-	h := inventory.NewHandler(svc)
+	pre := inventory.NewPreStock(dbx, rdb)
+	syncer := inventory.NewStockSyncer(dbx, rdb)
+	reconciler := inventory.NewReconciler(dbx, rdb)
+	h := inventory.NewHandler(svc, pre, syncer, reconciler)
 	h.Register(r)
+
+	// R1: 预扣流水异步落库 + 周期对账兜底
+	go inventory.StartStockSyncer(dbx, rdb, time.Second, ctx.Done())
+	go inventory.StartReconciler(dbx, rdb, time.Minute, ctx.Done())
 
 	grpcAddr := config.GetEnv("INVENTORY_GRPC_ADDR", ":9082")
 	grpcLis, err := net.Listen("tcp", grpcAddr)

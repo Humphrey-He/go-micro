@@ -7,9 +7,9 @@ package server
 import (
 	"context"
 
-	"go-micro/internal/generated/rpc/refund/internal/logic"
-	"go-micro/internal/generated/rpc/refund/internal/svc"
-	"go-micro/proto/refundpb"
+	"ecomm-micro/internal/generated/rpc/refund/internal/logic"
+	"ecomm-micro/internal/generated/rpc/refund/internal/svc"
+	"ecomm-micro/proto/refundpb"
 )
 
 type RefundServiceServer struct {

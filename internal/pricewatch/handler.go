@@ -1,10 +1,12 @@
 package pricewatch
 
 import (
+	"strconv"
+
+	"ecomm-micro/pkg/errx"
+	"ecomm-micro/pkg/httpx"
+	"ecomm-micro/pkg/middleware"
 	"github.com/gin-gonic/gin"
-	"go-micro/pkg/errx"
-	"go-micro/pkg/httpx"
-	"go-micro/pkg/middleware"
 )
 
 type Handler struct {
@@ -208,8 +210,12 @@ func (h *Handler) getNotifications(c *gin.Context) {
 
 func getUserID(c *gin.Context) int64 {
 	if uid, exists := c.Get(middleware.CtxUserID); exists {
-		if id, ok := uid.(int64); ok {
-			return id
+		// JWTAuth 中间件将 user_id 以 string 写入 context
+		if idStr, ok := uid.(string); ok {
+			id, err := strconv.ParseInt(idStr, 10, 64)
+			if err == nil {
+				return id
+			}
 		}
 	}
 	return 0

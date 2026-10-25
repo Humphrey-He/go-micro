@@ -39,7 +39,7 @@ var hub = &Hub{
 
 func init() {
 	go hub.run()
-	BroadcastNotification = broadcastToClients
+	SetBroadcastFunc(broadcastToClients)
 }
 
 func (h *Hub) run() {

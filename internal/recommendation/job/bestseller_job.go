@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
+	"ecomm-micro/internal/recommendation/algorithm"
 	"github.com/jmoiron/sqlx"
-	"go-micro/internal/recommendation/algorithm"
 )
 
 type BestsellerJob struct {

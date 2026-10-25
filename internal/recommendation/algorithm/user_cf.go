@@ -8,9 +8,9 @@ import (
 )
 
 type UserCF struct {
-	db            *sqlx.DB
-	topK          int
-	minBehaviors  int
+	db           *sqlx.DB
+	topK         int
+	minBehaviors int
 }
 
 func NewUserCF(db *sqlx.DB) *UserCF {

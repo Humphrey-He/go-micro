@@ -3,8 +3,8 @@ package logic
 import (
 	"context"
 
-	"go-micro/internal/generated/rpc/refund/internal/svc"
-	"go-micro/proto/refundpb"
+	"ecomm-micro/internal/generated/rpc/refund/internal/svc"
+	"ecomm-micro/proto/refundpb"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )

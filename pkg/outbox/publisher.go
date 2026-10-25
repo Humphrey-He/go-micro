@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"os"
 	"sync"
 	"time"
 
@@ -13,10 +14,10 @@ import (
 )
 
 const (
-	StatusPending   = "PENDING"
-	StatusSent      = "SENT"
-	StatusFailed    = "FAILED"
-	StatusDLQ       = "DLQ"
+	StatusPending = "PENDING"
+	StatusSent    = "SENT"
+	StatusFailed  = "FAILED"
+	StatusDLQ     = "DLQ"
 )
 
 var (
@@ -54,28 +55,37 @@ func init() {
 }
 
 type Message struct {
-	ID          int64           `json:"id" db:"id"`
-	EventType   string          `json:"event_type" db:"event_type"`
-	Payload     json.RawMessage `json:"payload" db:"payload"`
-	Status      string          `json:"status" db:"status"`
+	ID         int64           `json:"id" db:"id"`
+	EventType  string          `json:"event_type" db:"event_type"`
+	Payload    json.RawMessage `json:"payload" db:"payload"`
+	Status     string          `json:"status" db:"status"`
 	RetryCount int             `json:"retry_count" db:"retry_count"`
-	LastError   string          `json:"last_error" db:"last_error"`
-	CreatedAt   time.Time      `json:"created_at" db:"created_at"`
-	SentAt      sql.NullTime    `json:"sent_at" db:"sent_at"`
+	LastError  string          `json:"last_error" db:"last_error"`
+	CreatedAt  time.Time       `json:"created_at" db:"created_at"`
+	SentAt     sql.NullTime    `json:"sent_at" db:"sent_at"`
+	Owner      string          `json:"owner" db:"owner"`
+	LeaseUntil sql.NullTime    `json:"lease_until" db:"lease_until"`
 }
+
+// StatusClaimed 已被某实例认领、租约期内其他实例不得处理
+const StatusClaimed = "CLAIMED"
 
 type Publisher interface {
 	Publish(ctx context.Context, topic string, payload json.RawMessage) error
 }
 
 type Config struct {
-	BatchSize        int
-	Interval         time.Duration
-	MaxRetries       int
-	BaseBackoff      time.Duration
-	MaxBackoff       time.Duration
-	StuckThreshold   time.Duration
-	DLQTopic         string
+	BatchSize      int
+	Interval       time.Duration
+	MaxRetries     int
+	BaseBackoff    time.Duration
+	MaxBackoff     time.Duration
+	StuckThreshold time.Duration
+	DLQTopic       string
+	// LeaseTTL 认领租约时长：持有者超过该时间未完成，消息可被其他实例重新认领
+	LeaseTTL time.Duration
+	// Owner 持有者标识（默认 hostname+pid）；多实例部署时用于 owner 校验
+	Owner string
 }
 
 func DefaultConfig() *Config {
@@ -86,6 +96,7 @@ func DefaultConfig() *Config {
 		BaseBackoff:    1 * time.Second,
 		MaxBackoff:     60 * time.Second,
 		StuckThreshold: 1 * time.Hour,
+		LeaseTTL:       30 * time.Second,
 	}
 }
 
@@ -93,32 +104,34 @@ type OutboxPublisher struct {
 	db       DBInterface
 	pub      Publisher
 	cfg      *Config
+	owner    string
 	stopCh   chan struct{}
 	stopOnce sync.Once
 }
 
+func (p *OutboxPublisher) Owner() string { return p.owner }
+
+// DBInterface 由 *sqlx.DB 直接满足（认领/标记均为独立小语句，不再依赖长事务）。
 type DBInterface interface {
 	Get(dest interface{}, query string, args ...interface{}) error
 	Select(dest interface{}, query string, args ...interface{}) error
 	Exec(query string, args ...interface{}) (sql.Result, error)
-	Beginx() (TXInterface, error)
-}
-
-type TXInterface interface {
-	Select(dest interface{}, query string, args ...interface{}) error
-	Exec(query string, args ...interface{}) (sql.Result, error)
-	Commit() error
-	Rollback() error
 }
 
 func NewOutboxPublisher(db DBInterface, pub Publisher, cfg *Config) *OutboxPublisher {
 	if cfg == nil {
 		cfg = DefaultConfig()
 	}
+	owner := cfg.Owner
+	if owner == "" {
+		host, _ := os.Hostname()
+		owner = fmt.Sprintf("%s-%d", host, os.Getpid())
+	}
 	return &OutboxPublisher{
-		db:    db,
-		pub:   pub,
-		cfg:   cfg,
+		db:     db,
+		pub:    pub,
+		cfg:    cfg,
+		owner:  owner,
 		stopCh: make(chan struct{}),
 	}
 }
@@ -156,52 +169,58 @@ func (p *OutboxPublisher) processPending(ctx context.Context) {
 		outboxGauge.Set(float64(pending))
 	}
 
-	tx, err := p.db.Beginx()
-	if err != nil {
-		return
-	}
-
+	// 候选 = PENDING 待投递 + 租约过期的 CLAIMED（持有者疑似崩溃，允许重投；
+	// 重投可能造成下游重复消费，由消费端幂等表吸收——at-least-once + 幂等消费）
 	var rows []Message
-	if err := tx.Select(&rows, `
-		SELECT id, event_type, payload, retry_count, last_error, created_at
+	if err := p.db.Select(&rows, `
+		SELECT id, event_type, payload, retry_count, last_error, created_at, owner, lease_until
 		FROM order_outbox
-		WHERE status = ? AND retry_count < ?
+		WHERE (status = ? OR (status = ? AND lease_until < NOW())) AND retry_count < ?
 		ORDER BY id ASC
 		LIMIT ?`,
-		StatusPending, p.cfg.MaxRetries, p.cfg.BatchSize); err != nil {
-		_ = tx.Rollback()
+		StatusPending, StatusClaimed, p.cfg.MaxRetries, p.cfg.BatchSize); err != nil {
 		return
 	}
 
 	for _, r := range rows {
 		backoff := p.calculateBackoff(r.RetryCount)
-
 		if time.Since(r.CreatedAt) < backoff {
 			continue
 		}
 
+		// CAS 认领：仅当仍是 PENDING（或租约已过期）且未被他人抢先时生效
+		res, err := p.db.Exec(`
+			UPDATE order_outbox
+			SET status = ?, owner = ?, lease_until = DATE_ADD(NOW(), INTERVAL ? SECOND), updated_at = NOW()
+			WHERE id = ? AND (status = ? OR (status = ? AND lease_until < NOW()))`,
+			StatusClaimed, p.owner, int(p.cfg.LeaseTTL.Seconds()), r.ID, StatusPending, StatusClaimed)
+		if err != nil {
+			continue
+		}
+		if affected, _ := res.RowsAffected(); affected == 0 {
+			continue // 被其他实例抢先认领
+		}
+
 		if err := p.pub.Publish(ctx, r.EventType, r.Payload); err != nil {
-			_, _ = tx.Exec(`
+			// 失败回退 PENDING（owner 校验：租约期内才允许本实例回退）
+			_, _ = p.db.Exec(`
 				UPDATE order_outbox
-				SET retry_count = retry_count + 1, last_error = ?, updated_at = NOW()
-				WHERE id = ?`,
-				err.Error(), r.ID)
+				SET status = ?, retry_count = retry_count + 1, last_error = ?, owner = '', lease_until = NULL, updated_at = NOW()
+				WHERE id = ? AND owner = ? AND status = ?`,
+				StatusPending, err.Error(), r.ID, p.owner, StatusClaimed)
 			outboxPublishFailed.WithLabelValues(classifyError(err)).Inc()
 			continue
 		}
 
-		if _, err := tx.Exec(`
+		// 成功标记 SENT：owner 校验防止租约过期被抢走后覆盖他人状态
+		if _, err := p.db.Exec(`
 			UPDATE order_outbox
 			SET status = ?, sent_at = NOW(), updated_at = NOW()
-			WHERE id = ?`,
-			StatusSent, r.ID); err != nil {
-			_ = tx.Rollback()
-			return
+			WHERE id = ? AND owner = ? AND status = ?`,
+			StatusSent, r.ID, p.owner, StatusClaimed); err == nil {
+			outboxPublishSuccess.Inc()
 		}
-		outboxPublishSuccess.Inc()
 	}
-
-	_ = tx.Commit()
 }
 
 func (p *OutboxPublisher) processStuck(ctx context.Context) {

@@ -1,0 +1,66 @@
+# R5 主机轻量版：复用宿主机上已有的 async-mysql / redis-dev，只部署 4 个 Go 容器（~80MB）。
+# 前置（一次性，手动执行）：
+#   docker network create ecomm-demo
+#   docker network connect ecomm-demo async-mysql
+#   docker network connect ecomm-demo redis-dev
+#   # 建库见 manage 流程（manage.sh demo-init）
+# 端口全部绑回环，公网不可见（与主机安全口径一致；远程访问走 SSH 隧道）。
+services:
+  mock-platform-a:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    container_name: ecomm-mock-a
+    environment:
+      PLATFORM: tmall
+      PORT: ":9091"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "127.0.0.1:9091:9091"
+
+  mock-platform-b:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    container_name: ecomm-mock-b
+    environment:
+      PLATFORM: jd
+      PORT: ":9092"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "127.0.0.1:9092:9092"
+
+  mock-platform-c:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    container_name: ecomm-mock-c
+    environment:
+      PLATFORM: tiktok
+      PORT: ":9093"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "127.0.0.1:9093:9093"
+
+  distribution-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.distribution
+    container_name: ecomm-distribution
+    environment:
+      DISTRIBUTION_ADDR: ":8090"
+      MYSQL_DSN: "${ECOMM_MYSQL_DSN:?set ECOMM_MYSQL_DSN in deploy/cloud/host.env}"
+      SHOP_QPS: "15"
+      PLATFORM_ENDPOINTS: "tmall=http://ecomm-mock-a:9091,jd=http://ecomm-mock-b:9092,tiktok=http://ecomm-mock-c:9093"
+      RECONCILE_INTERVAL_SECONDS: "60"
+      RECEIPT_GRACE_SECONDS: "30"
+    ports:
+      - "127.0.0.1:8900:8090"
+
+networks:
+  default:
+    name: ecomm-demo
+    external: true

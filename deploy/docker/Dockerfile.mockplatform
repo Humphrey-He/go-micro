@@ -1,6 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM golang:1.26 AS builder
 WORKDIR /src
+# 国内主机构建依赖代理（海外环境无感回退 direct）
+ENV GOPROXY=https://goproxy.cn,direct
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .

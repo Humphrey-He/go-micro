@@ -11,8 +11,17 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-COMPOSE="docker compose -f deploy/cloud/docker-compose.demo.yml -p ecomm-demo"
-DIST=http://localhost:8090
+# HOST=1 时用主机轻量栈（复用宿主机 mysql/redis，见 deploy/cloud/docker-compose.host.yml）
+if [ "${HOST:-0}" = "1" ]; then
+  COMPOSE_FILE="deploy/cloud/docker-compose.host.yml"
+  [ -f deploy/cloud/host.env ] || { echo "缺少 deploy/cloud/host.env（复制 host.env.example 填 MYSQL_DSN）"; exit 1; }
+  set -a; source deploy/cloud/host.env; set +a
+fi
+COMPOSE_FILE="${COMPOSE_FILE:-deploy/cloud/docker-compose.demo.yml}"
+COMPOSE="docker compose -f $COMPOSE_FILE -p ecomm-demo"
+# host 模式下 distribution 绑在 8900
+DIST="${DIST:-http://localhost:8090}"
+if [ "${HOST:-0}" = "1" ]; then DIST=http://localhost:8900; fi
 
 case "${1:-help}" in
   up)

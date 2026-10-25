@@ -1,0 +1,82 @@
+# R5 分发调度演示栈：distribution-service + 3 个 mock 平台 + MySQL + Redis
+# 用法见仓库根 manage.sh（up / down / clean / status / logs / demo / demo-loss）
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: go_micro
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - demo-mysql-data:/var/lib/mysql
+      - ../../deploy/migrations:/docker-entrypoint-initdb.d/migrations:ro
+      - ../../deploy/cloud/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+
+  # 三个"平台"：同一份 mock 镜像、不同名称/端口/配额
+  mock-platform-a:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    environment:
+      PLATFORM: tmall
+      PORT: ":9091"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "9091:9091"
+
+  mock-platform-b:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    environment:
+      PLATFORM: jd
+      PORT: ":9092"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "9092:9092"
+
+  mock-platform-c:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.mockplatform
+    environment:
+      PLATFORM: tiktok
+      PORT: ":9093"
+      QPS_LIMIT: "50"
+      LOSS_RATE: "0"
+    ports:
+      - "9093:9093"
+
+  distribution-service:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile.distribution
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DISTRIBUTION_ADDR: ":8090"
+      MYSQL_DSN: root:root@tcp(mysql:3306)/go_micro?parseTime=true&charset=utf8mb4&loc=Local
+      SHOP_QPS: "15"
+      PLATFORM_ENDPOINTS: "tmall=http://mock-platform-a:9091,jd=http://mock-platform-b:9092,tiktok=http://mock-platform-c:9093"
+      RECONCILE_INTERVAL_SECONDS: "60"
+      RECEIPT_GRACE_SECONDS: "30"
+    ports:
+      - "8090:8090"
+
+volumes:
+  demo-mysql-data:

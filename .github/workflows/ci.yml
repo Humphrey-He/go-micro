@@ -220,6 +220,10 @@ jobs:
             dockerfile: deploy/docker/Dockerfile.task
           - image: user
             dockerfile: deploy/docker/Dockerfile.user
+          - image: distribution
+            dockerfile: deploy/docker/Dockerfile.distribution
+          - image: mockplatform
+            dockerfile: deploy/docker/Dockerfile.mockplatform
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -258,6 +262,8 @@ jobs:
           - refund
           - task
           - user
+          - distribution
+          - mockplatform
     steps:
       - name: Checkout
         uses: actions/checkout@v4

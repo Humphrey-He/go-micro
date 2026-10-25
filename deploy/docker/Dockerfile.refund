@@ -6,7 +6,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/refund ./cmd/refund-service
 
-FROM alpine:3.19
+FROM alpine:3.22
 WORKDIR /app
 COPY --from=builder /out/refund /app/refund
 EXPOSE 8086 9086
